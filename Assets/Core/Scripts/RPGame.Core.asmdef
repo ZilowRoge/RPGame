@@ -1,7 +1,9 @@
 {
     "name": "RPGame.Core",
     "rootNamespace": "RPGame.Core",
-    "references": [],
+    "references": [
+        "Unity.InputSystem"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
