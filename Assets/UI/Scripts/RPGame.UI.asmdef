@@ -1,9 +1,9 @@
 {
-    "name": "RPGame.Player",
-    "rootNamespace": "RPGame.Player",
+    "name": "RPGame.UI",
+    "rootNamespace": "RPGame.UI",
     "references": [
         "RPGame.Core",
-        "Unity.InputSystem"
+        "Unity.ugui"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

@@ -1,5 +1,7 @@
+using RPGame.Core.Statistics;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.Serialization;
 
 namespace RPGame.Player
 {
@@ -10,6 +12,7 @@ namespace RPGame.Player
         [SerializeField] private CharacterController characterController;
         [SerializeField] private Transform cameraTransform;
         [SerializeField] private PlayerInput playerInput;
+        [SerializeField] private StatisticsController statisticsController;
 
         [Header("Input")]
         [SerializeField] private InputActionProperty moveAction;
@@ -29,8 +32,15 @@ namespace RPGame.Player
         [SerializeField] private float sprintForwardThreshold = 0.1f;
         [SerializeField, Range(0f, 1f)] private float sprintSidewaysMultiplier = 0.35f;
 
+        [Header("Stamina")]
+        [SerializeField] private float sprintStaminaCostPerSecond = 20f;
+        [SerializeField] private float sprintMinimumStaminaToStart = 10f;
+        [FormerlySerializedAs("sprintStartStamina")]
+        [SerializeField] private float sprintStartStaminaCost = 5f;
+
         [Header("Jump And Gravity")]
         [SerializeField] private float jumpHeight = 1.5f;
+        [SerializeField] private float jumpStaminaCost = 10f;
         [SerializeField] private float gravity = -20f;
         [SerializeField] private float groundedVerticalVelocity = -2f;
         [SerializeField] private float coyoteTime = 0.12f;
@@ -68,6 +78,11 @@ namespace RPGame.Player
             if (playerInput == null)
             {
                 playerInput = GetComponent<PlayerInput>();
+            }
+
+            if (statisticsController == null)
+            {
+                statisticsController = GetComponent<StatisticsController>();
             }
 
             ResolveInputActions();
@@ -206,6 +221,12 @@ namespace RPGame.Player
 
             if (IsGrounded || coyoteTimer > 0f)
             {
+                if (!TrySpendJumpStamina())
+                {
+                    jumpBufferTimer = 0f;
+                    return;
+                }
+
                 verticalVelocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
                 lockedAirMoveVelocity = groundedMoveVelocity;
                 isAirMoveLocked = true;
@@ -258,16 +279,16 @@ namespace RPGame.Player
             return input.sqrMagnitude > 1f ? input.normalized : input;
         }
 
-        private bool IsSprintInputPressed()
+        private bool WasSprintInputPressedThisFrame()
         {
             if (resolvedSprintAction != null)
             {
-                return resolvedSprintAction.IsPressed();
+                return resolvedSprintAction.WasPressedThisFrame();
             }
 
-            return Keyboard.current != null && Keyboard.current.leftShiftKey.isPressed
-                || Keyboard.current != null && Keyboard.current.rightShiftKey.isPressed
-                || Gamepad.current != null && Gamepad.current.leftStickButton.isPressed;
+            return Keyboard.current != null && Keyboard.current.leftShiftKey.wasPressedThisFrame
+                || Keyboard.current != null && Keyboard.current.rightShiftKey.wasPressedThisFrame
+                || Gamepad.current != null && Gamepad.current.leftStickButton.wasPressedThisFrame;
         }
 
         private void UpdateSprintState(Vector2 moveInput)
@@ -275,16 +296,89 @@ namespace RPGame.Player
             bool isForwardPressed = moveInput.y > sprintForwardThreshold;
             bool isBackwardPressed = IsBackwardInputPressed(moveInput);
 
-            if (!IsSprintInputPressed() || isBackwardPressed)
+            if (isBackwardPressed)
             {
                 isSprinting = false;
                 return;
             }
 
-            if (isSprinting || isForwardPressed)
+            if (isSprinting && WasSprintInputPressedThisFrame())
+            {
+                isSprinting = false;
+                return;
+            }
+
+            if (!isSprinting && (!WasSprintInputPressedThisFrame() || !isForwardPressed || !TrySpendSprintStartStamina()))
+            {
+                return;
+            }
+
+            if (!isSprinting)
             {
                 isSprinting = true;
             }
+
+            if (isSprinting && !TrySpendSprintStamina())
+            {
+                isSprinting = false;
+            }
+        }
+
+        private bool TrySpendSprintStartStamina()
+        {
+            if (statisticsController == null)
+            {
+                return true;
+            }
+
+            if (statisticsController.CurrentStamina < sprintMinimumStaminaToStart)
+            {
+                return false;
+            }
+
+            if (sprintStartStaminaCost <= 0f)
+            {
+                return true;
+            }
+
+            if (!statisticsController.CanSpendStamina(sprintStartStaminaCost))
+            {
+                return false;
+            }
+
+            return statisticsController.TrySpendStamina(sprintStartStaminaCost);
+        }
+
+        private bool TrySpendSprintStamina()
+        {
+            if (statisticsController == null || sprintStaminaCostPerSecond <= 0f)
+            {
+                return true;
+            }
+
+            float staminaCost = sprintStaminaCostPerSecond * Time.deltaTime;
+
+            if (statisticsController.CanSpendStamina(staminaCost))
+            {
+                return statisticsController.TrySpendStamina(staminaCost);
+            }
+
+            if (statisticsController.CurrentStamina > 0f)
+            {
+                statisticsController.TrySpendStamina(statisticsController.CurrentStamina);
+            }
+
+            return false;
+        }
+
+        private bool TrySpendJumpStamina()
+        {
+            if (statisticsController == null || jumpStaminaCost <= 0f)
+            {
+                return true;
+            }
+
+            return statisticsController.TrySpendStamina(jumpStaminaCost);
         }
 
         private bool IsBackwardInputPressed(Vector2 moveInput)
@@ -391,6 +485,11 @@ namespace RPGame.Player
                 playerInput = GetComponent<PlayerInput>();
             }
 
+            if (statisticsController == null)
+            {
+                statisticsController = GetComponent<StatisticsController>();
+            }
+
             walkSpeed = Mathf.Max(0f, walkSpeed);
             sprintSpeed = Mathf.Max(walkSpeed, sprintSpeed);
             acceleration = Mathf.Max(0f, acceleration);
@@ -399,10 +498,14 @@ namespace RPGame.Player
             sprintForwardThreshold = Mathf.Max(0.01f, sprintForwardThreshold);
             sprintSidewaysMultiplier = Mathf.Clamp01(sprintSidewaysMultiplier);
             jumpHeight = Mathf.Max(0f, jumpHeight);
+            jumpStaminaCost = Mathf.Max(0f, jumpStaminaCost);
             gravity = Mathf.Min(-0.01f, gravity);
             groundedVerticalVelocity = Mathf.Min(0f, groundedVerticalVelocity);
             coyoteTime = Mathf.Max(0f, coyoteTime);
             jumpBufferTime = Mathf.Max(0f, jumpBufferTime);
+            sprintStaminaCostPerSecond = Mathf.Max(0f, sprintStaminaCostPerSecond);
+            sprintMinimumStaminaToStart = Mathf.Max(0f, sprintMinimumStaminaToStart);
+            sprintStartStaminaCost = Mathf.Max(0f, sprintStartStaminaCost);
         }
     }
 }

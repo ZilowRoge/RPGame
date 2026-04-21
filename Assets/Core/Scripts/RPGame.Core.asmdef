@@ -1,10 +1,7 @@
 {
-    "name": "RPGame.Player",
-    "rootNamespace": "RPGame.Player",
-    "references": [
-        "RPGame.Core",
-        "Unity.InputSystem"
-    ],
+    "name": "RPGame.Core",
+    "rootNamespace": "RPGame.Core",
+    "references": [],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
