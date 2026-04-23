@@ -1,11 +1,9 @@
 {
-    "name": "RPGame.UI",
-    "rootNamespace": "RPGame.UI",
+    "name": "RPGame.SymbolRecognition",
+    "rootNamespace": "RPGame.SymbolRecognition",
     "references": [
         "RPGame.Core",
-        "Unity.TextMeshPro",
-        "Unity.ugui",
-        "Unity.InputSystem"
+        "Unity.InferenceEngine"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

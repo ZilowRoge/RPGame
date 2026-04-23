@@ -92,6 +92,7 @@ namespace RPGame.Combat.Spells
         {
             if (currentSpell == null)
             {
+                Debug.LogWarning("SpellCaster.TryCast failed because currentSpell is not assigned.", this);
                 return false;
             }
 
