@@ -131,7 +131,7 @@ GameObject:
   - component: {fileID: 4903626}
   - component: {fileID: 4903625}
   m_Layer: 5
-  m_Name: RawImage
+  m_Name: DebugTexture
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -151,11 +151,11 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 1522083180}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -478, y: -332}
-  m_SizeDelta: {x: 200, y: 200}
-  m_Pivot: {x: 0.5, y: 0.5}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 20, y: 20}
+  m_SizeDelta: {x: 64, y: 64}
+  m_Pivot: {x: 0, y: 0}
 --- !u!114 &4903625
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1028,11 +1028,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b3f3a567dc32471c9170f14db4071f4a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: RPGame.Combat::RPGame.Combat.Spells.SpellCaster
-  currentSpell: {fileID: 11400000, guid: 09cb0f84a3d64db4aaada786edbc000a, type: 2}
+  currentSpell: {fileID: 0}
   castOrigin: {fileID: 2060851402}
   target: {fileID: 1094030656}
   casterObject: {fileID: 984627869}
-  castOnLeftMouseButton: 1
+  castOnLeftMouseButton: 0
+--- !u!114 &984627878
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 984627869}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 154ea095009a488d83accb17de8cad1f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: RPGame.Combat::RPGame.Combat.Spells.SpellSymbolCaster
+  spellCaster: {fileID: 984627875}
+  spellsBySymbol:
+  - symbolId: 9
+    spell: {fileID: 11400000, guid: 09cb0f84a3d64db4aaada786edbc000a, type: 2}
 --- !u!1 &1094030651
 GameObject:
   m_ObjectHideFlags: 0
@@ -1508,6 +1524,8 @@ GameObject:
   m_Component:
   - component: {fileID: 1522083180}
   - component: {fileID: 1522083181}
+  - component: {fileID: 1522083183}
+  - component: {fileID: 1522083184}
   m_Layer: 5
   m_Name: DrawUI
   m_TagString: Untagged
@@ -1549,16 +1567,40 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: RPGame.UI::RPGame.UI.Symbols.SymbolDrawerUI
   drawingImage: {fileID: 1737968000}
-  normalizedDebugImage: {fileID: 0}
-  drawingReceiver: {fileID: 0}
-  textureSize: 256
-  backgroundColor: {r: 1, g: 1, b: 1, a: 0}
-  lineColor: {r: 0, g: 0.8078432, b: 0.8196079, a: 1}
-  brushRadius: 4
-  normalizedTextureSize: 64
-  normalizedPadding: 6
-  normalizedLineRadius: 2
+  normalizedDebugImage: {fileID: 4903625}
+  drawingReceiver: {fileID: 1522083183}
+  lineColor: {r: 1, g: 0.09803922, b: 0.09803922, a: 1}
   clearAfterSubmit: 1
+  saveSubmittedSymbols: 1
+--- !u!114 &1522083183
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1522083179}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 183402f423e748d0836f608836c6bbaf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: RPGame.Core::RPGame.Core.Spells.Symbols.SymbolRecognition
+  recognizer: {fileID: 1522083184}
+  symbolReceiver: {fileID: 984627878}
+--- !u!114 &1522083184
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1522083179}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 30cef7dc6a9b47e29413a36126a23492, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: RPGame.SymbolRecognition::RPGame.SymbolRecognition.OnnxSymbolRecognizer
+  modelAsset: {fileID: 5022602860645237092, guid: 19dd160aebde59743b719b1cf4e36f4a, type: 3}
+  backendType: 512
+  minimumConfidence: 0.5
 --- !u!1 &1737967998
 GameObject:
   m_ObjectHideFlags: 0
@@ -1571,12 +1613,12 @@ GameObject:
   - component: {fileID: 1737968001}
   - component: {fileID: 1737968000}
   m_Layer: 5
-  m_Name: RawImage
+  m_Name: DrawingSpace
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1737967999
 RectTransform:
   m_ObjectHideFlags: 0
@@ -1901,6 +1943,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 8024470455656626075, guid: db388f493d4197a42b9bf51d3fb801a9, type: 3}
       insertIndex: -1
       addedObject: {fileID: 984627875}
+    - targetCorrespondingSourceObject: {fileID: 8024470455656626075, guid: db388f493d4197a42b9bf51d3fb801a9, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 984627878}
   m_SourcePrefab: {fileID: 100100000, guid: db388f493d4197a42b9bf51d3fb801a9, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:

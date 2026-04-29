@@ -1,4 +1,3 @@
-using System.IO;
 using RPGame.Core.Spells.Symbols;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -9,18 +8,15 @@ namespace RPGame.UI.Symbols
 {
     public sealed class SymbolDrawerUI : MonoBehaviour, IPointerDownHandler, IDragHandler, IPointerUpHandler
     {
-        private const int DefaultTextureSize = 1024;
-        private const int NormalizedTextureSize = 64;
-        private const int BrushRadius = 2;
-
         [SerializeField] private RawImage drawingImage;
         [SerializeField] private RawImage normalizedDebugImage;
         [SerializeField] private DrawingReceiverBase drawingReceiver;
         [SerializeField] private Color lineColor = Color.white;
         [SerializeField] private bool clearAfterSubmit = true;
-        [SerializeField] private bool saveSubmittedSymbols;
 
+        private PlayerControls playerControls;
         private Texture2D drawingTexture;
+        private Texture2D debugPreviewTexture;
         private Vector2Int previousPixel;
         private Vector2Int minDrawingPixel;
         private Vector2Int maxDrawingPixel;
@@ -31,6 +27,7 @@ namespace RPGame.UI.Symbols
 
         private void Awake()
         {
+            playerControls = new PlayerControls();
             CreateDrawingTexture();
             Clear();
             SetDrawingImageActive(false);
@@ -39,6 +36,24 @@ namespace RPGame.UI.Symbols
         private void Update()
         {
             SetDrawingImageActive(IsDrawModifierPressed() || isDrawing);
+        }
+
+        private void OnEnable()
+        {
+            playerControls?.Player.AlternativeUse.Enable();
+        }
+
+        private void OnDisable()
+        {
+            playerControls?.Player.AlternativeUse.Disable();
+        }
+
+        private void OnDestroy()
+        {
+            playerControls?.Dispose();
+            playerControls = null;
+            ReleaseTexture(ref debugPreviewTexture);
+            ReleaseTexture(ref drawingTexture);
         }
 
         public void OnPointerDown(PointerEventData eventData)
@@ -88,27 +103,22 @@ namespace RPGame.UI.Symbols
                 return;
             }
 
-            Debug.Log(
-                $"Submitting symbol with textureSize={DefaultTextureSize}, brushRadius={BrushRadius}, backgroundColor={BackgroundColor}, lineColor={lineColor}, normalizedTextureSize={NormalizedTextureSize}.",
-                this);
-
             if (normalizedDebugImage != null)
             {
+                ReleaseTexture(ref debugPreviewTexture);
+                debugPreviewTexture = submittedTexture;
                 normalizedDebugImage.texture = submittedTexture;
-            }
-
-            if (saveSubmittedSymbols)
-            {
-                SaveSubmittedSymbol(submittedTexture);
             }
 
             if (drawingReceiver == null)
             {
                 Debug.LogWarning("Symbol drawing was normalized, but drawingReceiver is not assigned.", this);
+                ReleaseSubmittedTextureIfNeeded(submittedTexture);
                 return;
             }
 
             drawingReceiver.SubmitDrawing(submittedTexture);
+            ReleaseSubmittedTextureIfNeeded(submittedTexture);
 
             if (clearAfterSubmit)
             {
@@ -136,7 +146,13 @@ namespace RPGame.UI.Symbols
 
         private void CreateDrawingTexture()
         {
-            drawingTexture = new Texture2D(DefaultTextureSize, DefaultTextureSize, TextureFormat.RGBA32, false);
+            ReleaseTexture(ref drawingTexture);
+
+            drawingTexture = new Texture2D(
+                SymbolDrawingConstants.DrawingTextureSize,
+                SymbolDrawingConstants.DrawingTextureSize,
+                TextureFormat.RGBA32,
+                false);
             drawingTexture.wrapMode = TextureWrapMode.Clamp;
             drawingTexture.filterMode = FilterMode.Point;
 
@@ -184,8 +200,14 @@ namespace RPGame.UI.Symbols
             }
 
             pixel = new Vector2Int(
-                Mathf.Clamp((int)(normalizedX * DefaultTextureSize), 0, DefaultTextureSize - 1),
-                Mathf.Clamp((int)(normalizedY * DefaultTextureSize), 0, DefaultTextureSize - 1));
+                Mathf.Clamp(
+                    (int)(normalizedX * SymbolDrawingConstants.DrawingTextureSize),
+                    0,
+                    SymbolDrawingConstants.DrawingTextureSize - 1),
+                Mathf.Clamp(
+                    (int)(normalizedY * SymbolDrawingConstants.DrawingTextureSize),
+                    0,
+                    SymbolDrawingConstants.DrawingTextureSize - 1));
             return true;
         }
 
@@ -226,7 +248,7 @@ namespace RPGame.UI.Symbols
 
         private void DrawBrush(Vector2Int center)
         {
-            int radius = BrushRadius;
+            int radius = SymbolDrawingConstants.BrushRadius;
             int radiusSquared = radius * radius;
 
             for (int y = -radius; y <= radius; y++)
@@ -240,7 +262,10 @@ namespace RPGame.UI.Symbols
 
                     int pixelX = center.x + x;
                     int pixelY = center.y + y;
-                    if (pixelX < 0 || pixelX >= DefaultTextureSize || pixelY < 0 || pixelY >= DefaultTextureSize)
+                    if (pixelX < 0
+                        || pixelX >= SymbolDrawingConstants.DrawingTextureSize
+                        || pixelY < 0
+                        || pixelY >= SymbolDrawingConstants.DrawingTextureSize)
                     {
                         continue;
                     }
@@ -253,60 +278,11 @@ namespace RPGame.UI.Symbols
 
         private Texture2D CreateNormalizedDrawingTexture()
         {
-            if (!hasDrawingBounds)
-            {
-                return null;
-            }
-
-            int size = NormalizedTextureSize;
-            int sourceWidth = maxDrawingPixel.x - minDrawingPixel.x + 1;
-            int sourceHeight = maxDrawingPixel.y - minDrawingPixel.y + 1;
-            if (sourceWidth <= 0 || sourceHeight <= 0)
-            {
-                return new Texture2D(size, size, drawingTexture.format, false);
-            }
-
-            Texture2D croppedTexture = new Texture2D(sourceWidth, sourceHeight, drawingTexture.format, false);
-            croppedTexture.wrapMode = TextureWrapMode.Clamp;
-            croppedTexture.filterMode = FilterMode.Bilinear;
-            croppedTexture.SetPixels(drawingTexture.GetPixels(minDrawingPixel.x, minDrawingPixel.y, sourceWidth, sourceHeight));
-            croppedTexture.Apply();
-
-            Texture2D normalizedTexture = new Texture2D(size, size, drawingTexture.format, false);
-            normalizedTexture.wrapMode = TextureWrapMode.Clamp;
-            normalizedTexture.filterMode = FilterMode.Bilinear;
-
-            for (int y = 0; y < size; y++)
-            {
-                for (int x = 0; x < size; x++)
-                {
-                    float u = size > 1 ? x / (float)(size - 1) : 0f;
-                    float v = size > 1 ? y / (float)(size - 1) : 0f;
-                    normalizedTexture.SetPixel(x, y, croppedTexture.GetPixelBilinear(u, v));
-                }
-            }
-
-            normalizedTexture.Apply();
-            Destroy(croppedTexture);
-            return normalizedTexture;
-        }
-
-        private void SaveSubmittedSymbol(Texture2D submittedTexture)
-        {
-            if (submittedTexture == null)
-            {
-                return;
-            }
-
-            string directoryPath = Path.Combine(Application.persistentDataPath, "SubmittedSymbols");
-            Directory.CreateDirectory(directoryPath);
-
-            string filePath = Path.Combine(
-                directoryPath,
-                $"symbol_{System.DateTime.UtcNow:yyyyMMdd_HHmmssfff}.png");
-
-            File.WriteAllBytes(filePath, submittedTexture.EncodeToPNG());
-            Debug.Log($"Saved submitted symbol to '{filePath}'.", this);
+            return SymbolDrawingUtility.CreateNormalizedTexture(
+                drawingTexture,
+                minDrawingPixel,
+                maxDrawingPixel,
+                hasDrawingBounds);
         }
 
         private void IncludePixelInBounds(int pixelX, int pixelY)
@@ -325,18 +301,37 @@ namespace RPGame.UI.Symbols
 
         private void ResetDrawingBounds()
         {
-            minDrawingPixel = new Vector2Int(DefaultTextureSize, DefaultTextureSize);
+            minDrawingPixel = new Vector2Int(
+                SymbolDrawingConstants.DrawingTextureSize,
+                SymbolDrawingConstants.DrawingTextureSize);
             maxDrawingPixel = Vector2Int.zero;
             hasDrawingBounds = false;
         }
 
-        private static bool IsDrawModifierPressed()
+        private void ReleaseSubmittedTextureIfNeeded(Texture2D submittedTexture)
         {
-            return Keyboard.current != null && Keyboard.current.leftCtrlKey.isPressed;
+            if (submittedTexture == null || ReferenceEquals(submittedTexture, debugPreviewTexture))
+            {
+                return;
+            }
+
+            Destroy(submittedTexture);
         }
 
-        private void OnValidate()
+        private static void ReleaseTexture(ref Texture2D texture)
         {
+            if (texture == null)
+            {
+                return;
+            }
+
+            Object.Destroy(texture);
+            texture = null;
+        }
+
+        private bool IsDrawModifierPressed()
+        {
+            return playerControls != null && playerControls.Player.AlternativeUse.IsPressed();
         }
     }
 }
