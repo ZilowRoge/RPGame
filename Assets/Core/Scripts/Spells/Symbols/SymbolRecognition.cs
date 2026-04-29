@@ -8,8 +8,8 @@ namespace RPGame.Core.Spells.Symbols
         [SerializeField] private SymbolRecognizerBase recognizer;
         [SerializeField] private SymbolReceiverBase symbolReceiver;
         [SerializeField] private bool saveSubmittedSymbols;
-        [SerializeField] private string savedSymbolsDirectoryName = "SubmittedSymbols";
-        [SerializeField] private string unrecognizedDirectoryName = "Unrecognized";
+        [SerializeField] private string rawSymbolsDirectoryName = "SubmittedSymbolsRaw";
+        [SerializeField] private string preprocessedSymbolsDirectoryName = "SubmittedSymbols";
 
         public override void SubmitDrawing(Texture2D drawingTexture)
         {
@@ -45,18 +45,27 @@ namespace RPGame.Core.Spells.Symbols
                 return;
             }
 
-            string labelDirectoryName = result.IsRecognized
-                ? result.SymbolId.ToString()
-                : unrecognizedDirectoryName;
-            string rootDirectoryPath = Path.Combine(Application.persistentDataPath, savedSymbolsDirectoryName);
-            string directoryPath = Path.Combine(rootDirectoryPath, labelDirectoryName);
-            Directory.CreateDirectory(directoryPath);
+            Texture2D preprocessedTexture = SymbolDrawingUtility.CreateWhiteForegroundTexture(drawingTexture);
+            if (preprocessedTexture == null)
+            {
+                return;
+            }
 
-            string filePath = Path.Combine(
-                directoryPath,
-                $"symbol_{System.DateTime.UtcNow:yyyyMMdd_HHmmssfff}.png");
+            string fileName = $"symbol_{System.DateTime.UtcNow:yyyyMMdd_HHmmssfff}.png";
+            string rawDirectoryPath = Path.Combine(Application.persistentDataPath, rawSymbolsDirectoryName);
+            string preprocessedDirectoryPath = Path.Combine(Application.persistentDataPath, preprocessedSymbolsDirectoryName);
+            Directory.CreateDirectory(rawDirectoryPath);
+            Directory.CreateDirectory(preprocessedDirectoryPath);
 
-            File.WriteAllBytes(filePath, drawingTexture.EncodeToPNG());
+            try
+            {
+                File.WriteAllBytes(Path.Combine(rawDirectoryPath, fileName), drawingTexture.EncodeToPNG());
+                File.WriteAllBytes(Path.Combine(preprocessedDirectoryPath, fileName), preprocessedTexture.EncodeToPNG());
+            }
+            finally
+            {
+                Destroy(preprocessedTexture);
+            }
         }
     }
 }

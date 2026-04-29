@@ -27,56 +27,69 @@ namespace RPGame.SymbolRecognition
                 return false;
             }
 
+            Texture2D preprocessedTexture = SymbolDrawingUtility.CreateWhiteForegroundTexture(drawingTexture);
+            if (preprocessedTexture == null)
+            {
+                return false;
+            }
+
             using Tensor<float> inputTensor = new Tensor<float>(
                 new TensorShape(
                     1,
                     SymbolDrawingConstants.NormalizedTextureSize,
                     SymbolDrawingConstants.NormalizedTextureSize,
                     SymbolDrawingConstants.InputChannels));
-            TextureConverter.ToTensor(
-                drawingTexture,
-                inputTensor,
-                new TextureTransform()
-                    .SetTensorLayout(TensorLayout.NHWC)
-                    .SetCoordOrigin(CoordOrigin.BottomLeft));
-
-            worker.Schedule(inputTensor);
-
-            if (worker.PeekOutput() is not Tensor<float> outputTensor)
+            try
             {
-                Debug.LogWarning("ONNX symbol recognition failed because model output is not a float tensor.", this);
-                return false;
-            }
+                TextureConverter.ToTensor(
+                    preprocessedTexture,
+                    inputTensor,
+                    new TextureTransform()
+                        .SetTensorLayout(TensorLayout.NHWC)
+                        .SetCoordOrigin(CoordOrigin.BottomLeft));
 
-            using Tensor<float> outputCpu = outputTensor.ReadbackAndClone();
-            float[] probabilities = outputCpu.DownloadToArray();
-            if (probabilities == null || probabilities.Length == 0)
-            {
-                Debug.LogWarning("ONNX symbol recognition failed because model output is empty.", this);
-                return false;
-            }
+                worker.Schedule(inputTensor);
 
-            int bestClassIndex = 0;
-            float confidence = probabilities[0];
-
-            for (int i = 1; i < probabilities.Length; i++)
-            {
-                if (probabilities[i] <= confidence)
+                if (worker.PeekOutput() is not Tensor<float> outputTensor)
                 {
-                    continue;
+                    Debug.LogWarning("ONNX symbol recognition failed because model output is not a float tensor.", this);
+                    return false;
                 }
 
-                bestClassIndex = i;
-                confidence = probabilities[i];
-            }
+                using Tensor<float> outputCpu = outputTensor.ReadbackAndClone();
+                float[] probabilities = outputCpu.DownloadToArray();
+                if (probabilities == null || probabilities.Length == 0)
+                {
+                    Debug.LogWarning("ONNX symbol recognition failed because model output is empty.", this);
+                    return false;
+                }
 
-            if (confidence < minimumConfidence)
+                int bestClassIndex = 0;
+                float confidence = probabilities[0];
+
+                for (int i = 1; i < probabilities.Length; i++)
+                {
+                    if (probabilities[i] <= confidence)
+                    {
+                        continue;
+                    }
+
+                    bestClassIndex = i;
+                    confidence = probabilities[i];
+                }
+
+                if (confidence < minimumConfidence)
+                {
+                    return false;
+                }
+
+                result = new SymbolRecognitionResult(bestClassIndex, confidence);
+                return true;
+            }
+            finally
             {
-                return false;
+                Destroy(preprocessedTexture);
             }
-
-            result = new SymbolRecognitionResult(bestClassIndex, confidence);
-            return true;
         }
 
         private bool EnsureWorker()

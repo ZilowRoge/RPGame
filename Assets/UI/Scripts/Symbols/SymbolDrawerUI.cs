@@ -11,10 +11,10 @@ namespace RPGame.UI.Symbols
         [SerializeField] private RawImage drawingImage;
         [SerializeField] private RawImage normalizedDebugImage;
         [SerializeField] private DrawingReceiverBase drawingReceiver;
+        [SerializeField] private InputActionReference drawModifierAction;
         [SerializeField] private Color lineColor = Color.white;
         [SerializeField] private bool clearAfterSubmit = true;
 
-        private PlayerControls playerControls;
         private Texture2D drawingTexture;
         private Texture2D debugPreviewTexture;
         private Vector2Int previousPixel;
@@ -27,7 +27,6 @@ namespace RPGame.UI.Symbols
 
         private void Awake()
         {
-            playerControls = new PlayerControls();
             CreateDrawingTexture();
             Clear();
             SetDrawingImageActive(false);
@@ -40,18 +39,16 @@ namespace RPGame.UI.Symbols
 
         private void OnEnable()
         {
-            playerControls?.Player.AlternativeUse.Enable();
+            drawModifierAction?.action?.Enable();
         }
 
         private void OnDisable()
         {
-            playerControls?.Player.AlternativeUse.Disable();
+            drawModifierAction?.action?.Disable();
         }
 
         private void OnDestroy()
         {
-            playerControls?.Dispose();
-            playerControls = null;
             ReleaseTexture(ref debugPreviewTexture);
             ReleaseTexture(ref drawingTexture);
         }
@@ -331,7 +328,7 @@ namespace RPGame.UI.Symbols
 
         private bool IsDrawModifierPressed()
         {
-            return playerControls != null && playerControls.Player.AlternativeUse.IsPressed();
+            return drawModifierAction != null && drawModifierAction.action != null && drawModifierAction.action.IsPressed();
         }
     }
 }

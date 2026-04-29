@@ -12,16 +12,20 @@ namespace RPGame.Player
         [Header("Input")]
         [SerializeField] private InputActionProperty lookAction;
         [SerializeField] private string lookActionName = "Look";
+        [SerializeField] private InputActionProperty alternativeUseAction;
+        [SerializeField] private string alternativeUseActionName = "AlternativeUse";
 
         [Header("Aim")]
         [SerializeField] private float mouseSensitivity = 0.12f;
         [SerializeField] private float stickSensitivity = 120f;
         [SerializeField] private float minPitch = -35f;
         [SerializeField] private float maxPitch = 70f;
+        [SerializeField, Range(0f, 1f)] private float alternativeUseSensitivityMultiplier = 0.35f;
 
         private float yaw;
         private float pitch;
         private InputAction resolvedLookAction;
+        private InputAction resolvedAlternativeUseAction;
         private bool isPointerLookInput;
 
         private void Awake()
@@ -47,6 +51,7 @@ namespace RPGame.Player
         {
             ResolveInputActions();
             EnableAction(resolvedLookAction);
+            EnableAction(resolvedAlternativeUseAction);
 
             if (resolvedLookAction != null)
             {
@@ -62,6 +67,7 @@ namespace RPGame.Player
             }
 
             DisableAction(resolvedLookAction);
+            DisableAction(resolvedAlternativeUseAction);
         }
 
         private void Update()
@@ -84,21 +90,23 @@ namespace RPGame.Player
             if (resolvedLookAction != null)
             {
                 Vector2 lookInput = resolvedLookAction.ReadValue<Vector2>();
+                float sensitivityMultiplier = IsAlternativeUsePressed() ? alternativeUseSensitivityMultiplier : 1f;
                 return isPointerLookInput
-                    ? lookInput * mouseSensitivity
-                    : lookInput * stickSensitivity * Time.deltaTime;
+                    ? lookInput * mouseSensitivity * sensitivityMultiplier
+                    : lookInput * stickSensitivity * sensitivityMultiplier * Time.deltaTime;
             }
 
             Vector2 delta = Vector2.zero;
+            float fallbackSensitivityMultiplier = IsAlternativeUsePressed() ? alternativeUseSensitivityMultiplier : 1f;
 
             if (Mouse.current != null)
             {
-                delta += Mouse.current.delta.ReadValue() * mouseSensitivity;
+                delta += Mouse.current.delta.ReadValue() * mouseSensitivity * fallbackSensitivityMultiplier;
             }
 
             if (Gamepad.current != null)
             {
-                delta += Gamepad.current.rightStick.ReadValue() * stickSensitivity * Time.deltaTime;
+                delta += Gamepad.current.rightStick.ReadValue() * stickSensitivity * fallbackSensitivityMultiplier * Time.deltaTime;
             }
 
             return delta;
@@ -113,6 +121,7 @@ namespace RPGame.Player
         private void ResolveInputActions()
         {
             resolvedLookAction = ResolveAction(lookAction, lookActionName);
+            resolvedAlternativeUseAction = ResolveAction(alternativeUseAction, alternativeUseActionName);
         }
 
         private InputAction ResolveAction(InputActionProperty actionProperty, string actionName)
@@ -151,6 +160,11 @@ namespace RPGame.Player
             return action != null && action.bindings.Count > 0;
         }
 
+        private bool IsAlternativeUsePressed()
+        {
+            return resolvedAlternativeUseAction != null && resolvedAlternativeUseAction.IsPressed();
+        }
+
         private static float NormalizeAngle(float angle)
         {
             return angle > 180f ? angle - 360f : angle;
@@ -172,6 +186,7 @@ namespace RPGame.Player
             stickSensitivity = Mathf.Max(0f, stickSensitivity);
             minPitch = Mathf.Clamp(minPitch, -89f, 89f);
             maxPitch = Mathf.Clamp(maxPitch, minPitch, 89f);
+            alternativeUseSensitivityMultiplier = Mathf.Clamp01(alternativeUseSensitivityMultiplier);
         }
     }
 }
