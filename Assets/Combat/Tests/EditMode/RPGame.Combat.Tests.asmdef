@@ -1,0 +1,22 @@
+{
+    "name": "RPGame.Combat.Tests",
+    "rootNamespace": "RPGame.Combat.Tests",
+    "references": [
+        "RPGame.Core",
+        "RPGame.Combat"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false,
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ]
+}

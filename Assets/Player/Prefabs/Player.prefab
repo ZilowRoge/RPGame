@@ -365,6 +365,7 @@ GameObject:
   - component: {fileID: 7061440437411484178}
   - component: {fileID: 780946161448724005}
   - component: {fileID: 8541911369478375139}
+  - component: {fileID: 6403399481275357045}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -528,3 +529,16 @@ MonoBehaviour:
   initializeOnAwake: 1
   regenerateHealth: 0
   regenerateStamina: 1
+--- !u!114 &6403399481275357045
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8024470455656626075}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cbccdc8f4b27455daff49c84b15b1fc4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: RPGame.Combat::RPGame.Combat.Damage.DamageReceiver
+  statisticsController: {fileID: 8541911369478375139}

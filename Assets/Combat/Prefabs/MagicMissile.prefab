@@ -250,6 +250,12 @@ MonoBehaviour:
   acceleration: 5
   damage: 10
   maxLifetime: 5
+  hitLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  triggerInteraction: 2
+  hitRadius: 0.1
+  destroyOnHit: 1
 --- !u!114 &8122335230277162384
 MonoBehaviour:
   m_ObjectHideFlags: 0
