@@ -8,6 +8,7 @@ namespace RPGame.Core.Inventory.Data
     {
         [SerializeField] private string id;
         [SerializeField] private string itemName;
+        [SerializeField] private string description;
         [SerializeField] private Sprite icon;
         [SerializeField] private ItemType itemType = ItemType.Equipment;
         [SerializeField] private int maxStack = 1;
@@ -15,6 +16,7 @@ namespace RPGame.Core.Inventory.Data
 
         public string Id => id;
         public string Name => itemName;
+        public string Description => description;
         public Sprite Icon => icon;
         public ItemType ItemType => itemType;
         public int MaxStack => Mathf.Max(1, maxStack);

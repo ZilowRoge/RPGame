@@ -10,6 +10,7 @@ namespace RPGame.UI.Inventory
         [SerializeField] private ItemManagementController controller;
         [SerializeField] private InventorySlotUI slotPrefab;
         [SerializeField] private Transform slotsRoot;
+        [SerializeField] private ItemTooltipUI tooltip;
         [SerializeField] private float doubleClickThreshold = 0.3f;
 
         private readonly List<InventorySlotUI> slots = new();
@@ -32,6 +33,8 @@ namespace RPGame.UI.Inventory
             {
                 controller.OnInventoryChanged -= Refresh;
             }
+
+            tooltip?.Hide();
         }
 
         private void RebuildSlotsIfNeeded()
@@ -48,6 +51,8 @@ namespace RPGame.UI.Inventory
                 InventorySlotUI slot = Instantiate(slotPrefab, slotsRoot);
                 slot.Initialize(i, doubleClickThreshold);
                 slot.DoubleClicked += HandleSlotDoubleClicked;
+                slot.PointerEntered += HandleSlotPointerEntered;
+                slot.PointerExited += HandleSlotPointerExited;
                 slots.Add(slot);
             }
         }
@@ -70,8 +75,19 @@ namespace RPGame.UI.Inventory
 
         private void HandleSlotDoubleClicked(int slotIndex)
         {
+            tooltip?.Hide();
             bool equipped = controller.EquipFromInventory(slotIndex);
             Debug.Log($"Equip from inventory slot {slotIndex}: {equipped}", this);
+        }
+
+        private void HandleSlotPointerEntered(ItemInstance item, Vector2 screenPosition)
+        {
+            tooltip?.Show(item, screenPosition);
+        }
+
+        private void HandleSlotPointerExited()
+        {
+            tooltip?.Hide();
         }
 
         private void ClearSlots()
@@ -81,6 +97,8 @@ namespace RPGame.UI.Inventory
                 if (slots[i] != null)
                 {
                     slots[i].DoubleClicked -= HandleSlotDoubleClicked;
+                    slots[i].PointerEntered -= HandleSlotPointerEntered;
+                    slots[i].PointerExited -= HandleSlotPointerExited;
                     Destroy(slots[i].gameObject);
                 }
             }

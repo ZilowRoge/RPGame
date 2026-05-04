@@ -8,7 +8,7 @@ using UnityEngine.UI;
 
 namespace RPGame.UI.Inventory
 {
-    public sealed class InventorySlotUI : MonoBehaviour, IPointerClickHandler
+    public sealed class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler
     {
         [SerializeField] private Image iconImage;
         [SerializeField] private TextMeshProUGUI stackText;
@@ -17,8 +17,11 @@ namespace RPGame.UI.Inventory
         private int slotIndex;
         private float doubleClickThreshold;
         private float lastClickTime = -1f;
+        private ItemInstance currentItem;
 
         public event Action<int> DoubleClicked;
+        public event Action<ItemInstance, Vector2> PointerEntered;
+        public event Action PointerExited;
 
         public void Initialize(int slotIndex, float doubleClickThreshold)
         {
@@ -28,6 +31,7 @@ namespace RPGame.UI.Inventory
 
         public void SetItem(ItemInstance item)
         {
+            currentItem = item;
             bool hasItem = item != null && item.Definition != null;
 
             if (iconImage != null)
@@ -47,6 +51,19 @@ namespace RPGame.UI.Inventory
             {
                 stackTextBackground.SetActive(showStackText);
             }
+        }
+
+        public void OnPointerEnter(PointerEventData eventData)
+        {
+            if (currentItem != null && currentItem.Definition != null)
+            {
+                PointerEntered?.Invoke(currentItem, eventData.position);
+            }
+        }
+
+        public void OnPointerExit(PointerEventData eventData)
+        {
+            PointerExited?.Invoke();
         }
 
         public void OnPointerClick(PointerEventData eventData)
