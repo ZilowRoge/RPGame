@@ -82,8 +82,7 @@ namespace RPGame.UI.Inventory
         private void HandleSlotDoubleClicked(EquipmentSlotType slotType)
         {
             tooltip?.Hide();
-            bool unequipped = controller.UnequipToInventory(slotType);
-            Debug.Log($"Unequip from equipment slot {slotType}: {unequipped}", this);
+            controller.UnequipToInventory(slotType);
         }
 
         private void HandleSlotPointerEntered(ItemInstance item, Vector2 screenPosition)
@@ -114,8 +113,7 @@ namespace RPGame.UI.Inventory
 
         private void HandleSlotDropped(ItemSlotReference target)
         {
-            bool moved = dragDrop != null && dragDrop.Drop(target, controller);
-            Debug.Log($"Drop to equipment slot {target.EquipmentSlotType}: {moved}", this);
+            dragDrop?.Drop(target, controller);
         }
 
         private void ClearSlots()

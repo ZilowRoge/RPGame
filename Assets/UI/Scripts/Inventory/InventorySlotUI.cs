@@ -89,7 +89,6 @@ namespace RPGame.UI.Inventory
             if (currentTime - lastClickTime <= doubleClickThreshold)
             {
                 lastClickTime = -1f;
-                Debug.Log($"Inventory slot double clicked: {slotIndex}", this);
                 DoubleClicked?.Invoke(slotIndex);
                 return;
             }
