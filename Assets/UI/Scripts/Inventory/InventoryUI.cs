@@ -11,6 +11,7 @@ namespace RPGame.UI.Inventory
         [SerializeField] private InventorySlotUI slotPrefab;
         [SerializeField] private Transform slotsRoot;
         [SerializeField] private ItemTooltipUI tooltip;
+        [SerializeField] private ItemDragDropUI dragDrop;
         [SerializeField] private float doubleClickThreshold = 0.3f;
 
         private readonly List<InventorySlotUI> slots = new();
@@ -53,6 +54,10 @@ namespace RPGame.UI.Inventory
                 slot.DoubleClicked += HandleSlotDoubleClicked;
                 slot.PointerEntered += HandleSlotPointerEntered;
                 slot.PointerExited += HandleSlotPointerExited;
+                slot.DragStarted += HandleSlotDragStarted;
+                slot.Dragged += HandleSlotDragged;
+                slot.DragEnded += HandleSlotDragEnded;
+                slot.Dropped += HandleSlotDropped;
                 slots.Add(slot);
             }
         }
@@ -90,6 +95,28 @@ namespace RPGame.UI.Inventory
             tooltip?.Hide();
         }
 
+        private void HandleSlotDragStarted(ItemSlotReference source, ItemInstance item, Vector2 screenPosition)
+        {
+            tooltip?.Hide();
+            dragDrop?.BeginDrag(source, item, screenPosition);
+        }
+
+        private void HandleSlotDragged(Vector2 screenPosition)
+        {
+            dragDrop?.Move(screenPosition);
+        }
+
+        private void HandleSlotDragEnded()
+        {
+            dragDrop?.EndDrag();
+        }
+
+        private void HandleSlotDropped(ItemSlotReference target)
+        {
+            bool moved = dragDrop != null && dragDrop.Drop(target, controller);
+            // Debug.Log($"Drop to inventory slot {target.InventoryIndex}: {moved}", this);
+        }
+
         private void ClearSlots()
         {
             for (int i = 0; i < slots.Count; i++)
@@ -99,6 +126,10 @@ namespace RPGame.UI.Inventory
                     slots[i].DoubleClicked -= HandleSlotDoubleClicked;
                     slots[i].PointerEntered -= HandleSlotPointerEntered;
                     slots[i].PointerExited -= HandleSlotPointerExited;
+                    slots[i].DragStarted -= HandleSlotDragStarted;
+                    slots[i].Dragged -= HandleSlotDragged;
+                    slots[i].DragEnded -= HandleSlotDragEnded;
+                    slots[i].Dropped -= HandleSlotDropped;
                     Destroy(slots[i].gameObject);
                 }
             }

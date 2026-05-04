@@ -86,6 +86,12 @@ namespace RPGame.Core.Inventory
             return inventory.AddItem(item, amount);
         }
 
+        public bool MoveItem(ItemSlotReference from, ItemSlotReference to)
+        {
+            EnsureInitialized();
+            return service.MoveItem(from, to);
+        }
+
         private void EnsureInitialized()
         {
             if (initialized)

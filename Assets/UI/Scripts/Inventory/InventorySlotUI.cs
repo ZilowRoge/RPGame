@@ -8,7 +8,15 @@ using UnityEngine.UI;
 
 namespace RPGame.UI.Inventory
 {
-    public sealed class InventorySlotUI : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler
+    public sealed class InventorySlotUI :
+        MonoBehaviour,
+        IPointerClickHandler,
+        IPointerEnterHandler,
+        IPointerExitHandler,
+        IBeginDragHandler,
+        IDragHandler,
+        IEndDragHandler,
+        IDropHandler
     {
         [SerializeField] private Image iconImage;
         [SerializeField] private TextMeshProUGUI stackText;
@@ -22,6 +30,10 @@ namespace RPGame.UI.Inventory
         public event Action<int> DoubleClicked;
         public event Action<ItemInstance, Vector2> PointerEntered;
         public event Action PointerExited;
+        public event Action<ItemSlotReference, ItemInstance, Vector2> DragStarted;
+        public event Action<Vector2> Dragged;
+        public event Action DragEnded;
+        public event Action<ItemSlotReference> Dropped;
 
         public void Initialize(int slotIndex, float doubleClickThreshold)
         {
@@ -83,6 +95,33 @@ namespace RPGame.UI.Inventory
             }
 
             lastClickTime = currentTime;
+        }
+
+        public void OnBeginDrag(PointerEventData eventData)
+        {
+            if (eventData.button != PointerEventData.InputButton.Left
+                || currentItem == null
+                || currentItem.Definition == null)
+            {
+                return;
+            }
+
+            DragStarted?.Invoke(ItemSlotReference.Inventory(slotIndex), currentItem, eventData.position);
+        }
+
+        public void OnDrag(PointerEventData eventData)
+        {
+            Dragged?.Invoke(eventData.position);
+        }
+
+        public void OnEndDrag(PointerEventData eventData)
+        {
+            DragEnded?.Invoke();
+        }
+
+        public void OnDrop(PointerEventData eventData)
+        {
+            Dropped?.Invoke(ItemSlotReference.Inventory(slotIndex));
         }
 
         private static bool IsLeftPointerClick(PointerEventData eventData)

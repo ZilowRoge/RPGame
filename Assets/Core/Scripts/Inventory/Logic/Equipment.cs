@@ -50,6 +50,24 @@ namespace RPGame.Core.Inventory.Logic
             return true;
         }
 
+        public bool SetItem(EquipmentSlotType slotType, ItemInstance item)
+        {
+            EquipmentSlot slot = GetSlot(slotType);
+            if (slot == null)
+            {
+                return false;
+            }
+
+            if (item != null && !CanEquipToSlot(item, slotType))
+            {
+                return false;
+            }
+
+            slot.SetItem(item);
+            OnEquipmentChanged?.Invoke();
+            return true;
+        }
+
         public ItemInstance Unequip(EquipmentSlotType slotType)
         {
             EquipmentSlot slot = GetSlot(slotType);
@@ -70,6 +88,13 @@ namespace RPGame.Core.Inventory.Logic
                 && item.Definition.ItemType == ItemType.Equipment
                 && TryGetEquipmentSlotType(item, out EquipmentSlotType slotType)
                 && GetSlot(slotType) != null;
+        }
+
+        public bool CanEquipToSlot(ItemInstance item, EquipmentSlotType slotType)
+        {
+            return CanEquip(item)
+                && TryGetEquipmentSlotType(item, out EquipmentSlotType itemSlotType)
+                && itemSlotType == slotType;
         }
 
         public EquipmentSlot GetSlot(EquipmentSlotType slotType)

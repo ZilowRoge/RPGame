@@ -117,6 +117,52 @@ namespace RPGame.Core.Inventory.Logic
             return true;
         }
 
+        public bool SwapItems(int firstIndex, int secondIndex)
+        {
+            if (!IsValidIndex(firstIndex) || !IsValidIndex(secondIndex) || firstIndex == secondIndex)
+            {
+                return false;
+            }
+
+            InventorySlot firstSlot = slots[firstIndex];
+            InventorySlot secondSlot = slots[secondIndex];
+
+            if (!firstSlot.HasItem || !secondSlot.HasItem)
+            {
+                return false;
+            }
+
+            ItemInstance firstItem = firstSlot.Item;
+            firstSlot.SetItem(secondSlot.Item);
+            secondSlot.SetItem(firstItem);
+            OnInventoryChanged?.Invoke();
+            return true;
+        }
+
+        public bool SetItem(int index, ItemInstance item)
+        {
+            if (!IsValidIndex(index))
+            {
+                return false;
+            }
+
+            slots[index].SetItem(item);
+            OnInventoryChanged?.Invoke();
+            return true;
+        }
+
+        public bool ClearSlot(int index)
+        {
+            if (!IsValidIndex(index))
+            {
+                return false;
+            }
+
+            slots[index].Clear();
+            OnInventoryChanged?.Invoke();
+            return true;
+        }
+
         public bool CanAddItem(ItemInstance item, int amount = 1)
         {
             if (item == null || item.Definition == null || amount <= 0 || amount > item.StackSize)

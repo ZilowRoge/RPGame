@@ -50,6 +50,25 @@ namespace RPGame.Core.Tests
         }
 
         [Test]
+        public void EquipFromInventory_WhenEquipmentSlotIsOccupied_SwapsItems()
+        {
+            InventoryModel inventory = new InventoryModel(1);
+            Equipment equipment = new Equipment();
+            InventoryEquipmentService service = new InventoryEquipmentService(inventory, equipment);
+            ItemInstance inventoryItem = new ItemInstance(weaponDefinition);
+            ItemInstance equippedItem = new ItemInstance(weaponDefinition);
+
+            inventory.AddItem(inventoryItem);
+            equipment.SetItem(EquipmentSlotType.MainHand, equippedItem);
+
+            bool equipped = service.EquipFromInventory(0);
+
+            Assert.IsTrue(equipped);
+            Assert.AreSame(equippedItem, inventory.GetSlot(0).Item);
+            Assert.AreSame(inventoryItem, equipment.GetSlot(EquipmentSlotType.MainHand).Item);
+        }
+
+        [Test]
         public void EquipFromInventory_WhenItemDoesNotFit_DoesNotRemoveFromInventory()
         {
             InventoryModel inventory = new InventoryModel(2);
@@ -178,6 +197,88 @@ namespace RPGame.Core.Tests
             Assert.IsFalse(moved);
             Assert.AreSame(sourceStack, inventory.GetSlot(1).Item);
             Assert.AreEqual(5, inventory.GetSlot(0).Item.StackSize);
+        }
+
+        [Test]
+        public void MoveItem_WhenInventoryTargetIsOccupied_SwapsItems()
+        {
+            InventoryModel inventory = new InventoryModel(2);
+            Equipment equipment = new Equipment();
+            InventoryEquipmentService service = new InventoryEquipmentService(inventory, equipment);
+            ItemInstance firstItem = new ItemInstance(weaponDefinition);
+            ItemInstance secondItem = new ItemInstance(weaponDefinition);
+
+            inventory.GetSlot(0).SetItem(firstItem);
+            inventory.GetSlot(1).SetItem(secondItem);
+
+            bool moved = service.MoveItem(ItemSlotReference.Inventory(0), ItemSlotReference.Inventory(1));
+
+            Assert.IsTrue(moved);
+            Assert.AreSame(secondItem, inventory.GetSlot(0).Item);
+            Assert.AreSame(firstItem, inventory.GetSlot(1).Item);
+        }
+
+        [Test]
+        public void MoveItem_WhenInventoryItemIsDroppedOnOccupiedEquipment_SwapsItems()
+        {
+            InventoryModel inventory = new InventoryModel(1);
+            Equipment equipment = new Equipment();
+            InventoryEquipmentService service = new InventoryEquipmentService(inventory, equipment);
+            ItemInstance inventoryItem = new ItemInstance(weaponDefinition);
+            ItemInstance equippedItem = new ItemInstance(weaponDefinition);
+
+            inventory.GetSlot(0).SetItem(inventoryItem);
+            equipment.SetItem(EquipmentSlotType.MainHand, equippedItem);
+
+            bool moved = service.MoveItem(
+                ItemSlotReference.Inventory(0),
+                ItemSlotReference.Equipment(EquipmentSlotType.MainHand));
+
+            Assert.IsTrue(moved);
+            Assert.AreSame(equippedItem, inventory.GetSlot(0).Item);
+            Assert.AreSame(inventoryItem, equipment.GetSlot(EquipmentSlotType.MainHand).Item);
+        }
+
+        [Test]
+        public void MoveItem_WhenEquipmentItemIsDroppedOnOccupiedInventory_SwapsItems()
+        {
+            InventoryModel inventory = new InventoryModel(1);
+            Equipment equipment = new Equipment();
+            InventoryEquipmentService service = new InventoryEquipmentService(inventory, equipment);
+            ItemInstance inventoryItem = new ItemInstance(weaponDefinition);
+            ItemInstance equippedItem = new ItemInstance(weaponDefinition);
+
+            inventory.GetSlot(0).SetItem(inventoryItem);
+            equipment.SetItem(EquipmentSlotType.MainHand, equippedItem);
+
+            bool moved = service.MoveItem(
+                ItemSlotReference.Equipment(EquipmentSlotType.MainHand),
+                ItemSlotReference.Inventory(0));
+
+            Assert.IsTrue(moved);
+            Assert.AreSame(equippedItem, inventory.GetSlot(0).Item);
+            Assert.AreSame(inventoryItem, equipment.GetSlot(EquipmentSlotType.MainHand).Item);
+        }
+
+        [Test]
+        public void MoveItem_WhenOccupiedInventoryItemCannotEquipToSourceSlot_ReturnsFalse()
+        {
+            InventoryModel inventory = new InventoryModel(1);
+            Equipment equipment = new Equipment();
+            InventoryEquipmentService service = new InventoryEquipmentService(inventory, equipment);
+            ItemInstance inventoryItem = new ItemInstance(equipmentWithoutSlotDefinition);
+            ItemInstance equippedItem = new ItemInstance(weaponDefinition);
+
+            inventory.GetSlot(0).SetItem(inventoryItem);
+            equipment.SetItem(EquipmentSlotType.MainHand, equippedItem);
+
+            bool moved = service.MoveItem(
+                ItemSlotReference.Equipment(EquipmentSlotType.MainHand),
+                ItemSlotReference.Inventory(0));
+
+            Assert.IsFalse(moved);
+            Assert.AreSame(inventoryItem, inventory.GetSlot(0).Item);
+            Assert.AreSame(equippedItem, equipment.GetSlot(EquipmentSlotType.MainHand).Item);
         }
 
         private static ItemDefinition CreateItemDefinition(
