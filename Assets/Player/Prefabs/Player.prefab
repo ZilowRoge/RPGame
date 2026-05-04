@@ -149,10 +149,24 @@ MonoBehaviour:
       m_Flags: 0
     m_Reference: {fileID: 0}
   lookActionName: Look
+  alternativeUseAction:
+    m_UseReference: 0
+    m_Action:
+      m_Name: 
+      m_Type: 0
+      m_ExpectedControlType: 
+      m_Id: 97046a47-a43b-44ee-baed-616db890dc0b
+      m_Processors: 
+      m_Interactions: 
+      m_SingletonActionBindings: []
+      m_Flags: 0
+    m_Reference: {fileID: 0}
+  alternativeUseActionName: AlternativeUse
   mouseSensitivity: 0.12
   stickSensitivity: 120
   minPitch: -35
   maxPitch: 70
+  alternativeUseSensitivityMultiplier: 0.35
 --- !u!1 &5642669242772990465
 GameObject:
   m_ObjectHideFlags: 0
@@ -352,6 +366,37 @@ MonoBehaviour:
     m_VarianceClampScale: 0.9
     m_ContrastAdaptiveSharpening: 0
   m_Version: 2
+--- !u!1 &7841262714092640844
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 70242763662629742}
+  m_Layer: 0
+  m_Name: CastOrigin
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &70242763662629742
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7841262714092640844}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.8, y: 0, z: 0.72}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 3136456713520390550}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &8024470455656626075
 GameObject:
   m_ObjectHideFlags: 0
@@ -366,6 +411,10 @@ GameObject:
   - component: {fileID: 780946161448724005}
   - component: {fileID: 8541911369478375139}
   - component: {fileID: 6403399481275357045}
+  - component: {fileID: 4581996241443596218}
+  - component: {fileID: 8903237724910096467}
+  - component: {fileID: 1416622787065215315}
+  - component: {fileID: 6738148486840793266}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -389,6 +438,7 @@ Transform:
   - {fileID: 2076565859437898434}
   - {fileID: 6623092092692575068}
   - {fileID: 8895899010277896616}
+  - {fileID: 70242763662629742}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!143 &7798429564494110509
@@ -461,6 +511,7 @@ MonoBehaviour:
   characterController: {fileID: 7798429564494110509}
   cameraTransform: {fileID: 8895899010277896616}
   playerInput: {fileID: 7061440437411484178}
+  statisticsController: {fileID: 8541911369478375139}
   moveAction:
     m_UseReference: 0
     m_Action:
@@ -508,7 +559,11 @@ MonoBehaviour:
   rotateWithCamera: 1
   sprintForwardThreshold: 0.1
   sprintSidewaysMultiplier: 0.35
+  sprintStaminaCostPerSecond: 20
+  sprintMinimumStaminaToStart: 10
+  sprintStartStaminaCost: 5
   jumpHeight: 1.5
+  jumpStaminaCost: 10
   gravity: -20
   groundedVerticalVelocity: -2
   coyoteTime: 0.12
@@ -542,3 +597,90 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: RPGame.Combat::RPGame.Combat.Damage.DamageReceiver
   statisticsController: {fileID: 8541911369478375139}
+--- !u!114 &4581996241443596218
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8024470455656626075}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f11bc2df38d04c2aab4f77c5a3852598, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: RPGame.Core::RPGame.Core.Interaction.Interactor
+  interactionOrigin: {fileID: 3136456713520390550}
+  playerInput: {fileID: 7061440437411484178}
+  interactAction:
+    m_UseReference: 0
+    m_Action:
+      m_Name: Interact
+      m_Type: 0
+      m_ExpectedControlType: 
+      m_Id: 390da0ea-8e86-4350-ae72-108e78d30a60
+      m_Processors: 
+      m_Interactions: 
+      m_SingletonActionBindings: []
+      m_Flags: 0
+    m_Reference: {fileID: 0}
+  interactActionName: Interact
+  minimumForwardDot: 0.25
+  forwardWeight: 2
+  distanceWeight: 1
+--- !u!114 &8903237724910096467
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8024470455656626075}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b3f3a567dc32471c9170f14db4071f4a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: RPGame.Combat::RPGame.Combat.Spells.SpellCaster
+  currentSpell: {fileID: 0}
+  castOrigin: {fileID: 70242763662629742}
+  target: {fileID: 0}
+  casterObject: {fileID: 8024470455656626075}
+  castOnLeftMouseButton: 0
+--- !u!114 &1416622787065215315
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8024470455656626075}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 154ea095009a488d83accb17de8cad1f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: RPGame.Combat::RPGame.Combat.Spells.SpellSymbolCaster
+  spellCaster: {fileID: 8903237724910096467}
+  spellsBySymbol:
+  - symbolId: 9
+    spell: {fileID: 11400000, guid: 09cb0f84a3d64db4aaada786edbc000a, type: 2}
+--- !u!114 &6738148486840793266
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8024470455656626075}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ec778541c80bb824288fb388840dc088, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: RPGame.Core::RPGame.Core.Inventory.ItemManagmentController
+  inventorySize: 20
+  startingItems:
+  - {fileID: 11400000, guid: 79331882a27426b4da0f8cbea5bbde46, type: 2}
+  inventory:
+    slots: []
+  equipment:
+    slots:
+    - slotType: 0
+      item:
+        definition: {fileID: 0}
+        instanceId: 
+        stackSize: 0

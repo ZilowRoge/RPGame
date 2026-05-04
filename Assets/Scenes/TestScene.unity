@@ -2335,120 +2335,45 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 8541911369478375139, guid: db388f493d4197a42b9bf51d3fb801a9, type: 3}
   m_PrefabInstance: {fileID: 1536372347364793585}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 984627869}
+  m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8a228d74ae0d45788e3d884cac2b0c3d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: RPGame.Core::RPGame.Core.Statistics.StatisticsController
---- !u!1 &984627869 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 8024470455656626075, guid: db388f493d4197a42b9bf51d3fb801a9, type: 3}
-  m_PrefabInstance: {fileID: 1536372347364793585}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &984627871 stripped
+--- !u!114 &984627874 stripped
 MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 7061440437411484178, guid: db388f493d4197a42b9bf51d3fb801a9, type: 3}
+  m_CorrespondingSourceObject: {fileID: 4581996241443596218, guid: db388f493d4197a42b9bf51d3fb801a9, type: 3}
   m_PrefabInstance: {fileID: 1536372347364793585}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 984627869}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 62899f850307741f2a39c98a8b639597, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.InputSystem::UnityEngine.InputSystem.PlayerInput
---- !u!4 &984627873 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 3136456713520390550, guid: db388f493d4197a42b9bf51d3fb801a9, type: 3}
-  m_PrefabInstance: {fileID: 1536372347364793585}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &984627874
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 984627869}
+  m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f11bc2df38d04c2aab4f77c5a3852598, type: 3}
   m_Name: 
   m_EditorClassIdentifier: RPGame.Core::RPGame.Core.Interaction.Interactor
-  interactionOrigin: {fileID: 984627873}
-  playerInput: {fileID: 984627871}
-  interactAction:
-    m_UseReference: 0
-    m_Action:
-      m_Name: Interact
-      m_Type: 0
-      m_ExpectedControlType: 
-      m_Id: 390da0ea-8e86-4350-ae72-108e78d30a60
-      m_Processors: 
-      m_Interactions: 
-      m_SingletonActionBindings: []
-      m_Flags: 0
-    m_Reference: {fileID: 0}
-  interactActionName: Interact
-  minimumForwardDot: 0.25
-  forwardWeight: 2
-  distanceWeight: 1
---- !u!114 &984627875
+--- !u!114 &984627878 stripped
 MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
+  m_CorrespondingSourceObject: {fileID: 1416622787065215315, guid: db388f493d4197a42b9bf51d3fb801a9, type: 3}
+  m_PrefabInstance: {fileID: 1536372347364793585}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 984627869}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: b3f3a567dc32471c9170f14db4071f4a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: RPGame.Combat::RPGame.Combat.Spells.SpellCaster
-  currentSpell: {fileID: 0}
-  castOrigin: {fileID: 2060851402}
-  target: {fileID: 83546019}
-  casterObject: {fileID: 984627869}
-  castOnLeftMouseButton: 0
---- !u!114 &984627878
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 984627869}
+  m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 154ea095009a488d83accb17de8cad1f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: RPGame.Combat::RPGame.Combat.Spells.SpellSymbolCaster
-  spellCaster: {fileID: 984627875}
-  spellsBySymbol:
-  - symbolId: 9
-    spell: {fileID: 11400000, guid: 09cb0f84a3d64db4aaada786edbc000a, type: 2}
---- !u!114 &984627882
+--- !u!114 &984627882 stripped
 MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
+  m_CorrespondingSourceObject: {fileID: 6738148486840793266, guid: db388f493d4197a42b9bf51d3fb801a9, type: 3}
+  m_PrefabInstance: {fileID: 1536372347364793585}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 984627869}
+  m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ec778541c80bb824288fb388840dc088, type: 3}
   m_Name: 
   m_EditorClassIdentifier: RPGame.Core::RPGame.Core.Inventory.ItemManagmentController
-  inventorySize: 20
-  startingItems:
-  - {fileID: 11400000, guid: 79331882a27426b4da0f8cbea5bbde46, type: 2}
-  inventory:
-    slots: []
-  equipment:
-    slots:
-    - slotType: 0
-      item:
-        definition: {fileID: 0}
-        instanceId: 
-        stackSize: 0
 --- !u!1 &1018623681
 GameObject:
   m_ObjectHideFlags: 0
@@ -3914,37 +3839,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2018762767}
   m_CullTransparentMesh: 1
---- !u!1 &2060851401
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 2060851402}
-  m_Layer: 0
-  m_Name: CastOrigin
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &2060851402
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2060851401}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.8, y: 0, z: 0.72}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 984627873}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &2076277543
 GameObject:
   m_ObjectHideFlags: 0
@@ -4327,25 +4221,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: Player
       objectReference: {fileID: 0}
+    - target: {fileID: 8903237724910096467, guid: db388f493d4197a42b9bf51d3fb801a9, type: 3}
+      propertyPath: target
+      value: 
+      objectReference: {fileID: 83546019}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects:
-    - targetCorrespondingSourceObject: {fileID: 3136456713520390550, guid: db388f493d4197a42b9bf51d3fb801a9, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 2060851402}
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 8024470455656626075, guid: db388f493d4197a42b9bf51d3fb801a9, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 984627874}
-    - targetCorrespondingSourceObject: {fileID: 8024470455656626075, guid: db388f493d4197a42b9bf51d3fb801a9, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 984627875}
-    - targetCorrespondingSourceObject: {fileID: 8024470455656626075, guid: db388f493d4197a42b9bf51d3fb801a9, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 984627878}
-    - targetCorrespondingSourceObject: {fileID: 8024470455656626075, guid: db388f493d4197a42b9bf51d3fb801a9, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 984627882}
+    m_AddedGameObjects: []
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: db388f493d4197a42b9bf51d3fb801a9, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
