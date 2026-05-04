@@ -1,0 +1,92 @@
+using System.Collections.Generic;
+using RPGame.Core.Inventory;
+using RPGame.Core.Inventory.Data;
+using RPGame.Core.Inventory.Logic;
+using UnityEngine;
+
+namespace RPGame.UI.Inventory
+{
+    public sealed class EquipmentUI : MonoBehaviour
+    {
+        [SerializeField] private ItemManagementController controller;
+        [SerializeField] private EquipmentSlotUI slotPrefab;
+        [SerializeField] private Transform slotsRoot;
+        [SerializeField] private float doubleClickThreshold = 0.3f;
+
+        private readonly List<EquipmentSlotUI> slots = new();
+
+        private void OnEnable()
+        {
+            if (controller == null)
+            {
+                return;
+            }
+
+            controller.OnEquipmentChanged += Refresh;
+            RebuildSlotsIfNeeded();
+            Refresh();
+        }
+
+        private void OnDisable()
+        {
+            if (controller != null)
+            {
+                controller.OnEquipmentChanged -= Refresh;
+            }
+        }
+
+        private void RebuildSlotsIfNeeded()
+        {
+            if (slotPrefab == null || slotsRoot == null || controller.Equipment == null || slots.Count == controller.Equipment.Slots.Count)
+            {
+                return;
+            }
+
+            ClearSlots();
+
+            foreach (EquipmentSlot equipmentSlot in controller.Equipment.Slots)
+            {
+                EquipmentSlotUI slot = Instantiate(slotPrefab, slotsRoot);
+                slot.Initialize(equipmentSlot.SlotType, doubleClickThreshold);
+                slot.DoubleClicked += HandleSlotDoubleClicked;
+                slots.Add(slot);
+            }
+        }
+
+        private void Refresh()
+        {
+            if (controller == null || controller.Equipment == null)
+            {
+                return;
+            }
+
+            RebuildSlotsIfNeeded();
+
+            for (int i = 0; i < slots.Count; i++)
+            {
+                EquipmentSlot equipmentSlot = controller.Equipment.GetSlot(slots[i].SlotType);
+                slots[i].SetItem(equipmentSlot?.Item);
+            }
+        }
+
+        private void HandleSlotDoubleClicked(EquipmentSlotType slotType)
+        {
+            bool unequipped = controller.UnequipToInventory(slotType);
+            Debug.Log($"Unequip from equipment slot {slotType}: {unequipped}", this);
+        }
+
+        private void ClearSlots()
+        {
+            for (int i = 0; i < slots.Count; i++)
+            {
+                if (slots[i] != null)
+                {
+                    slots[i].DoubleClicked -= HandleSlotDoubleClicked;
+                    Destroy(slots[i].gameObject);
+                }
+            }
+
+            slots.Clear();
+        }
+    }
+}
