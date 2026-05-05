@@ -1,0 +1,47 @@
+using RPGame.Core.Progression;
+using UnityEngine;
+
+namespace RPGame.Progression
+{
+    public sealed class CharacterProgression : MonoBehaviour, IExperienceReceiver
+    {
+        [SerializeField] private int availableXP;
+
+        private readonly JobContainer jobContainer = new();
+        private JobProgression jobs;
+
+        public JobContainer JobContainer => jobContainer;
+        public JobProgression Jobs => GetJobs();
+
+        public void AddExperience(int amount)
+        {
+            if (amount <= 0)
+            {
+                return;
+            }
+
+            availableXP = amount > int.MaxValue - availableXP ? int.MaxValue : availableXP + amount;
+        }
+
+        public int GetAvailableXP()
+        {
+            return availableXP;
+        }
+
+        private void OnValidate()
+        {
+            availableXP = Mathf.Max(0, availableXP);
+        }
+
+        private JobProgression GetJobs()
+        {
+            jobs ??= new JobProgression(jobContainer, GetAvailableXP, SpendExperience);
+            return jobs;
+        }
+
+        private void SpendExperience(int amount)
+        {
+            availableXP = Mathf.Max(0, availableXP - amount);
+        }
+    }
+}
