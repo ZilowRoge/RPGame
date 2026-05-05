@@ -281,6 +281,16 @@ namespace RPGame.Core.Tests
             Assert.AreSame(equippedItem, equipment.GetSlot(EquipmentSlotType.MainHand).Item);
         }
 
+        [Test]
+        public void ItemWeaponData_ReturnsDamageRangeInTooltip()
+        {
+            SetWeaponDamage(weaponData, 2f, 5f);
+
+            Assert.AreEqual(2f, weaponData.MinDamage);
+            Assert.AreEqual(5f, weaponData.MaxDamage);
+            Assert.AreEqual("Weapon\nDamage: 2-5", weaponData.GetTooltip());
+        }
+
         private static ItemDefinition CreateItemDefinition(
             string id,
             string itemName,
@@ -303,6 +313,14 @@ namespace RPGame.Core.Tests
 
             serializedDefinition.ApplyModifiedPropertiesWithoutUndo();
             return itemDefinition;
+        }
+
+        private static void SetWeaponDamage(ItemWeaponData itemWeaponData, float minDamage, float maxDamage)
+        {
+            SerializedObject serializedWeaponData = new SerializedObject(itemWeaponData);
+            serializedWeaponData.FindProperty("minDamage").floatValue = minDamage;
+            serializedWeaponData.FindProperty("maxDamage").floatValue = maxDamage;
+            serializedWeaponData.ApplyModifiedPropertiesWithoutUndo();
         }
     }
 }

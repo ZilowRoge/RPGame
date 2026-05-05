@@ -12,3 +12,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1e44dc55e4e4a6e4b9a59c4bfbf94d92, type: 3}
   m_Name: WeaponData
   m_EditorClassIdentifier: RPGame.Core::RPGame.Core.Inventory.Data.ItemWeaponData
+  minDamage: 2
+  maxDamage: 5
