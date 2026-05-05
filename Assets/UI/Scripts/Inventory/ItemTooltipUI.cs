@@ -1,6 +1,6 @@
 using System.Text;
-using RPGame.Core.Inventory.Data;
-using RPGame.Core.Inventory.Logic;
+using RPGame.Inventory.Data;
+using RPGame.Inventory.Logic;
 using TMPro;
 using UnityEngine;
 

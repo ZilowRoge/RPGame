@@ -1,5 +1,5 @@
 using System;
-using RPGame.Core.Inventory.Logic;
+using RPGame.Inventory.Logic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;

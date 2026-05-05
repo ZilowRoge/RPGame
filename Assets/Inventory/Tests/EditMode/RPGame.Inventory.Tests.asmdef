@@ -1,0 +1,21 @@
+{
+    "name": "RPGame.Inventory.Tests",
+    "rootNamespace": "RPGame.Inventory.Tests",
+    "references": [
+        "RPGame.Inventory"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false,
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ]
+}

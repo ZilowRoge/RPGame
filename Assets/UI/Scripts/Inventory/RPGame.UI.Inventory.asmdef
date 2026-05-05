@@ -1,0 +1,19 @@
+{
+    "name": "RPGame.UI.Inventory",
+    "rootNamespace": "RPGame.UI.Inventory",
+    "references": [
+        "RPGame.Inventory",
+        "Unity.TextMeshPro",
+        "Unity.ugui",
+        "Unity.InputSystem"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

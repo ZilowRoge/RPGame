@@ -671,7 +671,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ec778541c80bb824288fb388840dc088, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: RPGame.Core::RPGame.Core.Inventory.ItemManagmentController
+  m_EditorClassIdentifier: RPGame.Inventory::RPGame.Inventory.ItemManagementController
   inventorySize: 20
   startingItems:
   - {fileID: 11400000, guid: 79331882a27426b4da0f8cbea5bbde46, type: 2}

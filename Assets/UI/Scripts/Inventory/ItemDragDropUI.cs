@@ -1,5 +1,5 @@
-using RPGame.Core.Inventory;
-using RPGame.Core.Inventory.Logic;
+using RPGame.Inventory;
+using RPGame.Inventory.Logic;
 using UnityEngine;
 using UnityEngine.UI;
 
