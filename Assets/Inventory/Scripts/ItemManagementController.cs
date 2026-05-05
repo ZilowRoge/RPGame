@@ -92,6 +92,12 @@ namespace RPGame.Inventory
             return service.MoveItem(from, to);
         }
 
+        public ItemInstance GetEquippedItem(EquipmentSlotType slotType)
+        {
+            EnsureInitialized();
+            return equipment.GetSlot(slotType)?.Item;
+        }
+
         private void EnsureInitialized()
         {
             if (initialized)

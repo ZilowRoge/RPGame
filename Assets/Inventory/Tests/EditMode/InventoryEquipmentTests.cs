@@ -1,6 +1,9 @@
+using System.Collections.Generic;
 using NUnit.Framework;
+using RPGame.Core.Damage;
 using RPGame.Inventory.Data;
 using RPGame.Inventory.Logic;
+using RPGame.Inventory.Providers;
 using UnityEditor;
 using UnityEngine;
 using InventoryModel = RPGame.Inventory.Logic.Inventory;
@@ -284,11 +287,43 @@ namespace RPGame.Inventory.Tests
         [Test]
         public void ItemWeaponData_ReturnsDamageRangeInTooltip()
         {
-            SetWeaponDamage(weaponData, 2f, 5f);
+            SetWeaponDamage(
+                weaponData,
+                new PartialDamageRange(2f, 5f, DamageType.Magical, DamageElement.Fire));
 
-            Assert.AreEqual(2f, weaponData.MinDamage);
-            Assert.AreEqual(5f, weaponData.MaxDamage);
-            Assert.AreEqual("Weapon\nDamage: 2-5", weaponData.GetTooltip());
+            Assert.AreEqual(1, weaponData.Damage.Count);
+            Assert.AreEqual(2f, weaponData.Damage[0].MinDamage);
+            Assert.AreEqual(5f, weaponData.Damage[0].MaxDamage);
+            Assert.AreEqual(DamageType.Magical, weaponData.Damage[0].DamageType);
+            Assert.AreEqual(DamageElement.Fire, weaponData.Damage[0].DamageElement);
+            Assert.AreEqual("Weapon\nDamage: 2-5 Magical Fire", weaponData.GetTooltip());
+        }
+
+        [Test]
+        public void EquipmentCombatStatsProvider_RollDamage_ReturnsDamageFromEquippedWeapon()
+        {
+            SetWeaponDamage(
+                weaponData,
+                new PartialDamageRange(2f, 2f, DamageType.Magical, DamageElement.None));
+
+            GameObject gameObject = new GameObject("EquipmentCombatStatsProviderTests");
+            try
+            {
+                ItemManagementController controller = gameObject.AddComponent<ItemManagementController>();
+                EquipmentCombatStatsProvider provider = gameObject.AddComponent<EquipmentCombatStatsProvider>();
+                controller.Equipment.SetItem(EquipmentSlotType.MainHand, new ItemInstance(weaponDefinition));
+
+                IReadOnlyList<PartialDamage> damage = provider.RollDamage();
+
+                Assert.AreEqual(1, damage.Count);
+                Assert.AreEqual(2f, damage[0].Amount);
+                Assert.AreEqual(DamageType.Magical, damage[0].DamageType);
+                Assert.AreEqual(DamageElement.None, damage[0].DamageElement);
+            }
+            finally
+            {
+                Object.DestroyImmediate(gameObject);
+            }
         }
 
         private static ItemDefinition CreateItemDefinition(
@@ -315,11 +350,22 @@ namespace RPGame.Inventory.Tests
             return itemDefinition;
         }
 
-        private static void SetWeaponDamage(ItemWeaponData itemWeaponData, float minDamage, float maxDamage)
+        private static void SetWeaponDamage(ItemWeaponData itemWeaponData, params PartialDamageRange[] damageRanges)
         {
             SerializedObject serializedWeaponData = new SerializedObject(itemWeaponData);
-            serializedWeaponData.FindProperty("minDamage").floatValue = minDamage;
-            serializedWeaponData.FindProperty("maxDamage").floatValue = maxDamage;
+            SerializedProperty damage = serializedWeaponData.FindProperty("damage");
+            damage.arraySize = damageRanges.Length;
+
+            for (int i = 0; i < damageRanges.Length; i++)
+            {
+                PartialDamageRange damageRange = damageRanges[i];
+                SerializedProperty element = damage.GetArrayElementAtIndex(i);
+                element.FindPropertyRelative("minDamage").floatValue = damageRange.MinDamage;
+                element.FindPropertyRelative("maxDamage").floatValue = damageRange.MaxDamage;
+                element.FindPropertyRelative("damageType").enumValueIndex = (int)damageRange.DamageType;
+                element.FindPropertyRelative("damageElement").enumValueIndex = (int)damageRange.DamageElement;
+            }
+
             serializedWeaponData.ApplyModifiedPropertiesWithoutUndo();
         }
     }

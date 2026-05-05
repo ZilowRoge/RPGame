@@ -1,4 +1,8 @@
+using System;
+using System.Collections.Generic;
+using RPGame.Core.Damage;
 using RPGame.Core.Spells;
+using RPGame.Core.Statistics.CombatStats;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -10,12 +14,14 @@ namespace RPGame.Combat.Spells
         [SerializeField] private Transform castOrigin;
         [SerializeField] private Transform target;
         [SerializeField] private GameObject casterObject;
+        [SerializeField] private CombatStatsProvider combatStatsProvider;
         [SerializeField] private bool castOnLeftMouseButton = true;
 
         public Spell CurrentSpell => currentSpell;
         public Transform CastOrigin => castOrigin;
         public Transform Target => target;
         public GameObject CasterObject => casterObject != null ? casterObject : gameObject;
+        public CombatStatsProvider CombatStatsProvider => ResolveCombatStatsProvider();
 
         private void Awake()
         {
@@ -96,13 +102,35 @@ namespace RPGame.Combat.Spells
                 return false;
             }
 
-            currentSpell.OnCast(CreateCasterData());
+            currentSpell.OnCast(CreateCasterData(true));
             return true;
         }
 
-        public CasterData CreateCasterData()
+        public CasterData CreateCasterData(bool addDamage = false)
         {
-            return new CasterData(CasterObject, castOrigin, target);
+            CasterDataBuilder builder = new CasterDataBuilder(CasterObject, castOrigin, target);
+            if (addDamage)
+            {
+                builder.WithDamage(RollDamage());
+            }
+
+            return builder.Build();
+        }
+
+        private IReadOnlyList<PartialDamage> RollDamage()
+        {
+            CombatStatsProvider provider = ResolveCombatStatsProvider();
+            return provider != null ? provider.RollDamage() : Array.Empty<PartialDamage>();
+        }
+
+        private CombatStatsProvider ResolveCombatStatsProvider()
+        {
+            if (combatStatsProvider == null)
+            {
+                combatStatsProvider = GetComponentInParent<CombatStatsProvider>();
+            }
+
+            return combatStatsProvider;
         }
     }
 }

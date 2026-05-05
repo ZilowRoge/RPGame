@@ -2,6 +2,7 @@
     "name": "RPGame.Inventory.Tests",
     "rootNamespace": "RPGame.Inventory.Tests",
     "references": [
+        "RPGame.Core",
         "RPGame.Inventory"
     ],
     "includePlatforms": [

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using RPGame.Core.Damage;
 using RPGame.Core.Spells;
 using UnityEngine;
@@ -8,7 +9,10 @@ namespace RPGame.Combat.Projectiles
     {
         [SerializeField] private float speed = 10f;
         [SerializeField] private float acceleration;
-        [SerializeField] private float damage = 10f;
+        [SerializeField] private List<PartialDamageRange> damage = new()
+        {
+            new PartialDamageRange(10f, 10f, DamageType.Magical, DamageElement.None)
+        };
         [SerializeField] private float maxLifetime = 5f;
         [SerializeField] private LayerMask hitLayers = ~0;
         [SerializeField] private QueryTriggerInteraction triggerInteraction = QueryTriggerInteraction.Collide;
@@ -23,7 +27,7 @@ namespace RPGame.Combat.Projectiles
 
         public CasterData CasterData { get; private set; }
         public float CurrentSpeed => currentSpeed;
-        public float Damage => damage;
+        public IReadOnlyList<PartialDamageRange> Damage => damage;
         public bool IsInitialized { get; private set; }
 
         public void Initialize(CasterData casterData)
@@ -143,7 +147,30 @@ namespace RPGame.Combat.Projectiles
 
             if (TryGetDamageable(hitCollider, out IDamageable damageable))
             {
-                damageable.ApplyDamage(new DamageData(damage, CasterData.CasterObject));
+                List<PartialDamage> damageParts = new();
+                for (int i = 0; i < damage.Count; i++)
+                {
+                    PartialDamageRange damageRange = damage[i];
+                    int minDamage = Mathf.CeilToInt(damageRange.MinDamage);
+                    int maxDamage = Mathf.Max(minDamage, Mathf.FloorToInt(damageRange.MaxDamage));
+                    float amount = Random.Range(minDamage, maxDamage + 1);
+
+                    damageParts.Add(new PartialDamage(
+                        amount,
+                        damageRange.DamageType,
+                        damageRange.DamageElement));
+                }
+
+                IReadOnlyList<PartialDamage> casterDamage = CasterData.Damage;
+                if (casterDamage != null)
+                {
+                    for (int i = 0; i < casterDamage.Count; i++)
+                    {
+                        damageParts.Add(casterDamage[i]);
+                    }
+                }
+
+                damageable.ApplyDamage(new DamageData(damageParts, CasterData.CasterObject));
             }
 
             if (destroyOnHit)
@@ -173,7 +200,6 @@ namespace RPGame.Combat.Projectiles
         private void OnValidate()
         {
             speed = Mathf.Max(0f, speed);
-            damage = Mathf.Max(0f, damage);
             maxLifetime = Mathf.Max(0.01f, maxLifetime);
             hitRadius = Mathf.Max(0.001f, hitRadius);
         }

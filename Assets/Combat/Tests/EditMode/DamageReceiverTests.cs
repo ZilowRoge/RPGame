@@ -87,7 +87,7 @@ namespace RPGame.Combat.Tests
 
             try
             {
-                DamageResult result = damageReceiver.ApplyDamage(new DamageData(10f, source));
+                DamageResult result = damageReceiver.ApplyDamage(CreateData(10f, source));
 
                 Assert.AreSame(source, result.Data.Source);
             }
@@ -119,9 +119,14 @@ namespace RPGame.Combat.Tests
             Assert.AreEqual(0, receivedCount);
         }
 
-        private static DamageData CreateData(float amount)
+        private static DamageData CreateData(float amount, GameObject source = null)
         {
-            return new DamageData(amount);
+            PartialDamage[] damage =
+            {
+                new PartialDamage(amount, DamageType.Physical, DamageElement.None)
+            };
+
+            return new DamageData(damage, source);
         }
 
         private static StatisticsConfig CreateConfig(float maxHealth)

@@ -15,6 +15,7 @@
 - Do not introduce new packages without checking whether an existing Unity/package API already covers the need.
 - Treat serialized Unity files (`.unity`, `.prefab`, `.asset`, `.mat`, `.controller`, `.inputactions`) carefully; avoid manual edits unless the format and intent are clear.
 - Do not use MonoBehavior as field type in classes instad make abstract class that inherits from MonoBehaviour
+- Do not implement methods and fields that are not used.
 
 ## Code Style
 - Use C# with Unity conventions: `PascalCase` for types/properties/methods, `camelCase` for locals/parameters, and serialized private fields as `[SerializeField] private Type fieldName;`.

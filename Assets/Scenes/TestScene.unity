@@ -328,6 +328,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: RPGame.Combat::RPGame.Combat.Damage.DamageReceiver
   statisticsController: {fileID: 83546017}
+  loggingEnabled: 0
 --- !u!4 &83546019
 Transform:
   m_ObjectHideFlags: 0
