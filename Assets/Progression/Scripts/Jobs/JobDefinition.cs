@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace RPGame.Progression
@@ -13,6 +14,7 @@ namespace RPGame.Progression
         [SerializeField] private int maxLevel = 10;
         [SerializeField] private int baseXP = 100;
         [SerializeField] private float xpGrowthRate = 1.5f;
+        [SerializeField] private List<PerkDefinition> jobPerks = new();
 
         public string JobId => jobId;
         public string DisplayName => displayName;
@@ -21,6 +23,7 @@ namespace RPGame.Progression
         public int MaxLevel => maxLevel;
         public int BaseXP => baseXP;
         public float XPGrowthRate => xpGrowthRate;
+        public IReadOnlyList<PerkDefinition> JobPerks => jobPerks;
 
         public int GetRequiredExperience(int level)
         {

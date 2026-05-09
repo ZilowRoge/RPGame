@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace RPGame.Progression
@@ -14,6 +15,7 @@ namespace RPGame.Progression
         [SerializeField] private int currentXP;
         [SerializeField] private int totalInvestedXP;
         [SerializeField] private int jobPoints;
+        [SerializeField] private List<string> unlockedPerkIds = new();
 
         private readonly Action<JobInstance> onAdvanced;
 
@@ -55,6 +57,7 @@ namespace RPGame.Progression
         public int CurrentXP => currentXP;
         public int TotalInvestedXP => totalInvestedXP;
         public int JobPoints => jobPoints;
+        public IReadOnlyCollection<string> UnlockedPerkIds => GetUnlockedPerkIds();
         public bool IsMaxLevel => currentLevel >= definition.MaxLevel;
 
         public int AddExperience(int amount)
@@ -114,6 +117,34 @@ namespace RPGame.Progression
                 jobPoints = AddClamped(jobPoints, 1);
                 onAdvanced?.Invoke(this);
             }
+        }
+
+        internal bool SpendJobPoints(int amount)
+        {
+            if (amount <= 0 || jobPoints < amount)
+            {
+                return false;
+            }
+
+            jobPoints -= amount;
+            return true;
+        }
+
+        internal void UnlockPerk(string perkId)
+        {
+            List<string> perkIds = GetUnlockedPerkIds();
+            if (string.IsNullOrWhiteSpace(perkId) || perkIds.Contains(perkId))
+            {
+                return;
+            }
+
+            perkIds.Add(perkId);
+        }
+
+        private List<string> GetUnlockedPerkIds()
+        {
+            unlockedPerkIds ??= new List<string>();
+            return unlockedPerkIds;
         }
 
         private static int AddClamped(int currentValue, int amount)

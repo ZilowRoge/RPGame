@@ -10,6 +10,7 @@ namespace RPGame.Progression
         [SerializeField] private int availableXP;
 
         private readonly JobContainer jobContainer = new();
+        private readonly PerkProgression perks = new();
         private JobProgression jobs;
 
         public JobContainer JobContainer => jobContainer;
@@ -39,6 +40,16 @@ namespace RPGame.Progression
         public int GetAvailableXP()
         {
             return availableXP;
+        }
+
+        public PerkUnlockState GetPerkUnlockState(JobInstance job, PerkDefinition perk)
+        {
+            return perks.GetUnlockState(job, perk);
+        }
+
+        public bool TryUnlockPerk(JobInstance job, PerkDefinition perk)
+        {
+            return perks.TryUnlockPerk(job, perk);
         }
 
         private void OnValidate()

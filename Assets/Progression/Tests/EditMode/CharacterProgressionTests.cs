@@ -166,6 +166,23 @@ namespace RPGame.Progression.Tests
             Assert.AreEqual(200, progression.GetAvailableXP());
         }
 
+        [Test]
+        public void TryUnlockPerk_WhenPerkIsAvailable_StoresUnlockedPerkOnJob()
+        {
+            PerkDefinition perk = CreatePerkDefinition("ArcaneStart", isStartingPerk: true);
+            AddPerksToJobDefinition(wizardDefinition, perk);
+            progression.Jobs.UnlockJob(wizardDefinition);
+            JobInstance job = progression.Jobs.GetJob(WizardJobId);
+            job.AddExperience(job.GetXPToNextLevel());
+
+            bool unlocked = progression.TryUnlockPerk(job, perk);
+
+            Assert.IsTrue(unlocked);
+            CollectionAssert.Contains(job.UnlockedPerkIds, perk.PerkId);
+            Assert.AreEqual(0, job.JobPoints);
+            Object.DestroyImmediate(perk);
+        }
+
         private static JobDefinition CreateJobDefinition(string jobId, int maxLevel, int baseXP, float xpGrowthRate)
         {
             JobDefinition definition = ScriptableObject.CreateInstance<JobDefinition>();
@@ -179,6 +196,33 @@ namespace RPGame.Progression.Tests
             serializedDefinition.FindProperty("xpGrowthRate").floatValue = xpGrowthRate;
             serializedDefinition.ApplyModifiedPropertiesWithoutUndo();
             return definition;
+        }
+
+        private static PerkDefinition CreatePerkDefinition(string perkId, bool isStartingPerk)
+        {
+            PerkDefinition definition = ScriptableObject.CreateInstance<PerkDefinition>();
+            SerializedObject serializedDefinition = new SerializedObject(definition);
+            serializedDefinition.FindProperty("perkId").stringValue = perkId;
+            serializedDefinition.FindProperty("displayName").stringValue = perkId;
+            serializedDefinition.FindProperty("description").stringValue = "Test perk";
+            serializedDefinition.FindProperty("cost").intValue = 1;
+            serializedDefinition.FindProperty("isStartingPerk").boolValue = isStartingPerk;
+            serializedDefinition.ApplyModifiedPropertiesWithoutUndo();
+            return definition;
+        }
+
+        private static void AddPerksToJobDefinition(JobDefinition definition, params PerkDefinition[] perks)
+        {
+            SerializedObject serializedDefinition = new SerializedObject(definition);
+            SerializedProperty jobPerks = serializedDefinition.FindProperty("jobPerks");
+            jobPerks.arraySize = perks.Length;
+
+            for (int i = 0; i < perks.Length; i++)
+            {
+                jobPerks.GetArrayElementAtIndex(i).objectReferenceValue = perks[i];
+            }
+
+            serializedDefinition.ApplyModifiedPropertiesWithoutUndo();
         }
     }
 }
