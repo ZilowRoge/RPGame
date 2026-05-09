@@ -10,12 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c02a44f64e514f3fb2aa6f115c362cf5, type: 3}
-  m_Name: Wizard
-  m_EditorClassIdentifier: 
-  jobId: Wizard
-  displayName: Wizard
-  description: Basic arcane job prepared for future spell and perk progression.
+  m_Name: Warrior
+  m_EditorClassIdentifier: RPGame.Progression::RPGame.Progression.JobDefinition
+  jobId: Warrior
+  displayName: Warrior
+  description: 
   tier: 0
   maxLevel: 20
   baseXP: 100
-  xpGrowthRate: 1.5
+  xpGrowthRate: 1.25

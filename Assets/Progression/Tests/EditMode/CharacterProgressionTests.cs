@@ -117,6 +117,28 @@ namespace RPGame.Progression.Tests
         }
 
         [Test]
+        public void AddXPToJob_WhenThresholdIsReached_AddsJobPoint()
+        {
+            progression.AddExperience(500);
+            progression.Jobs.UnlockJob(wizardDefinition);
+
+            progression.Jobs.AddXPToJob(WizardJobId, 100);
+
+            Assert.AreEqual(1, progression.Jobs.GetJob(WizardJobId).JobPoints);
+        }
+
+        [Test]
+        public void AddXPToJob_WhenMultipleThresholdsAreReached_AddsJobPointPerLevel()
+        {
+            progression.AddExperience(500);
+            progression.Jobs.UnlockJob(wizardDefinition);
+
+            progression.Jobs.AddXPToJob(WizardJobId, 300);
+
+            Assert.AreEqual(2, progression.Jobs.GetJob(WizardJobId).JobPoints);
+        }
+
+        [Test]
         public void AddXPToJob_WhenAmountWouldExceedMaxLevel_OnlySpendsAcceptedXP()
         {
             progression.AddExperience(500);

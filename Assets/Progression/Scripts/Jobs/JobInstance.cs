@@ -13,11 +13,12 @@ namespace RPGame.Progression
         [SerializeField] private int currentLevel;
         [SerializeField] private int currentXP;
         [SerializeField] private int totalInvestedXP;
+        [SerializeField] private int jobPoints;
 
         private readonly Action<JobInstance> onAdvanced;
 
         public JobInstance(JobDefinition definition, Action<JobInstance> onAdvanced = null)
-            : this(definition, StartingLevel, 0, 0, onAdvanced)
+            : this(definition, StartingLevel, 0, 0, 0, onAdvanced)
         {
         }
 
@@ -27,12 +28,24 @@ namespace RPGame.Progression
             int currentXP,
             int totalInvestedXP,
             Action<JobInstance> onAdvanced = null)
+            : this(definition, currentLevel, currentXP, totalInvestedXP, 0, onAdvanced)
+        {
+        }
+
+        public JobInstance(
+            JobDefinition definition,
+            int currentLevel,
+            int currentXP,
+            int totalInvestedXP,
+            int jobPoints,
+            Action<JobInstance> onAdvanced = null)
         {
             this.definition = definition;
             jobId = definition.JobId;
             this.currentLevel = Mathf.Max(0, currentLevel);
             this.currentXP = Mathf.Max(0, currentXP);
             this.totalInvestedXP = Mathf.Max(0, totalInvestedXP);
+            this.jobPoints = Mathf.Max(0, jobPoints);
             this.onAdvanced = onAdvanced;
         }
 
@@ -41,6 +54,7 @@ namespace RPGame.Progression
         public int CurrentLevel => currentLevel;
         public int CurrentXP => currentXP;
         public int TotalInvestedXP => totalInvestedXP;
+        public int JobPoints => jobPoints;
         public bool IsMaxLevel => currentLevel >= definition.MaxLevel;
 
         public int AddExperience(int amount)
@@ -68,23 +82,7 @@ namespace RPGame.Progression
             return IsMaxLevel ? 0 : definition.GetRequiredExperience(currentLevel);
         }
 
-        private void ApplyLevelUps()
-        {
-            while (!IsMaxLevel)
-            {
-                int requiredXP = GetXPToNextLevel();
-                if (currentXP < requiredXP)
-                {
-                    return;
-                }
-
-                currentXP = Mathf.Max(0, currentXP - requiredXP);
-                currentLevel++;
-                onAdvanced?.Invoke(this);
-            }
-        }
-
-        private int GetRemainingXPToMaxLevel()
+        public int GetRemainingXPToMaxLevel()
         {
             long remainingXP = 0;
             int simulatedLevel = currentLevel;
@@ -99,6 +97,23 @@ namespace RPGame.Progression
             }
 
             return remainingXP >= int.MaxValue ? int.MaxValue : (int)remainingXP;
+        }
+
+        private void ApplyLevelUps()
+        {
+            while (!IsMaxLevel)
+            {
+                int requiredXP = GetXPToNextLevel();
+                if (currentXP < requiredXP)
+                {
+                    return;
+                }
+
+                currentXP = Mathf.Max(0, currentXP - requiredXP);
+                currentLevel++;
+                jobPoints = AddClamped(jobPoints, 1);
+                onAdvanced?.Invoke(this);
+            }
         }
 
         private static int AddClamped(int currentValue, int amount)

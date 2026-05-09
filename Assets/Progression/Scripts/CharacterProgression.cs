@@ -1,10 +1,12 @@
 using RPGame.Core.Progression;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace RPGame.Progression
 {
     public sealed class CharacterProgression : MonoBehaviour, IExperienceReceiver
     {
+        [SerializeField] private List<JobDefinition> startingJobs = new();
         [SerializeField] private int availableXP;
 
         private readonly JobContainer jobContainer = new();
@@ -12,6 +14,17 @@ namespace RPGame.Progression
 
         public JobContainer JobContainer => jobContainer;
         public JobProgression Jobs => GetJobs();
+
+        private void Awake()
+        {
+            for (int i = 0; i < startingJobs.Count; i++)
+            {
+                if (startingJobs[i] != null)
+                {
+                    Jobs.UnlockJob(startingJobs[i]);
+                }
+            }
+        }
 
         public void AddExperience(int amount)
         {
