@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ac71d95b42dd4be19c66502f86590d33, type: 3}
+  m_Name: JobDatabase
+  m_EditorClassIdentifier: RPGame.Progression::RPGame.Progression.JobDatabase
+  jobs:
+  - {fileID: 11400000, guid: 60ad5cdcae3b46349027ba31b56306ec, type: 2}
+  - {fileID: 11400000, guid: fc3b41ff177dd964bbb5989d306e8440, type: 2}

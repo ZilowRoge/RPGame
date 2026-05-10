@@ -1,12 +1,8 @@
 {
-    "name": "RPGame.UI.Inventory",
-    "rootNamespace": "RPGame.UI.Inventory",
+    "name": "RPGame.Progression",
+    "rootNamespace": "RPGame.Progression",
     "references": [
-        "RPGame.UI",
-        "RPGame.Inventory",
-        "Unity.TextMeshPro",
-        "Unity.ugui",
-        "Unity.InputSystem"
+        "RPGame.Core"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

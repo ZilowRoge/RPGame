@@ -1,12 +1,11 @@
 {
-    "name": "RPGame.UI.Inventory",
-    "rootNamespace": "RPGame.UI.Inventory",
+    "name": "RPGame.UI.Jobs",
+    "rootNamespace": "RPGame.UI.Jobs",
     "references": [
         "RPGame.UI",
-        "RPGame.Inventory",
+        "RPGame.Progression",
         "Unity.TextMeshPro",
-        "Unity.ugui",
-        "Unity.InputSystem"
+        "Unity.ugui"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

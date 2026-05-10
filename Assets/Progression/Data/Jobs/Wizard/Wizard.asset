@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c02a44f64e514f3fb2aa6f115c362cf5, type: 3}
+  m_Name: Wizard
+  m_EditorClassIdentifier: 
+  jobId: Wizard
+  displayName: Wizard
+  description: Basic arcane job prepared for future spell and perk progression.
+  tier: 0
+  maxLevel: 20
+  baseXP: 100
+  xpGrowthRate: 1.5
+  jobPerks:
+  - {fileID: 11400000, guid: d45d77c6b4af8e9409800275dcab1822, type: 2}
+  - {fileID: 11400000, guid: 2a5d102c0bfd7854581d13dcce47832f, type: 2}
+  - {fileID: 11400000, guid: e9fc8ff992d787347b6827e1d36a49e5, type: 2}
+  - {fileID: 11400000, guid: 4f221227d553b6044acfdc7b0cae5432, type: 2}
