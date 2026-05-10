@@ -13,6 +13,7 @@ namespace RPGame.Progression
         [SerializeField] private List<string> connectedPerkIds = new();
         [SerializeField] private int cost = 1;
         [SerializeField] private bool isStartingPerk;
+        [SerializeField] private Vector2 uiPosition;
 
         public string PerkId => perkId;
         public string DisplayName => displayName;
@@ -20,6 +21,7 @@ namespace RPGame.Progression
         public IReadOnlyList<string> ConnectedPerkIds => connectedPerkIds;
         public int Cost => cost;
         public bool IsStartingPerk => isStartingPerk;
+        public Vector2 UIPosition => uiPosition;
 
         private void OnValidate()
         {

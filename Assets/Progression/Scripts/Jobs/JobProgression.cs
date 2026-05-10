@@ -61,7 +61,11 @@ namespace RPGame.Progression
         public bool CanAddXPToJob(string jobId, int amount)
         {
             JobInstance job = jobs.GetJob(jobId);
-            return amount > 0 && amount <= getAvailableXP() && job != null && !job.IsMaxLevel;
+            return amount > 0
+                && amount <= getAvailableXP()
+                && job != null
+                && !job.IsMaxLevel
+                && amount <= job.GetRemainingXPToMaxLevel();
         }
 
         public int GetJobLevel(string jobId)

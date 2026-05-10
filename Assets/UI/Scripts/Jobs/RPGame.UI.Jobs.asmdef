@@ -1,0 +1,18 @@
+{
+    "name": "RPGame.UI.Jobs",
+    "rootNamespace": "RPGame.UI.Jobs",
+    "references": [
+        "RPGame.Progression",
+        "Unity.TextMeshPro",
+        "Unity.ugui"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

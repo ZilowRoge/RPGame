@@ -1,0 +1,26 @@
+{
+    "name": "RPGame.UI.Tests",
+    "rootNamespace": "RPGame.UI.Tests",
+    "references": [
+        "RPGame.Core",
+        "RPGame.Progression",
+        "RPGame.UI",
+        "RPGame.UI.Jobs",
+        "Unity.TextMeshPro",
+        "Unity.ugui"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false,
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ]
+}

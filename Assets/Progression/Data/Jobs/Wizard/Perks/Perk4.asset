@@ -19,3 +19,4 @@ MonoBehaviour:
   - Perk2
   cost: 1
   isStartingPerk: 0
+  uiPosition: {x: 100, y: 200}

@@ -44,7 +44,7 @@ namespace RPGame.Progression
         {
             this.definition = definition;
             jobId = definition.JobId;
-            this.currentLevel = Mathf.Max(0, currentLevel);
+            this.currentLevel = Mathf.Max(StartingLevel, currentLevel);
             this.currentXP = Mathf.Max(0, currentXP);
             this.totalInvestedXP = Mathf.Max(0, totalInvestedXP);
             this.jobPoints = Mathf.Max(0, jobPoints);

@@ -80,6 +80,14 @@ namespace RPGame.Progression.Tests
         }
 
         [Test]
+        public void JobInstance_WhenLevelIsBelowOne_ClampsToLevelOne()
+        {
+            JobInstance job = new JobInstance(wizardDefinition, currentLevel: 0, currentXP: 0, totalInvestedXP: 0);
+
+            Assert.AreEqual(1, job.CurrentLevel);
+        }
+
+        [Test]
         public void Jobs_UsesCharacterJobContainerState()
         {
             progression.Jobs.UnlockJob(wizardDefinition);
@@ -139,16 +147,16 @@ namespace RPGame.Progression.Tests
         }
 
         [Test]
-        public void AddXPToJob_WhenAmountWouldExceedMaxLevel_OnlySpendsAcceptedXP()
+        public void AddXPToJob_WhenAmountWouldExceedMaxLevel_BlocksInvestment()
         {
             progression.AddExperience(500);
             progression.Jobs.UnlockJob(wizardDefinition);
 
             bool added = progression.Jobs.AddXPToJob(WizardJobId, 301);
 
-            Assert.IsTrue(added);
-            Assert.AreEqual(200, progression.GetAvailableXP());
-            Assert.AreEqual(3, progression.Jobs.GetJobLevel(WizardJobId));
+            Assert.IsFalse(added);
+            Assert.AreEqual(500, progression.GetAvailableXP());
+            Assert.AreEqual(1, progression.Jobs.GetJobLevel(WizardJobId));
         }
 
         [Test]

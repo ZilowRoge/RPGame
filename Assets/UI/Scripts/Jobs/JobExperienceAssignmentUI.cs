@@ -81,7 +81,6 @@ namespace RPGame.UI.Jobs
             lastAssignedXP = 0;
 
             int maxAssignableXP = GetMaxAssignableXP();
-            LogLevelThresholds(maxAssignableXP);
 
             if (jobNameText != null)
             {
@@ -113,13 +112,11 @@ namespace RPGame.UI.Jobs
         private void Confirm()
         {
             int assignedXP = GetAssignedXP();
-            if (progression != null && job != null && assignedXP > 0)
+            if (CanAssignXP(assignedXP) && progression.Jobs.AddXPToJob(job.JobId, assignedXP))
             {
-                progression.Jobs.AddXPToJob(job.JobId, assignedXP);
                 confirmed?.Invoke();
+                Hide();
             }
-
-            Hide();
         }
 
         private void HandleSliderValueChanged(float value)
@@ -188,8 +185,15 @@ namespace RPGame.UI.Jobs
 
             if (confirmButton != null)
             {
-                confirmButton.interactable = clampedAssignedXP > 0;
+                confirmButton.interactable = CanAssignXP(clampedAssignedXP);
             }
+        }
+
+        private bool CanAssignXP(int assignedXP)
+        {
+            return progression != null
+                && job != null
+                && progression.Jobs.CanAddXPToJob(job.JobId, assignedXP);
         }
 
         private int GetPreviewLevel(int assignedXP)
@@ -296,44 +300,6 @@ namespace RPGame.UI.Jobs
         {
             return previousXP < thresholdXP && currentXP > thresholdXP
                 || previousXP > thresholdXP && currentXP < thresholdXP;
-        }
-
-        private void LogLevelThresholds(int maxAssignableXP)
-        {
-            if (job == null || job.Definition == null)
-            {
-                Debug.Log("[JobExperienceAssignmentUI] No job selected, level thresholds unavailable.");
-                return;
-            }
-
-            int currentLevel = job.CurrentLevel;
-            int currentXP = job.CurrentXP;
-            int cumulativeXP = 0;
-
-            Debug.Log($"[JobExperienceAssignmentUI] Level thresholds for {job.Definition.DisplayName}. Available assignable XP: {maxAssignableXP}.");
-
-            while (currentLevel < job.Definition.MaxLevel)
-            {
-                int requiredXP = job.Definition.GetRequiredExperience(currentLevel);
-                int xpToNextLevel = Mathf.Max(0, requiredXP - currentXP);
-
-                if (xpToNextLevel > int.MaxValue - cumulativeXP)
-                {
-                    Debug.Log("[JobExperienceAssignmentUI] Remaining level thresholds exceed int range.");
-                    return;
-                }
-
-                cumulativeXP += xpToNextLevel;
-                Debug.Log($"[JobExperienceAssignmentUI] Lvl {currentLevel} -> {currentLevel + 1}: assign {cumulativeXP} XP total.");
-
-                if (cumulativeXP >= maxAssignableXP)
-                {
-                    return;
-                }
-
-                currentLevel++;
-                currentXP = 0;
-            }
         }
 
         private void Hide()
