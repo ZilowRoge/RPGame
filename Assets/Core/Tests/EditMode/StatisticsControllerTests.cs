@@ -17,9 +17,12 @@ namespace RPGame.Core.Tests
             config = CreateConfig(
                 maxHealth: 100f,
                 maxStamina: 50f,
+                maxMana: 80f,
                 healthRegenerationPerSecond: 5f,
                 staminaRegenerationPerSecond: 10f,
-                staminaRegenerationDelay: 0.5f);
+                staminaRegenerationDelay: 0.5f,
+                manaRegenerationPerSecond: 8f,
+                manaRegenerationDelay: 0.5f);
 
             gameObject = new GameObject("StatisticsControllerTests");
             controller = gameObject.AddComponent<StatisticsController>();
@@ -39,8 +42,10 @@ namespace RPGame.Core.Tests
         {
             Assert.AreEqual(100f, controller.CurrentHealth);
             Assert.AreEqual(50f, controller.CurrentStamina);
+            Assert.AreEqual(80f, controller.CurrentMana);
             Assert.AreEqual(1f, controller.HealthNormalized);
             Assert.AreEqual(1f, controller.StaminaNormalized);
+            Assert.AreEqual(1f, controller.ManaNormalized);
         }
 
         [Test]
@@ -106,6 +111,102 @@ namespace RPGame.Core.Tests
         }
 
         [Test]
+        public void TrySpendMana_WhenEnoughMana_ReducesManaAndReturnsTrue()
+        {
+            bool spent = controller.TrySpendMana(25f);
+
+            Assert.IsTrue(spent);
+            Assert.AreEqual(55f, controller.CurrentMana);
+        }
+
+        [Test]
+        public void TrySpendMana_WhenNotEnoughMana_DoesNotChangeManaAndReturnsFalse()
+        {
+            bool spent = controller.TrySpendMana(90f);
+
+            Assert.IsFalse(spent);
+            Assert.AreEqual(80f, controller.CurrentMana);
+        }
+
+        [Test]
+        public void TrySpendMana_WhenAmountIsNotPositive_DoesNotChangeManaAndReturnsTrue()
+        {
+            bool spent = controller.TrySpendMana(-10f);
+
+            Assert.IsTrue(spent);
+            Assert.AreEqual(80f, controller.CurrentMana);
+        }
+
+        [Test]
+        public void RestoreMana_IncreasesManaAndClampsAtMax()
+        {
+            controller.TrySpendMana(30f);
+            controller.RestoreMana(15f);
+
+            Assert.AreEqual(65f, controller.CurrentMana);
+
+            controller.RestoreMana(500f);
+            Assert.AreEqual(80f, controller.CurrentMana);
+        }
+
+        [Test]
+        public void ManaRegeneration_RestoresManaOverTime()
+        {
+            controller.TrySpendMana(30f);
+
+            controller.Tick(0.5f);
+            controller.Tick(2f);
+
+            Assert.AreEqual(66f, controller.CurrentMana);
+        }
+
+        [Test]
+        public void ManaRegeneration_DoesNotExceedMaxMana()
+        {
+            controller.TrySpendMana(5f);
+
+            controller.Tick(0.5f);
+            controller.Tick(2f);
+
+            Assert.AreEqual(80f, controller.CurrentMana);
+        }
+
+        [Test]
+        public void TrySpendMana_DelaysManaRegeneration()
+        {
+            controller.TrySpendMana(20f);
+
+            controller.Tick(0.25f);
+            Assert.AreEqual(60f, controller.CurrentMana);
+
+            controller.Tick(0.25f);
+            Assert.AreEqual(60f, controller.CurrentMana);
+
+            controller.Tick(1f);
+            Assert.AreEqual(68f, controller.CurrentMana);
+        }
+
+        [Test]
+        public void ManaChanged_IsRaisedWhenManaChanges()
+        {
+            int changedCount = 0;
+            float currentMana = 0f;
+            float maxMana = 0f;
+            controller.OnManaChanged += (current, max) =>
+            {
+                changedCount++;
+                currentMana = current;
+                maxMana = max;
+            };
+
+            controller.TrySpendMana(20f);
+
+            Assert.AreEqual(1, changedCount);
+            Assert.AreEqual(60f, currentMana);
+            Assert.AreEqual(80f, maxMana);
+        }
+
+        [Test]
         public void Died_IsRaisedOnceWhenHealthReachesZero()
         {
             int diedCount = 0;
@@ -146,17 +247,23 @@ namespace RPGame.Core.Tests
         private static StatisticsConfig CreateConfig(
             float maxHealth,
             float maxStamina,
+            float maxMana,
             float healthRegenerationPerSecond,
             float staminaRegenerationPerSecond,
-            float staminaRegenerationDelay)
+            float staminaRegenerationDelay,
+            float manaRegenerationPerSecond,
+            float manaRegenerationDelay)
         {
             StatisticsConfig statisticsConfig = ScriptableObject.CreateInstance<StatisticsConfig>();
             SerializedObject serializedConfig = new SerializedObject(statisticsConfig);
             serializedConfig.FindProperty("maxHealth").floatValue = maxHealth;
             serializedConfig.FindProperty("maxStamina").floatValue = maxStamina;
+            serializedConfig.FindProperty("maxMana").floatValue = maxMana;
             serializedConfig.FindProperty("healthRegenerationPerSecond").floatValue = healthRegenerationPerSecond;
             serializedConfig.FindProperty("staminaRegenerationPerSecond").floatValue = staminaRegenerationPerSecond;
             serializedConfig.FindProperty("staminaRegenerationDelay").floatValue = staminaRegenerationDelay;
+            serializedConfig.FindProperty("manaRegenerationPerSecond").floatValue = manaRegenerationPerSecond;
+            serializedConfig.FindProperty("manaRegenerationDelay").floatValue = manaRegenerationDelay;
             serializedConfig.ApplyModifiedPropertiesWithoutUndo();
             return statisticsConfig;
         }

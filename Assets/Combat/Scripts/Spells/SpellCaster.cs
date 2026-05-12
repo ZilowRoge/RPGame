@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using RPGame.Core.Damage;
 using RPGame.Core.Spells;
+using RPGame.Core.Statistics;
 using RPGame.Core.Statistics.CombatStats;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -15,6 +16,7 @@ namespace RPGame.Combat.Spells
         [SerializeField] private Transform target;
         [SerializeField] private GameObject casterObject;
         [SerializeField] private CombatStatsProvider combatStatsProvider;
+        [SerializeField] private StatisticsController statisticsController;
         [SerializeField] private bool castOnLeftMouseButton = true;
 
         public Spell CurrentSpell => currentSpell;
@@ -22,6 +24,7 @@ namespace RPGame.Combat.Spells
         public Transform Target => target;
         public GameObject CasterObject => casterObject != null ? casterObject : gameObject;
         public CombatStatsProvider CombatStatsProvider => ResolveCombatStatsProvider();
+        public IStatisticsController Statistics => ResolveStatisticsController();
 
         private void Awake()
         {
@@ -102,6 +105,12 @@ namespace RPGame.Combat.Spells
                 return false;
             }
 
+            IStatisticsController statistics = ResolveStatisticsController();
+            if (statistics != null && !statistics.TrySpendMana(currentSpell.ManaCost))
+            {
+                return false;
+            }
+
             currentSpell.OnCast(CreateCasterData(true));
             return true;
         }
@@ -131,6 +140,16 @@ namespace RPGame.Combat.Spells
             }
 
             return combatStatsProvider;
+        }
+
+        private StatisticsController ResolveStatisticsController()
+        {
+            if (statisticsController == null)
+            {
+                statisticsController = GetComponentInParent<StatisticsController>();
+            }
+
+            return statisticsController;
         }
     }
 }

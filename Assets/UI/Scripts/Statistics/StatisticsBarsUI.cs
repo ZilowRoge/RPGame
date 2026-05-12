@@ -10,8 +10,10 @@ namespace RPGame.UI.Statistics
         [SerializeField] private StatisticsController statisticsController;
         [SerializeField] private Image healthFill;
         [SerializeField] private Image staminaFill;
+        [SerializeField] private Image manaFill;
         [SerializeField] private Text healthValueText;
         [SerializeField] private Text staminaValueText;
+        [SerializeField] private Text manaValueText;
 
         private IStatisticsController statistics;
 
@@ -65,6 +67,7 @@ namespace RPGame.UI.Statistics
 
             statistics.HealthChanged += OnHealthChanged;
             statistics.StaminaChanged += OnStaminaChanged;
+            statistics.OnManaChanged += OnManaChanged;
         }
 
         private void Unsubscribe()
@@ -76,6 +79,7 @@ namespace RPGame.UI.Statistics
 
             statistics.HealthChanged -= OnHealthChanged;
             statistics.StaminaChanged -= OnStaminaChanged;
+            statistics.OnManaChanged -= OnManaChanged;
         }
 
         private void Refresh()
@@ -84,15 +88,19 @@ namespace RPGame.UI.Statistics
             {
                 SetFillAmount(healthFill, 0f);
                 SetFillAmount(staminaFill, 0f);
+                SetFillAmount(manaFill, 0f);
                 SetValueText(healthValueText, 0f, 0f);
                 SetValueText(staminaValueText, 0f, 0f);
+                SetValueText(manaValueText, 0f, 0f);
                 return;
             }
 
             SetFillAmount(healthFill, statistics.HealthNormalized);
             SetFillAmount(staminaFill, statistics.StaminaNormalized);
+            SetFillAmount(manaFill, statistics.ManaNormalized);
             SetValueText(healthValueText, statistics.CurrentHealth, statistics.MaxHealth);
             SetValueText(staminaValueText, statistics.CurrentStamina, statistics.MaxStamina);
+            SetValueText(manaValueText, statistics.CurrentMana, statistics.MaxMana);
         }
 
         private void OnHealthChanged(float currentHealth, float maxHealth)
@@ -105,6 +113,12 @@ namespace RPGame.UI.Statistics
         {
             SetFillAmount(staminaFill, GetNormalizedValue(currentStamina, maxStamina));
             SetValueText(staminaValueText, currentStamina, maxStamina);
+        }
+
+        private void OnManaChanged(float currentMana, float maxMana)
+        {
+            SetFillAmount(manaFill, GetNormalizedValue(currentMana, maxMana));
+            SetValueText(manaValueText, currentMana, maxMana);
         }
 
         private static float GetNormalizedValue(float currentValue, float maxValue)
@@ -140,6 +154,12 @@ namespace RPGame.UI.Statistics
             {
                 staminaFill.type = Image.Type.Filled;
                 staminaFill.fillMethod = Image.FillMethod.Horizontal;
+            }
+
+            if (manaFill != null)
+            {
+                manaFill.type = Image.Type.Filled;
+                manaFill.fillMethod = Image.FillMethod.Horizontal;
             }
         }
     }

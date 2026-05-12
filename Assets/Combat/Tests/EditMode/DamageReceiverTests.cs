@@ -135,9 +135,12 @@ namespace RPGame.Combat.Tests
             SerializedObject serializedConfig = new SerializedObject(statisticsConfig);
             serializedConfig.FindProperty("maxHealth").floatValue = maxHealth;
             serializedConfig.FindProperty("maxStamina").floatValue = 50f;
+            serializedConfig.FindProperty("maxMana").floatValue = 50f;
             serializedConfig.FindProperty("healthRegenerationPerSecond").floatValue = 0f;
             serializedConfig.FindProperty("staminaRegenerationPerSecond").floatValue = 0f;
             serializedConfig.FindProperty("staminaRegenerationDelay").floatValue = 0f;
+            serializedConfig.FindProperty("manaRegenerationPerSecond").floatValue = 0f;
+            serializedConfig.FindProperty("manaRegenerationDelay").floatValue = 0f;
             serializedConfig.ApplyModifiedPropertiesWithoutUndo();
             return statisticsConfig;
         }

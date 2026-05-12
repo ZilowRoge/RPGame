@@ -11,23 +11,31 @@ namespace RPGame.Core.Statistics
         [Header("Regeneration")]
         [SerializeField] private bool regenerateHealth;
         [SerializeField] private bool regenerateStamina = true;
+        [SerializeField] private bool regenerateMana = true;
 
         public event Action<float, float> HealthChanged;
         public event Action<float, float> StaminaChanged;
+        public event Action<float, float> OnManaChanged;
         public event Action Died;
 
         public float CurrentHealth { get; private set; }
         public float CurrentStamina { get; private set; }
+        public float CurrentMana { get; private set; }
         public float MaxHealth => config != null ? config.MaxHealth : 0f;
         public float MaxStamina => config != null ? config.MaxStamina : 0f;
+        public float MaxMana => config != null ? config.MaxMana : 0f;
         public float HealthRegenerationPerSecond => config != null ? config.HealthRegenerationPerSecond : 0f;
         public float StaminaRegenerationPerSecond => config != null ? config.StaminaRegenerationPerSecond : 0f;
         public float StaminaRegenerationDelay => config != null ? config.StaminaRegenerationDelay : 0f;
+        public float ManaRegenerationPerSecond => config != null ? config.ManaRegenerationPerSecond : 0f;
+        public float ManaRegenerationDelay => config != null ? config.ManaRegenerationDelay : 0f;
         public float HealthNormalized => MaxHealth > 0f ? CurrentHealth / MaxHealth : 0f;
         public float StaminaNormalized => MaxStamina > 0f ? CurrentStamina / MaxStamina : 0f;
+        public float ManaNormalized => MaxMana > 0f ? CurrentMana / MaxMana : 0f;
         public bool IsAlive => CurrentHealth > 0f;
 
         private float staminaRegenerationDelayTimer;
+        private float manaRegenerationDelayTimer;
 
         private void Awake()
         {
@@ -56,6 +64,7 @@ namespace RPGame.Core.Statistics
         {
             SetHealth(MaxHealth);
             SetStamina(MaxStamina);
+            SetMana(MaxMana);
         }
 
         public void TakeDamage(float amount)
@@ -110,6 +119,38 @@ namespace RPGame.Core.Statistics
             SetStamina(CurrentStamina + amount);
         }
 
+        public bool CanSpendMana(float amount)
+        {
+            return amount <= 0f || CurrentMana >= amount;
+        }
+
+        public bool TrySpendMana(float amount)
+        {
+            if (amount <= 0f)
+            {
+                return true;
+            }
+
+            if (!CanSpendMana(amount))
+            {
+                return false;
+            }
+
+            SetMana(CurrentMana - amount);
+            manaRegenerationDelayTimer = ManaRegenerationDelay;
+            return true;
+        }
+
+        public void RestoreMana(float amount)
+        {
+            if (amount <= 0f)
+            {
+                return;
+            }
+
+            SetMana(CurrentMana + amount);
+        }
+
         private void Regenerate(float deltaTime)
         {
             if (config == null || !IsAlive)
@@ -125,12 +166,22 @@ namespace RPGame.Core.Statistics
             if (staminaRegenerationDelayTimer > 0f)
             {
                 staminaRegenerationDelayTimer -= deltaTime;
-                return;
             }
-
-            if (regenerateStamina)
+            else if (regenerateStamina)
             {
                 RestoreStamina(config.StaminaRegenerationPerSecond * deltaTime);
+            }
+
+            if (regenerateMana)
+            {
+                if (manaRegenerationDelayTimer > 0f)
+                {
+                    manaRegenerationDelayTimer -= deltaTime;
+                }
+                else
+                {
+                    RestoreMana(config.ManaRegenerationPerSecond * deltaTime);
+                }
             }
         }
 
@@ -158,6 +209,17 @@ namespace RPGame.Core.Statistics
             if (!Mathf.Approximately(previousStamina, CurrentStamina))
             {
                 StaminaChanged?.Invoke(CurrentStamina, MaxStamina);
+            }
+        }
+
+        private void SetMana(float value)
+        {
+            float previousMana = CurrentMana;
+            CurrentMana = Mathf.Clamp(value, 0f, MaxMana);
+
+            if (!Mathf.Approximately(previousMana, CurrentMana))
+            {
+                OnManaChanged?.Invoke(CurrentMana, MaxMana);
             }
         }
     }
