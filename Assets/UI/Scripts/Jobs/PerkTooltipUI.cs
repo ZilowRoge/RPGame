@@ -1,3 +1,5 @@
+using System.Text;
+using RPGame.Core.Effects;
 using RPGame.Progression;
 using RPGame.UI;
 using TMPro;
@@ -35,10 +37,36 @@ namespace RPGame.UI.Jobs
 
             if (bonusesText != null)
             {
-                SetTextSection(bonusesText, NoBonusesText);
+                SetTextSection(bonusesText, GetBonusesText(perk));
             }
 
             ShowAt(screenPosition);
+        }
+
+        private static string GetBonusesText(PerkDefinition perk)
+        {
+            if (perk.Effects.Count == 0)
+            {
+                return NoBonusesText;
+            }
+
+            StringBuilder builder = new StringBuilder();
+            foreach (EffectDefinition effect in perk.Effects)
+            {
+                if (effect == null)
+                {
+                    continue;
+                }
+
+                if (builder.Length > 0)
+                {
+                    builder.AppendLine();
+                }
+
+                builder.Append(effect.ToString());
+            }
+
+            return builder.Length > 0 ? builder.ToString() : NoBonusesText;
         }
     }
 }

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using RPGame.Core.Effects;
 using UnityEngine;
 
 namespace RPGame.Progression
@@ -14,6 +15,7 @@ namespace RPGame.Progression
         [SerializeField] private int cost = 1;
         [SerializeField] private bool isStartingPerk;
         [SerializeField] private Vector2 uiPosition;
+        [SerializeField] private List<EffectDefinition> effects = new();
 
         public string PerkId => perkId;
         public string DisplayName => displayName;
@@ -22,6 +24,7 @@ namespace RPGame.Progression
         public int Cost => cost;
         public bool IsStartingPerk => isStartingPerk;
         public Vector2 UIPosition => uiPosition;
+        public IReadOnlyList<EffectDefinition> Effects => effects;
 
         private void OnValidate()
         {

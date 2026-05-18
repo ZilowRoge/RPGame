@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using RPGame.Core.Effects;
 
 namespace RPGame.Progression
 {
@@ -47,6 +48,27 @@ namespace RPGame.Progression
             job.UnlockPerk(perk.PerkId);
             PerkUnlocked?.Invoke(job, perk);
             return true;
+        }
+
+        public EffectContainer CreateEffectContainer(JobInstance job)
+        {
+            EffectContainer container = new EffectContainer();
+            if (job?.Definition == null)
+            {
+                return container;
+            }
+
+            foreach (PerkDefinition perk in job.Definition.JobPerks)
+            {
+                if (perk == null || !job.UnlockedPerkIds.Contains(perk.PerkId))
+                {
+                    continue;
+                }
+
+                container.AddRange(perk.Effects);
+            }
+
+            return container;
         }
 
         private static bool IsPerkDefinedForJob(JobInstance job, PerkDefinition perk)

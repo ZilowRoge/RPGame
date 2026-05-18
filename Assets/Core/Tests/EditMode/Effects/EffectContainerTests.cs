@@ -75,6 +75,18 @@ namespace RPGame.Core.Tests.Effects
             Object.DestroyImmediate(secondEffect);
         }
 
+        [Test]
+        public void ToString_WhenEffectIsFlat_FormatsTooltipText()
+        {
+            Assert.AreEqual("+10 Max Health", maxHealthEffect.ToString());
+        }
+
+        [Test]
+        public void ToString_WhenEffectIsPercent_FormatsFractionAsPercentTooltipText()
+        {
+            Assert.AreEqual("+5% Mana Regeneration", manaRegenerationEffect.ToString());
+        }
+
         private static StatEffectDefinition CreateStatEffect(
             EffectStat stat,
             EffectModifierType modifierType,

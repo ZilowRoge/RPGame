@@ -9,12 +9,16 @@ namespace RPGame.Core.Tests.Effects
     {
         private StatEffectDefinition firstManaRegenerationEffect;
         private StatEffectDefinition secondManaRegenerationEffect;
+        private GameObject gameObject;
+        private EffectAggregator aggregator;
 
         [SetUp]
         public void SetUp()
         {
             firstManaRegenerationEffect = CreateStatEffect(EffectStat.ManaRegeneration, EffectModifierType.Percent, 0.05f);
             secondManaRegenerationEffect = CreateStatEffect(EffectStat.ManaRegeneration, EffectModifierType.Percent, 0.10f);
+            gameObject = new GameObject("Effect Aggregator");
+            aggregator = gameObject.AddComponent<EffectAggregator>();
         }
 
         [TearDown]
@@ -22,30 +26,23 @@ namespace RPGame.Core.Tests.Effects
         {
             Object.DestroyImmediate(firstManaRegenerationEffect);
             Object.DestroyImmediate(secondManaRegenerationEffect);
+            Object.DestroyImmediate(gameObject);
         }
 
         [Test]
-        public void Add_WhenContainerWasAlreadyAdded_DoesNotAddDuplicate()
+        public void Add_WhenDefinitionIsAdded_StoresEffect()
         {
-            EffectContainer container = new EffectContainer();
-            EffectAggregator aggregator = new EffectAggregator();
+            aggregator.Add(firstManaRegenerationEffect);
 
-            aggregator.Add(container);
-            aggregator.Add(container);
-
-            Assert.AreEqual(1, aggregator.Containers.Count);
+            Assert.AreEqual(1, aggregator.Effects.Count);
+            Assert.AreSame(firstManaRegenerationEffect, aggregator.Effects[0].Definition);
         }
 
         [Test]
-        public void GetEffectValue_WhenMultipleContainersHaveMatchingEffects_ReturnsSum()
+        public void GetEffectValue_WhenMultipleEffectsMatch_ReturnsSum()
         {
-            EffectContainer firstContainer = new EffectContainer();
-            EffectContainer secondContainer = new EffectContainer();
-            firstContainer.Add(firstManaRegenerationEffect);
-            secondContainer.Add(secondManaRegenerationEffect);
-            EffectAggregator aggregator = new EffectAggregator();
-            aggregator.Add(firstContainer);
-            aggregator.Add(secondContainer);
+            aggregator.Add(firstManaRegenerationEffect);
+            aggregator.Add(secondManaRegenerationEffect);
 
             float value = aggregator.GetEffectValue(EffectStat.ManaRegeneration, EffectModifierType.Percent);
 
@@ -53,21 +50,13 @@ namespace RPGame.Core.Tests.Effects
         }
 
         [Test]
-        public void GetEffectValue_WhenContainerIsRemoved_DoesNotIncludeRemovedContainer()
+        public void AddRange_WhenDefinitionsAreAdded_StoresAllEffects()
         {
-            EffectContainer firstContainer = new EffectContainer();
-            EffectContainer secondContainer = new EffectContainer();
-            firstContainer.Add(firstManaRegenerationEffect);
-            secondContainer.Add(secondManaRegenerationEffect);
-            EffectAggregator aggregator = new EffectAggregator();
-            aggregator.Add(firstContainer);
-            aggregator.Add(secondContainer);
-
-            bool removed = aggregator.Remove(secondContainer);
+            aggregator.AddRange(new[] { firstManaRegenerationEffect, secondManaRegenerationEffect });
             float value = aggregator.GetEffectValue(EffectStat.ManaRegeneration, EffectModifierType.Percent);
 
-            Assert.IsTrue(removed);
-            Assert.AreEqual(0.05f, value, 0.0001f);
+            Assert.AreEqual(2, aggregator.Effects.Count);
+            Assert.AreEqual(0.15f, value, 0.0001f);
         }
 
         private static StatEffectDefinition CreateStatEffect(

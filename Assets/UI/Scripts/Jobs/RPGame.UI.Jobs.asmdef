@@ -2,6 +2,7 @@
     "name": "RPGame.UI.Jobs",
     "rootNamespace": "RPGame.UI.Jobs",
     "references": [
+        "RPGame.Core",
         "RPGame.UI",
         "RPGame.Progression",
         "Unity.TextMeshPro",

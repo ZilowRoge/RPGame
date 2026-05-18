@@ -1,4 +1,5 @@
 using NUnit.Framework;
+using RPGame.Core.Effects;
 using RPGame.Progression;
 using UnityEditor;
 using UnityEngine;
@@ -13,12 +14,15 @@ namespace RPGame.Progression.Tests
         private PerkDefinition outgoingConnectedPerk;
         private PerkDefinition isolatedPerk;
         private PerkDefinition foreignPerk;
+        private StatEffectDefinition manaRegenerationEffect;
         private PerkProgression service;
 
         [SetUp]
         public void SetUp()
         {
+            manaRegenerationEffect = CreateStatEffect(EffectStat.ManaRegeneration, EffectModifierType.Percent, 0.05f);
             startingPerk = CreatePerkDefinition("start", isStartingPerk: true, "outgoingConnected");
+            SetPerkEffects(startingPerk, manaRegenerationEffect);
             connectedPerk = CreatePerkDefinition("connected", isStartingPerk: false, "start");
             outgoingConnectedPerk = CreatePerkDefinition("outgoingConnected", isStartingPerk: false);
             isolatedPerk = CreatePerkDefinition("isolated", isStartingPerk: false);
@@ -36,6 +40,7 @@ namespace RPGame.Progression.Tests
             Object.DestroyImmediate(outgoingConnectedPerk);
             Object.DestroyImmediate(isolatedPerk);
             Object.DestroyImmediate(foreignPerk);
+            Object.DestroyImmediate(manaRegenerationEffect);
         }
 
         [Test]
@@ -134,6 +139,29 @@ namespace RPGame.Progression.Tests
             Assert.AreEqual(PerkUnlockState.Locked, state);
         }
 
+        [Test]
+        public void CreateEffectContainer_WhenPerkIsUnlocked_ContainsUnlockedPerkEffects()
+        {
+            JobInstance job = CreateJob(jobPoints: 1);
+            service.TryUnlockPerk(job, startingPerk);
+
+            EffectContainer container = service.CreateEffectContainer(job);
+
+            float value = container.GetEffectValue(EffectStat.ManaRegeneration, EffectModifierType.Percent);
+            Assert.AreEqual(0.05f, value, 0.0001f);
+        }
+
+        [Test]
+        public void CreateEffectContainer_WhenPerkIsLocked_DoesNotContainLockedPerkEffects()
+        {
+            JobInstance job = CreateJob(jobPoints: 1);
+
+            EffectContainer container = service.CreateEffectContainer(job);
+
+            float value = container.GetEffectValue(EffectStat.ManaRegeneration, EffectModifierType.Percent);
+            Assert.AreEqual(0f, value, 0.0001f);
+        }
+
         private JobInstance CreateJob(int jobPoints)
         {
             return new JobInstance(jobDefinition, currentLevel: 1, currentXP: 0, totalInvestedXP: 0, jobPoints: jobPoints);
@@ -184,6 +212,33 @@ namespace RPGame.Progression.Tests
 
             serializedDefinition.ApplyModifiedPropertiesWithoutUndo();
             return definition;
+        }
+
+        private static StatEffectDefinition CreateStatEffect(
+            EffectStat stat,
+            EffectModifierType modifierType,
+            float value)
+        {
+            StatEffectDefinition definition = ScriptableObject.CreateInstance<StatEffectDefinition>();
+            SerializedObject serializedDefinition = new SerializedObject(definition);
+            serializedDefinition.FindProperty("stat").enumValueIndex = (int)stat;
+            serializedDefinition.FindProperty("modifierType").enumValueIndex = (int)modifierType;
+            serializedDefinition.FindProperty("value").floatValue = value;
+            serializedDefinition.ApplyModifiedPropertiesWithoutUndo();
+            return definition;
+        }
+
+        private static void SetPerkEffects(PerkDefinition perk, params EffectDefinition[] effects)
+        {
+            SerializedObject serializedPerk = new SerializedObject(perk);
+            SerializedProperty perkEffects = serializedPerk.FindProperty("effects");
+            perkEffects.arraySize = effects.Length;
+            for (int i = 0; i < effects.Length; i++)
+            {
+                perkEffects.GetArrayElementAtIndex(i).objectReferenceValue = effects[i];
+            }
+
+            serializedPerk.ApplyModifiedPropertiesWithoutUndo();
         }
     }
 }

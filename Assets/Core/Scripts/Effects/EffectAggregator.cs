@@ -1,38 +1,27 @@
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace RPGame.Core.Effects
 {
-    public sealed class EffectAggregator
+    public sealed class EffectAggregator : MonoBehaviour
     {
-        private readonly List<EffectContainer> containers = new();
+        private readonly EffectContainer container = new();
 
-        public IReadOnlyList<EffectContainer> Containers => containers;
+        public IReadOnlyList<EffectInstance> Effects => container.Effects;
 
-        public void Add(EffectContainer container)
+        public void Add(EffectDefinition definition)
         {
-            if (container == null || containers.Contains(container))
-            {
-                return;
-            }
-
-            containers.Add(container);
+            container.Add(definition);
         }
 
-        public bool Remove(EffectContainer container)
+        public void AddRange(IEnumerable<EffectDefinition> definitions)
         {
-            return container != null && containers.Remove(container);
+            container.AddRange(definitions);
         }
 
         public float GetEffectValue(EffectStat stat, EffectModifierType modifierType)
         {
-            float value = 0f;
-
-            foreach (EffectContainer container in containers)
-            {
-                value += container.GetEffectValue(stat, modifierType);
-            }
-
-            return value;
+            return container.GetEffectValue(stat, modifierType);
         }
     }
 }
