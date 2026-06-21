@@ -4,12 +4,17 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
+#if UNITY_EDITOR
+using UnityEditor;
+using UnityEditor.SceneManagement;
+#endif
 
 namespace RPGame.UI.Jobs
 {
     public sealed class JobPerksUI : MonoBehaviour
     {
         [SerializeField] private CharacterProgression progression;
+        [SerializeField] private JobDefinition editorPreviewJob;
         [SerializeField] private TMP_Text jobNameText;
         [SerializeField] private TMP_Text availableJobPointsText;
         [SerializeField] private RectTransform perkNodesParent;
@@ -73,10 +78,39 @@ namespace RPGame.UI.Jobs
 
         public void SetJob(JobInstance job)
         {
+            GeneratePerkTree(job);
+        }
+
+        public void GeneratePerkTree(JobDefinition jobDefinition)
+        {
+            GeneratePerkTree(jobDefinition != null ? new JobInstance(jobDefinition) : null);
+        }
+
+        public void GeneratePerkTree(JobInstance job)
+        {
             this.job = job;
             ClearPendingPerks();
             ResolveProgression();
             Refresh();
+        }
+
+        [ContextMenu("Rebuild Perk Tree")]
+        private void RebuildPerkTreeFromContextMenu()
+        {
+            if (job?.Definition != null)
+            {
+                GeneratePerkTree(job);
+                return;
+            }
+
+            if (editorPreviewJob == null)
+            {
+                Debug.LogWarning("Cannot rebuild perk tree because Editor Preview Job is not assigned.", this);
+                GeneratePerkTree((JobInstance)null);
+                return;
+            }
+
+            GeneratePerkTree(editorPreviewJob);
         }
 
         public void Refresh()
@@ -97,7 +131,22 @@ namespace RPGame.UI.Jobs
 
             RefreshConfirmButton();
 
-            PerkTreeBuilder.Rebuild(
+            int createdNodes = RebuildPerkTree();
+
+#if UNITY_EDITOR
+            if (!Application.isPlaying)
+            {
+                RefreshEditorLayout();
+                Debug.Log(
+                    $"Rebuilt perk tree for {(job?.Definition != null ? job.Definition.DisplayName : "none")} under {(perkNodesParent != null ? perkNodesParent.name : "none")}. Created {createdNodes} nodes.",
+                    this);
+            }
+#endif
+        }
+
+        private int RebuildPerkTree()
+        {
+            return PerkTreeBuilder.Rebuild(
                 job,
                 perkNodesParent,
                 connectionsGraphic,
@@ -111,6 +160,29 @@ namespace RPGame.UI.Jobs
                 HidePerkTooltip,
                 Refresh);
         }
+
+#if UNITY_EDITOR
+        private void RefreshEditorLayout()
+        {
+            if (perkNodesParent != null)
+            {
+                LayoutRebuilder.ForceRebuildLayoutImmediate(perkNodesParent);
+            }
+
+            Canvas.ForceUpdateCanvases();
+            EditorUtility.SetDirty(this);
+
+            if (perkNodesParent != null)
+            {
+                EditorUtility.SetDirty(perkNodesParent);
+            }
+
+            if (gameObject.scene.IsValid())
+            {
+                EditorSceneManager.MarkSceneDirty(gameObject.scene);
+            }
+        }
+#endif
 
         private void ResolveProgression()
         {

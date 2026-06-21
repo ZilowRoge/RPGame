@@ -2,12 +2,15 @@ using System;
 using System.Collections.Generic;
 using RPGame.Progression;
 using UnityEngine;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 namespace RPGame.UI.Jobs
 {
     public static class PerkTreeBuilder
     {
-        public static void Rebuild(
+        public static int Rebuild(
             JobInstance job,
             RectTransform perkNodesParent,
             PerkTreeConnectionsGraphic connectionsGraphic,
@@ -21,7 +24,7 @@ namespace RPGame.UI.Jobs
             Action hideTooltip,
             Action refreshRequested)
         {
-            Clear(spawnedPerkNodes);
+            Clear(spawnedPerkNodes, perkNodesParent);
 
             if (job?.Definition == null || perkNodesParent == null || spawnedPerkNodes == null)
             {
@@ -30,7 +33,7 @@ namespace RPGame.UI.Jobs
                     GetConnectionsGraphic(perkNodesParent, connectionsGraphic)?.SetConnections(null);
                 }
 
-                return;
+                return 0;
             }
 
             List<PerkDefinition> spawnedPerks = new();
@@ -55,6 +58,8 @@ namespace RPGame.UI.Jobs
                 showTooltip,
                 hideTooltip,
                 refreshRequested);
+
+            return spawnedPerkNodes.Count;
         }
 
         private static void SpawnRootNode(
@@ -70,6 +75,12 @@ namespace RPGame.UI.Jobs
             RectTransform rootNode = UnityEngine.Object.Instantiate(rootNodePrefab, perkNodesParent);
             rootNode.name = rootNodePrefab.name;
             rootNode.anchoredPosition = Vector2.zero;
+#if UNITY_EDITOR
+            if (!Application.isPlaying)
+            {
+                Undo.RegisterCreatedObjectUndo(rootNode.gameObject, "Rebuild Perk Tree");
+            }
+#endif
             spawnedPerkNodes.Add(rootNode.gameObject);
         }
 
@@ -261,7 +272,7 @@ namespace RPGame.UI.Jobs
                 : perkNodesParent.GetComponent<PerkTreeConnectionsGraphic>();
         }
 
-        private static void Clear(List<GameObject> spawnedPerkNodes)
+        private static void Clear(List<GameObject> spawnedPerkNodes, RectTransform perkNodesParent)
         {
             if (spawnedPerkNodes == null)
             {
@@ -278,12 +289,34 @@ namespace RPGame.UI.Jobs
                     }
                     else
                     {
+#if UNITY_EDITOR
+                        Undo.DestroyObjectImmediate(spawnedPerkNodes[i]);
+#else
                         UnityEngine.Object.DestroyImmediate(spawnedPerkNodes[i]);
+#endif
                     }
                 }
             }
 
             spawnedPerkNodes.Clear();
+
+            if (Application.isPlaying || perkNodesParent == null)
+            {
+                return;
+            }
+
+            for (int i = perkNodesParent.childCount - 1; i >= 0; i--)
+            {
+                Transform child = perkNodesParent.GetChild(i);
+                if (child != null)
+                {
+#if UNITY_EDITOR
+                    Undo.DestroyObjectImmediate(child.gameObject);
+#else
+                    UnityEngine.Object.DestroyImmediate(child.gameObject);
+#endif
+                }
+            }
         }
 
         private static void SpawnPerkNode(
@@ -306,6 +339,12 @@ namespace RPGame.UI.Jobs
             RectTransform node = UnityEngine.Object.Instantiate(perkNodePrefab, perkNodesParent);
             node.name = string.IsNullOrWhiteSpace(perk.PerkId) ? perkNodePrefab.name : perk.PerkId;
             node.anchoredPosition = perk.UIPosition;
+#if UNITY_EDITOR
+            if (!Application.isPlaying)
+            {
+                Undo.RegisterCreatedObjectUndo(node.gameObject, "Rebuild Perk Tree");
+            }
+#endif
             PerkNodeUI nodeUI = node.GetComponent<PerkNodeUI>() ?? node.gameObject.AddComponent<PerkNodeUI>();
             nodeUI.Initialize(
                 perk,
