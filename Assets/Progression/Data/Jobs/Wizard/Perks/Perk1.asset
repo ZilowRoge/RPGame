@@ -17,6 +17,9 @@ MonoBehaviour:
   description: 
   connectedPerkIds:
   - Perk3
+  - Perk11
+  - Perk25
   cost: 1
   isStartingPerk: 1
-  uiPosition: {x: -75, y: 100}
+  uiPosition: {x: -74, y: 100}
+  effects: []

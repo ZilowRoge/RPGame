@@ -10,16 +10,16 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 5145033cfde049c88a0cd28b4579eb12, type: 3}
-  m_Name: Perk2
+  m_Name: Perk11
   m_EditorClassIdentifier: RPGame.Progression::RPGame.Progression.PerkDefinition
-  perkId: Perk2
-  displayName: Perk 2
+  perkId: Perk11
+  displayName: Perk 11
   description: 
   connectedPerkIds:
-  - Perk4
-  - Perk10
-  - Perk25
+  - Perk1
+  - Perk23
+  - Perk7
   cost: 1
-  isStartingPerk: 1
-  uiPosition: {x: 75, y: 100}
+  isStartingPerk: 0
+  uiPosition: {x: -300, y: 250}
   effects: []

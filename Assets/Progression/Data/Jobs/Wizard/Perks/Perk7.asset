@@ -12,11 +12,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5145033cfde049c88a0cd28b4579eb12, type: 3}
   m_Name: Perk7
   m_EditorClassIdentifier: RPGame.Progression::RPGame.Progression.PerkDefinition
-  perkId: Perk4
-  displayName: Perk 4
+  perkId: Perk7
+  displayName: Perk 7
   description: 
   connectedPerkIds:
-  - Perk2
+  - Perk5
+  - Perk14
+  - Perk12
+  - Perk25
+  - Perk11
   cost: 1
   isStartingPerk: 0
-  uiPosition: {x: 100, y: 200}
+  uiPosition: {x: -150, y: 400}
+  effects: []

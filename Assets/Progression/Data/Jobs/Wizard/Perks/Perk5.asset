@@ -13,11 +13,12 @@ MonoBehaviour:
   m_Name: Perk5
   m_EditorClassIdentifier: RPGame.Progression::RPGame.Progression.PerkDefinition
   perkId: Perk5
-  displayName: Perk 4
+  displayName: Perk 5
   description: 
   connectedPerkIds:
-  - Perk2
+  - Perk3
+  - Perk7
   cost: 1
   isStartingPerk: 0
-  uiPosition: {x: 100, y: 200}
+  uiPosition: {x: -150, y: 301}
   effects: []
