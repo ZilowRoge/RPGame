@@ -1,0 +1,19 @@
+{
+    "name": "RPGame.Progression.Editor",
+    "rootNamespace": "RPGame.Progression.Editor",
+    "references": [
+        "RPGame.Core",
+        "RPGame.Progression"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
