@@ -40,6 +40,8 @@ namespace RPGame.UI.Jobs
             List<PerkTreeConnection> connections = new();
             GetReachablePerksAndConnections(
                 job.Definition.JobPerks,
+                rootNodePrefab,
+                perkNodePrefab,
                 spawnedPerks,
                 connections,
                 getUnlockState,
@@ -86,6 +88,8 @@ namespace RPGame.UI.Jobs
 
         private static void GetReachablePerksAndConnections(
             IReadOnlyList<PerkDefinition> jobPerks,
+            RectTransform rootNodePrefab,
+            RectTransform perkNodePrefab,
             List<PerkDefinition> spawnedPerks,
             List<PerkTreeConnection> connections,
             Func<PerkDefinition, PerkUnlockState> getUnlockState,
@@ -114,8 +118,8 @@ namespace RPGame.UI.Jobs
                         connectionKeys,
                         string.Empty,
                         perk.PerkId,
-                        Vector2.zero,
-                        perk.UIPosition,
+                        GetNodeCenterPosition(rootNodePrefab, Vector2.zero),
+                        GetNodeCenterPosition(perkNodePrefab, perk.UIPosition),
                         GetConnectionState(perk, null, getUnlockState, isPerkPending));
                 }
             }
@@ -137,8 +141,8 @@ namespace RPGame.UI.Jobs
                         connectionKeys,
                         perk.PerkId,
                         connectedPerk.PerkId,
-                        perk.UIPosition,
-                        connectedPerk.UIPosition,
+                        GetNodeCenterPosition(perkNodePrefab, perk.UIPosition),
+                        GetNodeCenterPosition(perkNodePrefab, connectedPerk.UIPosition),
                         GetConnectionState(perk, connectedPerk, getUnlockState, isPerkPending));
 
                     if (!spawnedPerkIds.Contains(connectedPerk.PerkId))
@@ -261,6 +265,24 @@ namespace RPGame.UI.Jobs
             return string.CompareOrdinal(fromPerkId, toPerkId) <= 0
                 ? $"{fromPerkId}:{toPerkId}"
                 : $"{toPerkId}:{fromPerkId}";
+        }
+
+        private static Vector2 GetNodeCenterPosition(RectTransform nodePrefab, Vector2 anchoredPosition)
+        {
+            if (nodePrefab == null)
+            {
+                return anchoredPosition;
+            }
+
+            Vector2 size = nodePrefab.rect.size;
+            if (size == Vector2.zero)
+            {
+                size = nodePrefab.sizeDelta;
+            }
+
+            return anchoredPosition + new Vector2(
+                (0.5f - nodePrefab.pivot.x) * size.x,
+                (0.5f - nodePrefab.pivot.y) * size.y);
         }
 
         private static PerkTreeConnectionsGraphic GetConnectionsGraphic(

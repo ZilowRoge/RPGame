@@ -34,11 +34,11 @@ RectTransform:
   - {fileID: 9097161488079149865}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 147.3}
+  m_AnchorMin: {x: 0.5, y: 0}
+  m_AnchorMax: {x: 0.5, y: 0}
+  m_AnchoredPosition: {x: 0, y: 122.3}
   m_SizeDelta: {x: 50, y: 50}
-  m_Pivot: {x: 0.5, y: 0.5}
+  m_Pivot: {x: 0.5, y: 0}
 --- !u!222 &709765967901157707
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -92,6 +92,7 @@ MonoBehaviour:
   targetGraphic: {fileID: 1969561753665354506}
   lockedColor: {r: 0.35, g: 0.35, b: 0.35, a: 1}
   availableColor: {r: 0.95, g: 0.82, b: 0.35, a: 1}
+  pendingColor: {r: 0.35, g: 0.65, b: 1, a: 1}
   unlockedColor: {r: 0.08333331, g: 1, b: 0, a: 1}
   hoverColor: {r: 0.04258332, g: 0.511, b: 0, a: 1}
 --- !u!1 &5178197383642904463
