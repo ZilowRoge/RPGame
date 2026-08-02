@@ -1,5 +1,7 @@
 using NUnit.Framework;
+using RPGame.Core.Effects;
 using RPGame.Core.Progression;
+using RPGame.Core.Statistics.Attributes;
 using RPGame.Progression;
 using UnityEditor;
 using UnityEngine;
@@ -191,6 +193,66 @@ namespace RPGame.Progression.Tests
             Object.DestroyImmediate(perk);
         }
 
+        [Test]
+        public void TryUnlockPerk_WhenPerkHasEffects_AddsEffectsToAggregator()
+        {
+            EffectAggregator aggregator = gameObject.AddComponent<EffectAggregator>();
+            StatEffectDefinition powerEffect = CreateStatEffect(EffectStat.Power, EffectModifierType.Flat, 3f);
+            PerkDefinition perk = CreatePerkDefinition("ArcanePower", isStartingPerk: true);
+            SetPerkEffects(perk, powerEffect);
+            AddPerksToJobDefinition(wizardDefinition, perk);
+            progression.Jobs.UnlockJob(wizardDefinition);
+            JobInstance job = progression.Jobs.GetJob(WizardJobId);
+            job.AddExperience(job.GetXPToNextLevel());
+
+            bool unlocked = progression.TryUnlockPerk(job, perk);
+
+            Assert.IsTrue(unlocked);
+            Assert.AreEqual(3f, aggregator.GetEffectValue(EffectStat.Power, EffectModifierType.Flat), 0.0001f);
+            Object.DestroyImmediate(perk);
+            Object.DestroyImmediate(powerEffect);
+        }
+
+        [Test]
+        public void TryUnlockPerk_WhenPerkHasEffectsAndAggregatorIsMissing_CreatesAggregatorUsedByAttributes()
+        {
+            CharacterAttributesConfig config = CreateAttributesConfig(power: 6);
+            CharacterAttributes attributes = gameObject.AddComponent<CharacterAttributes>();
+            SetAttributesConfig(attributes, config);
+            StatEffectDefinition powerEffect = CreateStatEffect(EffectStat.Power, EffectModifierType.Flat, 3f);
+            PerkDefinition perk = CreatePerkDefinition("ArcanePower", isStartingPerk: true);
+            SetPerkEffects(perk, powerEffect);
+            AddPerksToJobDefinition(wizardDefinition, perk);
+            progression.Jobs.UnlockJob(wizardDefinition);
+            JobInstance job = progression.Jobs.GetJob(WizardJobId);
+            job.AddExperience(job.GetXPToNextLevel());
+
+            bool unlocked = progression.TryUnlockPerk(job, perk);
+
+            Assert.IsTrue(unlocked);
+            Assert.IsNotNull(gameObject.GetComponent<EffectAggregator>());
+            Assert.AreEqual(9, attributes.Power);
+            Object.DestroyImmediate(config);
+            Object.DestroyImmediate(perk);
+            Object.DestroyImmediate(powerEffect);
+        }
+
+        [Test]
+        public void TryUnlockPerk_WhenPerkHasNoEffects_DoesNotAddEffectsToAggregator()
+        {
+            PerkDefinition perk = CreatePerkDefinition("StyleChange", isStartingPerk: true);
+            AddPerksToJobDefinition(wizardDefinition, perk);
+            progression.Jobs.UnlockJob(wizardDefinition);
+            JobInstance job = progression.Jobs.GetJob(WizardJobId);
+            job.AddExperience(job.GetXPToNextLevel());
+
+            bool unlocked = progression.TryUnlockPerk(job, perk);
+
+            Assert.IsTrue(unlocked);
+            Assert.IsNull(gameObject.GetComponent<EffectAggregator>());
+            Object.DestroyImmediate(perk);
+        }
+
         private static JobDefinition CreateJobDefinition(string jobId, int maxLevel, int baseXP, float xpGrowthRate)
         {
             JobDefinition definition = ScriptableObject.CreateInstance<JobDefinition>();
@@ -219,6 +281,38 @@ namespace RPGame.Progression.Tests
             return definition;
         }
 
+        private static StatEffectDefinition CreateStatEffect(
+            EffectStat stat,
+            EffectModifierType modifierType,
+            float value)
+        {
+            StatEffectDefinition definition = ScriptableObject.CreateInstance<StatEffectDefinition>();
+            SerializedObject serializedDefinition = new SerializedObject(definition);
+            serializedDefinition.FindProperty("stat").enumValueIndex = (int)stat;
+            serializedDefinition.FindProperty("modifierType").enumValueIndex = (int)modifierType;
+            serializedDefinition.FindProperty("value").floatValue = value;
+            serializedDefinition.ApplyModifiedPropertiesWithoutUndo();
+            return definition;
+        }
+
+        private static CharacterAttributesConfig CreateAttributesConfig(int power)
+        {
+            CharacterAttributesConfig attributesConfig = ScriptableObject.CreateInstance<CharacterAttributesConfig>();
+            SerializedObject serializedConfig = new SerializedObject(attributesConfig);
+            serializedConfig.FindProperty("power").intValue = power;
+            serializedConfig.ApplyModifiedPropertiesWithoutUndo();
+            return attributesConfig;
+        }
+
+        private static void SetAttributesConfig(
+            CharacterAttributes attributes,
+            CharacterAttributesConfig config)
+        {
+            SerializedObject serializedAttributes = new SerializedObject(attributes);
+            serializedAttributes.FindProperty("config").objectReferenceValue = config;
+            serializedAttributes.ApplyModifiedPropertiesWithoutUndo();
+        }
+
         private static void AddPerksToJobDefinition(JobDefinition definition, params PerkDefinition[] perks)
         {
             SerializedObject serializedDefinition = new SerializedObject(definition);
@@ -231,6 +325,19 @@ namespace RPGame.Progression.Tests
             }
 
             serializedDefinition.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private static void SetPerkEffects(PerkDefinition perk, params EffectDefinition[] effects)
+        {
+            SerializedObject serializedPerk = new SerializedObject(perk);
+            SerializedProperty perkEffects = serializedPerk.FindProperty("effects");
+            perkEffects.arraySize = effects.Length;
+            for (int i = 0; i < effects.Length; i++)
+            {
+                perkEffects.GetArrayElementAtIndex(i).objectReferenceValue = effects[i];
+            }
+
+            serializedPerk.ApplyModifiedPropertiesWithoutUndo();
         }
     }
 }

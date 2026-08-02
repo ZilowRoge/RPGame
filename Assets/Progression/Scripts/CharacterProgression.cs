@@ -1,4 +1,6 @@
 using RPGame.Core.Progression;
+using RPGame.Core.Effects;
+using RPGame.Core.Statistics.Attributes;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -8,6 +10,8 @@ namespace RPGame.Progression
     {
         [SerializeField] private List<JobDefinition> startingJobs = new();
         [SerializeField] private int availableXP;
+        [SerializeField] private EffectAggregator effectAggregator;
+        [SerializeField] private CharacterAttributes attributes;
 
         private readonly JobContainer jobContainer = new();
         private readonly PerkProgression perks = new();
@@ -15,6 +19,7 @@ namespace RPGame.Progression
 
         public JobContainer JobContainer => jobContainer;
         public JobProgression Jobs => GetJobs();
+        public AttributeProgression Attributes => GetAttributes();
 
         private void Awake()
         {
@@ -49,7 +54,38 @@ namespace RPGame.Progression
 
         public bool TryUnlockPerk(JobInstance job, PerkDefinition perk)
         {
-            return perks.TryUnlockPerk(job, perk);
+            if (!perks.TryUnlockPerk(job, perk))
+            {
+                return false;
+            }
+
+            AddPerkEffects(perk);
+            return true;
+        }
+
+        public int GetNextAttributePointCost(CharacterAttributeType attributeType)
+        {
+            return Attributes.GetNextPointCost(attributeType);
+        }
+
+        public int GetAttributePointsCost(IReadOnlyDictionary<CharacterAttributeType, int> pendingPoints)
+        {
+            return Attributes.GetTotalCost(pendingPoints);
+        }
+
+        public bool CanBuyAttributePoint(CharacterAttributeType attributeType)
+        {
+            return Attributes.CanBuyAttributePoint(attributeType);
+        }
+
+        public AttributePurchaseResult TryBuyAttributePoint(CharacterAttributeType attributeType)
+        {
+            return Attributes.TryBuyAttributePoint(attributeType);
+        }
+
+        public AttributePurchaseResult TryBuyAttributePoints(IReadOnlyDictionary<CharacterAttributeType, int> pendingPoints)
+        {
+            return Attributes.TryBuyAttributePoints(pendingPoints);
         }
 
         private void OnValidate()
@@ -63,9 +99,53 @@ namespace RPGame.Progression
             return jobs;
         }
 
+        private AttributeProgression GetAttributes()
+        {
+            ResolveAttributes();
+            return new AttributeProgression(
+                attributes,
+                GetAvailableXP,
+                SpendExperience);
+        }
+
         private void SpendExperience(int amount)
         {
             availableXP = Mathf.Max(0, availableXP - amount);
+        }
+
+        private void AddPerkEffects(PerkDefinition perk)
+        {
+            if (perk == null || perk.Effects.Count == 0)
+            {
+                return;
+            }
+
+            ResolveEffectAggregator();
+            if (effectAggregator != null)
+            {
+                effectAggregator.AddRange(perk.Effects);
+            }
+        }
+
+        private void ResolveEffectAggregator()
+        {
+            if (effectAggregator == null)
+            {
+                TryGetComponent(out effectAggregator);
+            }
+
+            if (effectAggregator == null)
+            {
+                effectAggregator = gameObject.AddComponent<EffectAggregator>();
+            }
+        }
+
+        private void ResolveAttributes()
+        {
+            if (attributes == null)
+            {
+                TryGetComponent(out attributes);
+            }
         }
     }
 }

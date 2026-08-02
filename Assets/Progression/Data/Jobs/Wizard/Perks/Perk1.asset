@@ -22,4 +22,5 @@ MonoBehaviour:
   cost: 1
   isStartingPerk: 1
   uiPosition: {x: -74, y: 100}
-  effects: []
+  effects:
+  - {fileID: 11400000, guid: 09f002b578bf6974586e064832557f69, type: 2}

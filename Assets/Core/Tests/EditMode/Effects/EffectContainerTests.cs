@@ -62,6 +62,37 @@ namespace RPGame.Core.Tests.Effects
         }
 
         [Test]
+        public void EffectStat_AttributesUseFirstEnumValues()
+        {
+            Assert.AreEqual(0, (int)EffectStat.Strength);
+            Assert.AreEqual(1, (int)EffectStat.Dexterity);
+            Assert.AreEqual(2, (int)EffectStat.Endurance);
+            Assert.AreEqual(3, (int)EffectStat.Vitality);
+            Assert.AreEqual(4, (int)EffectStat.Intelligence);
+            Assert.AreEqual(5, (int)EffectStat.Power);
+            Assert.AreEqual(6, (int)EffectStat.MaxHealth);
+            Assert.AreEqual(7, (int)EffectStat.ManaRegeneration);
+        }
+
+        [TestCase(EffectStat.Strength)]
+        [TestCase(EffectStat.Dexterity)]
+        [TestCase(EffectStat.Endurance)]
+        [TestCase(EffectStat.Vitality)]
+        [TestCase(EffectStat.Intelligence)]
+        [TestCase(EffectStat.Power)]
+        public void GetEffectValue_WhenAttributeHasFlatBonus_ReturnsFlatValue(EffectStat attributeStat)
+        {
+            StatEffectDefinition attributeEffect = CreateStatEffect(attributeStat, EffectModifierType.Flat, 3f);
+            EffectContainer container = new EffectContainer();
+            container.Add(attributeEffect);
+
+            float value = container.GetEffectValue(attributeStat, EffectModifierType.Flat);
+
+            Assert.AreEqual(3f, value, 0.0001f);
+            Object.DestroyImmediate(attributeEffect);
+        }
+
+        [Test]
         public void GetEffectValue_WhenMultiplePercentageEffects_ReturnsSumOfFractions()
         {
             StatEffectDefinition secondEffect = CreateStatEffect(EffectStat.ManaRegeneration, EffectModifierType.Percent, 0.10f);
@@ -85,6 +116,15 @@ namespace RPGame.Core.Tests.Effects
         public void ToString_WhenEffectIsPercent_FormatsFractionAsPercentTooltipText()
         {
             Assert.AreEqual("+5% Mana Regeneration", manaRegenerationEffect.ToString());
+        }
+
+        [Test]
+        public void ToString_WhenEffectIsAttribute_FormatsAttributeTooltipText()
+        {
+            StatEffectDefinition strengthEffect = CreateStatEffect(EffectStat.Strength, EffectModifierType.Flat, 2f);
+
+            Assert.AreEqual("+2 Strength", strengthEffect.ToString());
+            Object.DestroyImmediate(strengthEffect);
         }
 
         private static StatEffectDefinition CreateStatEffect(

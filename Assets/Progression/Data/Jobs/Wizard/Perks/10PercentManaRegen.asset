@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bed36caaac624fad9bfd42816345e8a0, type: 3}
   m_Name: 10PercentManaRegen
   m_EditorClassIdentifier: RPGame.Core::RPGame.Core.Effects.StatEffectDefinition
-  stat: 0
+  stat: 6
   modifierType: 0
   value: 10
