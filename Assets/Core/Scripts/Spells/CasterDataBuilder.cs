@@ -1,18 +1,20 @@
 using System;
 using System.Collections.Generic;
 using RPGame.Core.Damage;
+using RPGame.Core.Statistics.Attributes;
 using UnityEngine;
 
 namespace RPGame.Core.Spells
 {
     public sealed class CasterDataBuilder
     {
-        private static readonly IReadOnlyList<PartialDamage> EmptyDamage = Array.Empty<PartialDamage>();
+        private static readonly IReadOnlyList<PartialDamageRange> EmptyDamageRanges = Array.Empty<PartialDamageRange>();
 
         private readonly GameObject casterObject;
         private readonly Transform castOrigin;
         private readonly Transform target;
-        private IReadOnlyList<PartialDamage> damage = EmptyDamage;
+        private IReadOnlyList<PartialDamageRange> damageRanges = EmptyDamageRanges;
+        private ICharacterAttributes attributes;
 
         public CasterDataBuilder(GameObject casterObject, Transform castOrigin, Transform target)
         {
@@ -21,15 +23,21 @@ namespace RPGame.Core.Spells
             this.target = target;
         }
 
-        public CasterDataBuilder WithDamage(IReadOnlyList<PartialDamage> damage)
+        public CasterDataBuilder WithAttributes(ICharacterAttributes attributes)
         {
-            this.damage = damage ?? EmptyDamage;
+            this.attributes = attributes;
+            return this;
+        }
+
+        public CasterDataBuilder WithDamageRanges(IReadOnlyList<PartialDamageRange> damageRanges)
+        {
+            this.damageRanges = damageRanges ?? EmptyDamageRanges;
             return this;
         }
 
         public CasterData Build()
         {
-            return new CasterData(casterObject, castOrigin, target, damage);
+            return new CasterData(casterObject, castOrigin, target, attributes, damageRanges);
         }
     }
 }

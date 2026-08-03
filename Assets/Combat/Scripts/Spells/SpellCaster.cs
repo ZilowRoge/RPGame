@@ -1,9 +1,6 @@
-using System;
-using System.Collections.Generic;
-using RPGame.Core.Damage;
 using RPGame.Core.Spells;
 using RPGame.Core.Statistics;
-using RPGame.Core.Statistics.CombatStats;
+using RPGame.Core.Statistics.Attributes;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -15,15 +12,14 @@ namespace RPGame.Combat.Spells
         [SerializeField] private Transform castOrigin;
         [SerializeField] private Transform target;
         [SerializeField] private GameObject casterObject;
-        [SerializeField] private CombatStatsProvider combatStatsProvider;
         [SerializeField] private StatisticsController statisticsController;
+        [SerializeField] private CharacterAttributes characterAttributes;
         [SerializeField] private bool castOnLeftMouseButton = true;
 
         public Spell CurrentSpell => currentSpell;
         public Transform CastOrigin => castOrigin;
         public Transform Target => target;
         public GameObject CasterObject => casterObject != null ? casterObject : gameObject;
-        public CombatStatsProvider CombatStatsProvider => ResolveCombatStatsProvider();
         public IStatisticsController Statistics => ResolveStatisticsController();
 
         private void Awake()
@@ -111,35 +107,25 @@ namespace RPGame.Combat.Spells
                 return false;
             }
 
-            currentSpell.OnCast(CreateCasterData(true));
+            currentSpell.OnCast(CreateCasterData());
             return true;
         }
 
-        public CasterData CreateCasterData(bool addDamage = false)
+        public CasterData CreateCasterData()
         {
-            CasterDataBuilder builder = new CasterDataBuilder(CasterObject, castOrigin, target);
-            if (addDamage)
-            {
-                builder.WithDamage(RollDamage());
-            }
-
-            return builder.Build();
+            return new CasterDataBuilder(CasterObject, castOrigin, target)
+                .WithAttributes(ResolveCharacterAttributes())
+                .Build();
         }
 
-        private IReadOnlyList<PartialDamage> RollDamage()
+        private CharacterAttributes ResolveCharacterAttributes()
         {
-            CombatStatsProvider provider = ResolveCombatStatsProvider();
-            return provider != null ? provider.RollDamage() : Array.Empty<PartialDamage>();
-        }
-
-        private CombatStatsProvider ResolveCombatStatsProvider()
-        {
-            if (combatStatsProvider == null)
+            if (characterAttributes == null)
             {
-                combatStatsProvider = GetComponentInParent<CombatStatsProvider>();
+                TryGetComponent(out characterAttributes);
             }
 
-            return combatStatsProvider;
+            return characterAttributes;
         }
 
         private StatisticsController ResolveStatisticsController()

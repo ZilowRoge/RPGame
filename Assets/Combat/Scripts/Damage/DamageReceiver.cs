@@ -9,7 +9,7 @@ namespace RPGame.Combat.Damage
     public sealed class DamageReceiver : MonoBehaviour, IDamageable
     {
         [SerializeField] private StatisticsController statisticsController;
-        [SerializeField] private bool loggingEnabled;
+        [SerializeField] private bool loggingEnabled = true;
 
         public event Action<DamageResult> DamageReceived;
 
@@ -52,12 +52,17 @@ namespace RPGame.Combat.Damage
 
         private void LogDamageReceived(DamageResult result)
         {
-            if (loggingEnabled) 
+            if (loggingEnabled)
             {
                 Debug.Log(
-                    $"{name} received {result.AppliedAmount:0.#} damage ({FormatDamageParts(result.Data)}).",
+                    $"{FormatDamageSource(result.Data)} dealt {result.AppliedAmount:0.#} damage to {name} ({FormatDamageParts(result.Data)}).",
                     this);
             }
+        }
+
+        private static string FormatDamageSource(DamageData data)
+        {
+            return data.Source != null ? data.Source.name : "Unknown source";
         }
 
         private static string FormatDamageParts(DamageData data)

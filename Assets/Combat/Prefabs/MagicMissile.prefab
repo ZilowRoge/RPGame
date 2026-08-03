@@ -248,11 +248,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: RPGame.Combat::RPGame.Combat.Projectiles.ProjectileController
   speed: 10
   acceleration: 5
-  damage:
-  - minDamage: 10
-    maxDamage: 10
-    damageType: 1
-    damageElement: 0
   maxLifetime: 5
   hitLayers:
     serializedVersion: 2

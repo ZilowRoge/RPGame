@@ -9,10 +9,6 @@ namespace RPGame.Combat.Projectiles
     {
         [SerializeField] private float speed = 10f;
         [SerializeField] private float acceleration;
-        [SerializeField] private List<PartialDamageRange> damage = new()
-        {
-            new PartialDamageRange(10f, 10f, DamageType.Magical, DamageElement.None)
-        };
         [SerializeField] private float maxLifetime = 5f;
         [SerializeField] private LayerMask hitLayers = ~0;
         [SerializeField] private QueryTriggerInteraction triggerInteraction = QueryTriggerInteraction.Collide;
@@ -27,7 +23,6 @@ namespace RPGame.Combat.Projectiles
 
         public CasterData CasterData { get; private set; }
         public float CurrentSpeed => currentSpeed;
-        public IReadOnlyList<PartialDamageRange> Damage => damage;
         public bool IsInitialized { get; private set; }
 
         public void Initialize(CasterData casterData)
@@ -148,25 +143,20 @@ namespace RPGame.Combat.Projectiles
             if (TryGetDamageable(hitCollider, out IDamageable damageable))
             {
                 List<PartialDamage> damageParts = new();
-                for (int i = 0; i < damage.Count; i++)
+                IReadOnlyList<PartialDamageRange> casterDamageRanges = CasterData.DamageRanges;
+                if (casterDamageRanges != null)
                 {
-                    PartialDamageRange damageRange = damage[i];
-                    int minDamage = Mathf.CeilToInt(damageRange.MinDamage);
-                    int maxDamage = Mathf.Max(minDamage, Mathf.FloorToInt(damageRange.MaxDamage));
-                    float amount = Random.Range(minDamage, maxDamage + 1);
-
-                    damageParts.Add(new PartialDamage(
-                        amount,
-                        damageRange.DamageType,
-                        damageRange.DamageElement));
-                }
-
-                IReadOnlyList<PartialDamage> casterDamage = CasterData.Damage;
-                if (casterDamage != null)
-                {
-                    for (int i = 0; i < casterDamage.Count; i++)
+                    for (int i = 0; i < casterDamageRanges.Count; i++)
                     {
-                        damageParts.Add(casterDamage[i]);
+                        PartialDamageRange damageRange = casterDamageRanges[i];
+                        int minDamage = Mathf.CeilToInt(damageRange.MinDamage);
+                        int maxDamage = Mathf.Max(minDamage, Mathf.FloorToInt(damageRange.MaxDamage));
+                        float amount = Random.Range(minDamage, maxDamage + 1);
+
+                        damageParts.Add(new PartialDamage(
+                            amount,
+                            damageRange.DamageType,
+                            damageRange.DamageElement));
                     }
                 }
 

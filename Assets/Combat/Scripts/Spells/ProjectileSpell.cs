@@ -1,5 +1,8 @@
+using System.Collections.Generic;
+using RPGame.Core.Damage;
 using RPGame.Combat.Projectiles;
 using RPGame.Core.Spells;
+using RPGame.Core.Statistics.Attributes;
 using UnityEngine;
 
 namespace RPGame.Combat.Spells
@@ -7,6 +10,9 @@ namespace RPGame.Combat.Spells
     [CreateAssetMenu(fileName = "ProjectileSpell", menuName = "RPGame/Spells/Projectile Spell")]
     public sealed class ProjectileSpell : Spell
     {
+        [SerializeField] private PartialDamageRange baseDamageRange = new(10f, 10f, DamageType.Magical, DamageElement.None);
+        [SerializeField] private float powerDamageScaling;
+
         public override void OnCast(CasterData casterData)
         {
             if (SpellPrefab == null)
@@ -27,7 +33,33 @@ namespace RPGame.Combat.Spells
                 return;
             }
 
-            projectile.Initialize(casterData);
+            projectile.Initialize(CreateProjectileCasterData(casterData));
+        }
+
+        private CasterData CreateProjectileCasterData(CasterData casterData)
+        {
+            return new CasterDataBuilder(casterData.CasterObject, casterData.CastOrigin, casterData.Target)
+                .WithDamageRanges(CreateDamageRanges(casterData.Attributes))
+                .Build();
+        }
+
+        private IReadOnlyList<PartialDamageRange> CreateDamageRanges(ICharacterAttributes attributes)
+        {
+            float powerDamageBonus = CalculatePowerDamageBonus(attributes);
+            return new[]
+            {
+                new PartialDamageRange(
+                    baseDamageRange.MinDamage + powerDamageBonus,
+                    baseDamageRange.MaxDamage + powerDamageBonus,
+                    baseDamageRange.DamageType,
+                    baseDamageRange.DamageElement)
+            };
+        }
+
+        private float CalculatePowerDamageBonus(ICharacterAttributes attributes)
+        {
+            int power = attributes != null ? attributes.Power : 0;
+            return SpellDamageCalculator.CalculatePowerDamageBonus(power, powerDamageScaling);
         }
     }
 }

@@ -14,3 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: RPGame.Combat::RPGame.Combat.Spells.ProjectileSpell
   spellPrefab: {fileID: 8290428544382467781, guid: 0c8e054a61c533048addf69ce119cb66, type: 3}
   manaCost: 10
+  baseDamageRange:
+    minDamage: 10
+    maxDamage: 10
+    damageType: 1
+    damageElement: 0
+  powerDamageScaling: 1

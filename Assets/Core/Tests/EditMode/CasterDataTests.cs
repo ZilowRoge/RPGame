@@ -9,58 +9,34 @@ namespace RPGame.Core.Tests
     public sealed class CasterDataTests
     {
         [Test]
-        public void CasterData_WhenDamageIsProvided_PreservesDamage()
-        {
-            GameObject caster = new GameObject("CasterDataTests");
-            List<PartialDamage> damage = new()
-            {
-                new PartialDamage(3f, DamageType.Magical, DamageElement.Fire)
-            };
-
-            try
-            {
-                CasterData casterData = new CasterData(caster, caster.transform, null, damage);
-
-                Assert.AreSame(caster, casterData.CasterObject);
-                Assert.AreEqual(1, casterData.Damage.Count);
-                Assert.AreEqual(3f, casterData.Damage[0].Amount);
-                Assert.AreEqual(DamageElement.Fire, casterData.Damage[0].DamageElement);
-            }
-            finally
-            {
-                Object.DestroyImmediate(caster);
-            }
-        }
-
-        [Test]
-        public void CasterData_WhenDamageIsNotProvided_UsesEmptyDamage()
+        public void CasterData_WhenDamageRangesAreNotProvided_UsesEmptyDamageRanges()
         {
             CasterData casterData = new CasterData(null, null, null);
 
-            Assert.IsNotNull(casterData.Damage);
-            Assert.AreEqual(0, casterData.Damage.Count);
+            Assert.IsNotNull(casterData.DamageRanges);
+            Assert.AreEqual(0, casterData.DamageRanges.Count);
         }
 
         [Test]
-        public void CasterDataBuilder_WithDamage_BuildsCasterDataWithDamage()
+        public void CasterDataBuilder_WithDamageRanges_BuildsCasterDataWithDamageRanges()
         {
-            GameObject caster = new GameObject("CasterDataBuilderTests");
-            List<PartialDamage> damage = new()
+            GameObject caster = new GameObject("CasterDataBuilderDamageRangesTests");
+            List<PartialDamageRange> damageRanges = new()
             {
-                new PartialDamage(4f, DamageType.Magical, DamageElement.Light)
+                new PartialDamageRange(5f, 9f, DamageType.Magical, DamageElement.Fire)
             };
 
             try
             {
                 CasterData casterData = new CasterDataBuilder(caster, caster.transform, null)
-                    .WithDamage(damage)
+                    .WithDamageRanges(damageRanges)
                     .Build();
 
                 Assert.AreSame(caster, casterData.CasterObject);
-                Assert.AreSame(caster.transform, casterData.CastOrigin);
-                Assert.AreEqual(1, casterData.Damage.Count);
-                Assert.AreEqual(4f, casterData.Damage[0].Amount);
-                Assert.AreEqual(DamageElement.Light, casterData.Damage[0].DamageElement);
+                Assert.AreEqual(1, casterData.DamageRanges.Count);
+                Assert.AreEqual(5f, casterData.DamageRanges[0].MinDamage);
+                Assert.AreEqual(9f, casterData.DamageRanges[0].MaxDamage);
+                Assert.AreEqual(DamageElement.Fire, casterData.DamageRanges[0].DamageElement);
             }
             finally
             {

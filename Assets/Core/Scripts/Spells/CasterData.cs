@@ -1,48 +1,52 @@
 using System;
 using System.Collections.Generic;
 using RPGame.Core.Damage;
+using RPGame.Core.Statistics.Attributes;
 using UnityEngine;
 
 namespace RPGame.Core.Spells
 {
     public readonly struct CasterData
     {
-        private static readonly IReadOnlyList<PartialDamage> EmptyDamage = Array.Empty<PartialDamage>();
+        private static readonly IReadOnlyList<PartialDamageRange> EmptyDamageRanges = Array.Empty<PartialDamageRange>();
 
         public CasterData(
             GameObject casterObject,
             Transform castOrigin,
             Transform target,
-            IReadOnlyList<PartialDamage> damage = null)
+            ICharacterAttributes attributes = null,
+            IReadOnlyList<PartialDamageRange> damageRanges = null)
         {
             CasterObject = casterObject;
             CastOrigin = castOrigin;
             Target = target;
-            Damage = CopyDamage(damage);
+            Attributes = attributes;
+            DamageRanges = CopyDamageRanges(damageRanges);
         }
 
         public GameObject CasterObject { get; }
         public Transform CastOrigin { get; }
         public Transform Target { get; }
-        public IReadOnlyList<PartialDamage> Damage { get; }
+        public ICharacterAttributes Attributes { get; }
+        public IReadOnlyList<PartialDamageRange> DamageRanges { get; }
 
-        private static IReadOnlyList<PartialDamage> CopyDamage(IReadOnlyList<PartialDamage> damage)
+        private static IReadOnlyList<PartialDamageRange> CopyDamageRanges(IReadOnlyList<PartialDamageRange> damageRanges)
         {
-            if (damage == null || damage.Count == 0)
+            if (damageRanges == null || damageRanges.Count == 0)
             {
-                return EmptyDamage;
+                return EmptyDamageRanges;
             }
 
-            List<PartialDamage> copiedDamage = new(damage.Count);
-            for (int i = 0; i < damage.Count; i++)
+            List<PartialDamageRange> copiedDamageRanges = new(damageRanges.Count);
+            for (int i = 0; i < damageRanges.Count; i++)
             {
-                if (damage[i].HasDamage)
+                if (damageRanges[i].MaxDamage > 0f)
                 {
-                    copiedDamage.Add(damage[i]);
+                    copiedDamageRanges.Add(damageRanges[i]);
                 }
             }
 
-            return copiedDamage.Count > 0 ? copiedDamage : EmptyDamage;
+            return copiedDamageRanges.Count > 0 ? copiedDamageRanges : EmptyDamageRanges;
         }
     }
 }

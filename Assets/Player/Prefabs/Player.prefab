@@ -598,6 +598,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: RPGame.Combat::RPGame.Combat.Damage.DamageReceiver
   statisticsController: {fileID: 8541911369478375139}
+  loggingEnabled: 1
 --- !u!114 &4581996241443596218
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -644,7 +645,6 @@ MonoBehaviour:
   castOrigin: {fileID: 70242763662629742}
   target: {fileID: 0}
   casterObject: {fileID: 8024470455656626075}
-  combatStatsProvider: {fileID: 0}
   castOnLeftMouseButton: 0
 --- !u!114 &1416622787065215315
 MonoBehaviour:
