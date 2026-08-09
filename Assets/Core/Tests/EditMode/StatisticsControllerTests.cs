@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using RPGame.Core.Statistics;
+using RPGame.Core.Statistics.Attributes;
 using UnityEditor;
 using UnityEngine;
 
@@ -9,6 +10,7 @@ namespace RPGame.Core.Tests
     {
         private GameObject gameObject;
         private StatisticsConfig config;
+        private CharacterAttributesConfig attributesConfig;
         private StatisticsController controller;
 
         [SetUp]
@@ -35,6 +37,10 @@ namespace RPGame.Core.Tests
         {
             Object.DestroyImmediate(gameObject);
             Object.DestroyImmediate(config);
+            if (attributesConfig != null)
+            {
+                Object.DestroyImmediate(attributesConfig);
+            }
         }
 
         [Test]
@@ -46,6 +52,36 @@ namespace RPGame.Core.Tests
             Assert.AreEqual(1f, controller.HealthNormalized);
             Assert.AreEqual(1f, controller.StaminaNormalized);
             Assert.AreEqual(1f, controller.ManaNormalized);
+        }
+
+        [Test]
+        public void MaxHealth_AddsFiveForEachVitalityPoint()
+        {
+            AddAttributes(vitality: 7, endurance: 0, intelligence: 0);
+            controller.ResetToConfig();
+
+            Assert.AreEqual(135f, controller.MaxHealth);
+            Assert.AreEqual(135f, controller.CurrentHealth);
+        }
+
+        [Test]
+        public void MaxStamina_AddsFiveForEachEndurancePoint()
+        {
+            AddAttributes(vitality: 0, endurance: 6, intelligence: 0);
+            controller.ResetToConfig();
+
+            Assert.AreEqual(80f, controller.MaxStamina);
+            Assert.AreEqual(80f, controller.CurrentStamina);
+        }
+
+        [Test]
+        public void MaxMana_AddsFiveForEachIntelligencePoint()
+        {
+            AddAttributes(vitality: 0, endurance: 0, intelligence: 4);
+            controller.ResetToConfig();
+
+            Assert.AreEqual(100f, controller.MaxMana);
+            Assert.AreEqual(100f, controller.CurrentMana);
         }
 
         [Test]
@@ -266,6 +302,24 @@ namespace RPGame.Core.Tests
             serializedConfig.FindProperty("manaRegenerationDelay").floatValue = manaRegenerationDelay;
             serializedConfig.ApplyModifiedPropertiesWithoutUndo();
             return statisticsConfig;
+        }
+
+        private void AddAttributes(int vitality, int endurance, int intelligence)
+        {
+            attributesConfig = ScriptableObject.CreateInstance<CharacterAttributesConfig>();
+            SerializedObject serializedConfig = new SerializedObject(attributesConfig);
+            serializedConfig.FindProperty("strength").intValue = 0;
+            serializedConfig.FindProperty("dexterity").intValue = 0;
+            serializedConfig.FindProperty("endurance").intValue = endurance;
+            serializedConfig.FindProperty("vitality").intValue = vitality;
+            serializedConfig.FindProperty("intelligence").intValue = intelligence;
+            serializedConfig.FindProperty("power").intValue = 0;
+            serializedConfig.ApplyModifiedPropertiesWithoutUndo();
+
+            CharacterAttributes attributes = gameObject.AddComponent<CharacterAttributes>();
+            SerializedObject serializedAttributes = new SerializedObject(attributes);
+            serializedAttributes.FindProperty("config").objectReferenceValue = attributesConfig;
+            serializedAttributes.ApplyModifiedPropertiesWithoutUndo();
         }
 
         private static void SetControllerConfig(StatisticsController statisticsController, StatisticsConfig statisticsConfig)

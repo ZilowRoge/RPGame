@@ -1,11 +1,15 @@
 using System;
+using RPGame.Core.Statistics.Attributes;
 using UnityEngine;
 
 namespace RPGame.Core.Statistics
 {
     public sealed class StatisticsController : MonoBehaviour, IStatisticsController
     {
+        private const float AttributeVitalBonus = 5f;
+
         [SerializeField] private StatisticsConfig config;
+        [SerializeField] private CharacterAttributes attributes;
         [SerializeField] private bool initializeOnAwake = true;
 
         [Header("Regeneration")]
@@ -21,9 +25,9 @@ namespace RPGame.Core.Statistics
         public float CurrentHealth { get; private set; }
         public float CurrentStamina { get; private set; }
         public float CurrentMana { get; private set; }
-        public float MaxHealth => config != null ? config.MaxHealth : 0f;
-        public float MaxStamina => config != null ? config.MaxStamina : 0f;
-        public float MaxMana => config != null ? config.MaxMana : 0f;
+        public float MaxHealth => GetBaseMaxHealth() + GetAttributeVitalBonus(CharacterAttributeType.Vitality);
+        public float MaxStamina => GetBaseMaxStamina() + GetAttributeVitalBonus(CharacterAttributeType.Endurance);
+        public float MaxMana => GetBaseMaxMana() + GetAttributeVitalBonus(CharacterAttributeType.Intelligence);
         public float HealthRegenerationPerSecond => config != null ? config.HealthRegenerationPerSecond : 0f;
         public float StaminaRegenerationPerSecond => config != null ? config.StaminaRegenerationPerSecond : 0f;
         public float StaminaRegenerationDelay => config != null ? config.StaminaRegenerationDelay : 0f;
@@ -36,13 +40,34 @@ namespace RPGame.Core.Statistics
 
         private float staminaRegenerationDelayTimer;
         private float manaRegenerationDelayTimer;
+        private float lastKnownMaxHealth;
+        private float lastKnownMaxStamina;
+        private float lastKnownMaxMana;
 
         private void Awake()
         {
+            ResolveAttributes();
+
             if (initializeOnAwake)
             {
                 ResetToConfig();
             }
+        }
+
+        private void OnEnable()
+        {
+            ResolveAttributes();
+            SubscribeAttributes();
+        }
+
+        private void OnDisable()
+        {
+            UnsubscribeAttributes();
+        }
+
+        private void OnDestroy()
+        {
+            UnsubscribeAttributes();
         }
 
         private void Update()
@@ -188,12 +213,17 @@ namespace RPGame.Core.Statistics
         private void SetHealth(float value)
         {
             float previousHealth = CurrentHealth;
-            CurrentHealth = Mathf.Clamp(value, 0f, MaxHealth);
+            float maxHealth = MaxHealth;
+            float previousMaxHealth = lastKnownMaxHealth;
+            CurrentHealth = Mathf.Clamp(value, 0f, maxHealth);
 
-            if (!Mathf.Approximately(previousHealth, CurrentHealth))
+            if (!Mathf.Approximately(previousHealth, CurrentHealth)
+                || !Mathf.Approximately(previousMaxHealth, maxHealth))
             {
-                HealthChanged?.Invoke(CurrentHealth, MaxHealth);
+                HealthChanged?.Invoke(CurrentHealth, maxHealth);
             }
+
+            lastKnownMaxHealth = maxHealth;
 
             if (previousHealth > 0f && CurrentHealth <= 0f)
             {
@@ -204,23 +234,86 @@ namespace RPGame.Core.Statistics
         private void SetStamina(float value)
         {
             float previousStamina = CurrentStamina;
-            CurrentStamina = Mathf.Clamp(value, 0f, MaxStamina);
+            float maxStamina = MaxStamina;
+            float previousMaxStamina = lastKnownMaxStamina;
+            CurrentStamina = Mathf.Clamp(value, 0f, maxStamina);
 
-            if (!Mathf.Approximately(previousStamina, CurrentStamina))
+            if (!Mathf.Approximately(previousStamina, CurrentStamina)
+                || !Mathf.Approximately(previousMaxStamina, maxStamina))
             {
-                StaminaChanged?.Invoke(CurrentStamina, MaxStamina);
+                StaminaChanged?.Invoke(CurrentStamina, maxStamina);
             }
+
+            lastKnownMaxStamina = maxStamina;
         }
 
         private void SetMana(float value)
         {
             float previousMana = CurrentMana;
-            CurrentMana = Mathf.Clamp(value, 0f, MaxMana);
+            float maxMana = MaxMana;
+            float previousMaxMana = lastKnownMaxMana;
+            CurrentMana = Mathf.Clamp(value, 0f, maxMana);
 
-            if (!Mathf.Approximately(previousMana, CurrentMana))
+            if (!Mathf.Approximately(previousMana, CurrentMana)
+                || !Mathf.Approximately(previousMaxMana, maxMana))
             {
-                OnManaChanged?.Invoke(CurrentMana, MaxMana);
+                OnManaChanged?.Invoke(CurrentMana, maxMana);
             }
+
+            lastKnownMaxMana = maxMana;
+        }
+
+        private void ResolveAttributes()
+        {
+            if (attributes == null)
+            {
+                TryGetComponent(out attributes);
+            }
+        }
+
+        private void SubscribeAttributes()
+        {
+            if (attributes != null)
+            {
+                attributes.ValuesChanged -= OnAttributesChanged;
+                attributes.ValuesChanged += OnAttributesChanged;
+            }
+        }
+
+        private void UnsubscribeAttributes()
+        {
+            if (attributes != null)
+            {
+                attributes.ValuesChanged -= OnAttributesChanged;
+            }
+        }
+
+        private void OnAttributesChanged()
+        {
+            SetHealth(CurrentHealth);
+            SetStamina(CurrentStamina);
+            SetMana(CurrentMana);
+        }
+
+        private float GetBaseMaxHealth()
+        {
+            return config != null ? config.MaxHealth : 0f;
+        }
+
+        private float GetBaseMaxStamina()
+        {
+            return config != null ? config.MaxStamina : 0f;
+        }
+
+        private float GetBaseMaxMana()
+        {
+            return config != null ? config.MaxMana : 0f;
+        }
+
+        private float GetAttributeVitalBonus(CharacterAttributeType attributeType)
+        {
+            ResolveAttributes();
+            return attributes != null ? attributes.GetValue(attributeType) * AttributeVitalBonus : 0f;
         }
     }
 }
