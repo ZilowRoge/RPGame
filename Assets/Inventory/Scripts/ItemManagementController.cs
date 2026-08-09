@@ -80,10 +80,16 @@ namespace RPGame.Inventory
             return service.UnequipToInventory(slotType);
         }
 
-        public bool AddItem(ItemInstance item, int amount = 1)
+        public bool AddItem(ItemDefinition definition, int amount)
         {
             EnsureInitialized();
-            return inventory.AddItem(item, amount);
+            return inventory.AddItem(definition, amount);
+        }
+
+        public bool AddItem(ItemInstance item)
+        {
+            EnsureInitialized();
+            return inventory.AddItem(item);
         }
 
         public bool MoveItem(ItemSlotReference from, ItemSlotReference to)
@@ -121,7 +127,7 @@ namespace RPGame.Inventory
                 ItemDefinition definition = startingItems[i];
                 if (definition != null)
                 {
-                    inventory.AddItem(new ItemInstance(definition), 1);
+                    inventory.AddItem(definition, 1);
                 }
             }
         }

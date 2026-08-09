@@ -31,7 +31,7 @@ namespace RPGame.Inventory.Logic
             EquipmentSlot equipmentSlot = equipment.GetSlot(slotType);
             ItemInstance item = equipmentSlot?.Item;
 
-            if (item == null || !inventory.CanAddItem(item, item.StackSize))
+            if (item == null || !inventory.CanAddItem(item))
             {
                 return false;
             }
@@ -42,7 +42,7 @@ namespace RPGame.Inventory.Logic
                 return false;
             }
 
-            if (inventory.AddItem(unequippedItem, unequippedItem.StackSize))
+            if (inventory.AddItem(unequippedItem))
             {
                 return true;
             }

@@ -125,6 +125,44 @@ namespace RPGame.Inventory.Tests
         }
 
         [Test]
+        public void AddItem_WhenSingleItemFits_AddsItemInstance()
+        {
+            InventoryModel inventory = new InventoryModel(1);
+            ItemInstance item = new ItemInstance(weaponDefinition);
+
+            bool added = inventory.AddItem(item);
+
+            Assert.IsTrue(added);
+            Assert.AreSame(item, inventory.GetSlot(0).Item);
+        }
+
+        [Test]
+        public void AddItem_WhenDefinitionAmountFits_AddsStack()
+        {
+            InventoryModel inventory = new InventoryModel(2);
+
+            bool added = inventory.AddItem(stackableDefinition, 4);
+
+            Assert.IsTrue(added);
+            Assert.AreSame(stackableDefinition, inventory.GetSlot(0).Item.Definition);
+            Assert.AreEqual(4, inventory.GetSlot(0).Item.StackSize);
+            Assert.IsFalse(inventory.GetSlot(1).HasItem);
+        }
+
+        [Test]
+        public void AddItem_WhenItemIsStackable_FillsExistingStack()
+        {
+            InventoryModel inventory = new InventoryModel(2);
+
+            inventory.AddItem(stackableDefinition, 2);
+            bool added = inventory.AddItem(new ItemInstance(stackableDefinition, 3));
+
+            Assert.IsTrue(added);
+            Assert.AreEqual(5, inventory.GetSlot(0).Item.StackSize);
+            Assert.IsFalse(inventory.GetSlot(1).HasItem);
+        }
+
+        [Test]
         public void AddItem_WhenInventoryIsFull_ReturnsFalse()
         {
             InventoryModel inventory = new InventoryModel(1);
@@ -140,18 +178,15 @@ namespace RPGame.Inventory.Tests
         }
 
         [Test]
-        public void AddItem_WhenItemIsStackable_FillsExistingStack()
+        public void AddItem_WhenStackDoesNotFullyFit_DoesNotPartiallyModifyInventory()
         {
-            InventoryModel inventory = new InventoryModel(2);
-            ItemInstance firstStack = new ItemInstance(stackableDefinition, 2);
-            ItemInstance secondStack = new ItemInstance(stackableDefinition, 3);
+            InventoryModel inventory = new InventoryModel(1);
 
-            inventory.AddItem(firstStack, 2);
-            bool added = inventory.AddItem(secondStack, 3);
+            inventory.AddItem(stackableDefinition, 4);
+            bool added = inventory.AddItem(stackableDefinition, 2);
 
-            Assert.IsTrue(added);
-            Assert.AreEqual(5, inventory.GetSlot(0).Item.StackSize);
-            Assert.IsFalse(inventory.GetSlot(1).HasItem);
+            Assert.IsFalse(added);
+            Assert.AreEqual(4, inventory.GetSlot(0).Item.StackSize);
         }
 
         [Test]
@@ -175,7 +210,7 @@ namespace RPGame.Inventory.Tests
             ItemInstance firstStack = new ItemInstance(stackableDefinition, 2);
             ItemInstance secondStack = new ItemInstance(stackableDefinition, 2);
 
-            inventory.AddItem(firstStack, 2);
+            inventory.AddItem(firstStack);
             inventory.GetSlot(1).SetItem(secondStack);
 
             bool moved = inventory.MoveItem(1, 0, 2);
@@ -192,7 +227,7 @@ namespace RPGame.Inventory.Tests
             ItemInstance fullStack = new ItemInstance(stackableDefinition, 5);
             ItemInstance sourceStack = new ItemInstance(stackableDefinition, 1);
 
-            inventory.AddItem(fullStack, 5);
+            inventory.AddItem(fullStack);
             inventory.GetSlot(1).SetItem(sourceStack);
 
             bool moved = inventory.MoveItem(1, 0);

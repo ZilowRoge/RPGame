@@ -26,8 +26,10 @@ namespace RPGame.Core.Interaction
         public event Action<IInteractable> CurrentInteractableChanged;
 
         public IInteractable CurrentInteractable { get; private set; }
-        public string CurrentInteractionText => CurrentInteractable != null ? CurrentInteractable.GetInteractionText() : string.Empty;
-        public bool HasInteractable => CurrentInteractable != null;
+        public string CurrentInteractionText => !IsInvalidInteractable(CurrentInteractable)
+            ? CurrentInteractable.GetInteractionText()
+            : string.Empty;
+        public bool HasInteractable => !IsInvalidInteractable(CurrentInteractable);
 
         private void Awake()
         {
@@ -73,7 +75,7 @@ namespace RPGame.Core.Interaction
 
         public void RegisterInteractable(IInteractable interactable)
         {
-            if (interactable == null || interactable.InteractionTransform == null || ContainsInteractable(interactable))
+            if (IsInvalidInteractable(interactable) || ContainsInteractable(interactable))
             {
                 return;
             }
@@ -114,7 +116,7 @@ namespace RPGame.Core.Interaction
             {
                 IInteractable candidate = candidates[i];
 
-                if (candidate == null || candidate.InteractionTransform == null)
+                if (IsInvalidInteractable(candidate))
                 {
                     candidates.RemoveAt(i);
                 }
@@ -132,8 +134,14 @@ namespace RPGame.Core.Interaction
 
         private bool ContainsInteractable(IInteractable interactable)
         {
-            for (int i = 0; i < candidates.Count; i++)
+            for (int i = candidates.Count - 1; i >= 0; i--)
             {
+                if (IsInvalidInteractable(candidates[i]))
+                {
+                    candidates.RemoveAt(i);
+                    continue;
+                }
+
                 if (ReferenceEquals(candidates[i], interactable))
                 {
                     return true;
@@ -209,6 +217,16 @@ namespace RPGame.Core.Interaction
         private static bool HasBindings(InputAction action)
         {
             return action != null && action.bindings.Count > 0;
+        }
+
+        private static bool IsInvalidInteractable(IInteractable interactable)
+        {
+            if (interactable == null || interactable is UnityEngine.Object unityObject && unityObject == null)
+            {
+                return true;
+            }
+
+            return interactable.InteractionTransform == null;
         }
 
         private void OnValidate()
