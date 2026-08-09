@@ -2,8 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using RPGame.Core.Spells;
 using NUnit.Framework;
+using RPGame.Core.Progression;
+using RPGame.Core.Spells;
 using RPGame.Core.Statistics;
 using RPGame.Core.Statistics.Attributes;
 using RPGame.Core.Statistics.CombatStats;
@@ -176,6 +177,62 @@ namespace RPGame.UI.Tests
         }
 
         [Test]
+        public void Builder_WithAvailableExperience_DisplaysAvailableExperienceRecord()
+        {
+            RecordsBuilder builder = new()
+            {
+                Definitions = new List<RecordDefinition>
+                {
+                    RecordDefinition.AvailableExperience()
+                }
+            };
+            DataEntry[] entries =
+            {
+                new(RecordId.AvailableExperience, "250")
+            };
+
+            IReadOnlyList<StatisticRecordData> records = builder.Build(entries);
+
+            Assert.AreEqual(1, records.Count);
+            Assert.AreEqual("Available XP", records[0].Label);
+            Assert.AreEqual("250", records[0].ValueText);
+        }
+
+        [Test]
+        public void Builder_WithDefaultDefinitions_DisplaysAvailableExperienceFirst()
+        {
+            RecordsBuilder builder = new();
+            DataEntry[] entries =
+            {
+                new(RecordId.Health, "10 / 100"),
+                new(RecordId.AvailableExperience, "250")
+            };
+
+            IReadOnlyList<StatisticRecordData> records = builder.Build(entries);
+
+            Assert.AreEqual("Available XP", records[0].Label);
+            Assert.AreEqual("250", records[0].ValueText);
+        }
+
+        [Test]
+        public void Builder_WhenAvailableExperienceIsMissing_DisplaysEmptyValue()
+        {
+            RecordsBuilder builder = new()
+            {
+                Definitions = new List<RecordDefinition>
+                {
+                    RecordDefinition.AvailableExperience()
+                }
+            };
+
+            IReadOnlyList<StatisticRecordData> records = builder.Build(System.Array.Empty<DataEntry>());
+
+            Assert.AreEqual(1, records.Count);
+            Assert.AreEqual("Available XP", records[0].Label);
+            Assert.AreEqual("\u2014", records[0].ValueText);
+        }
+
+        [Test]
         public void StatisticRecordUI_SetText_UsesOnlyProvidedLabelAndValue()
         {
             StatisticRecordUI record = CreateRecordPrefab("Record");
@@ -194,7 +251,8 @@ namespace RPGame.UI.Tests
                 typeof(StatisticsController),
                 typeof(CharacterAttributes),
                 typeof(CombatStatsProvider),
-                typeof(ILastUsedSpellDamageRangeProvider)
+                typeof(ILastUsedSpellDamageRangeProvider),
+                typeof(IExperienceProvider)
             };
 
             Type[] referencedTypes = typeof(StatisticRecordUI)

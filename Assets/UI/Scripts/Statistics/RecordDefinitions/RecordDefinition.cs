@@ -50,6 +50,11 @@ namespace RPGame.UI.Statistics
             return new RecordDefinition(RecordId.StaminaRegeneration, "Stamina Regeneration");
         }
 
+        public static RecordDefinition AvailableExperience()
+        {
+            return new RecordDefinition(RecordId.AvailableExperience, "Available XP", showWhenMissing: true);
+        }
+
         public static RecordDefinition LastSpell()
         {
             return new RecordDefinition(RecordId.LastSpellDamage, "Last spell", showWhenMissing: true);

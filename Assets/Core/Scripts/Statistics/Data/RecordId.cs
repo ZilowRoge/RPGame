@@ -9,6 +9,7 @@ namespace RPGame.Core.Statistics
         HealthRegeneration,
         ManaRegeneration,
         StaminaRegeneration,
+        AvailableExperience,
         LastSpellDamage,
         WeaponDamage
     }

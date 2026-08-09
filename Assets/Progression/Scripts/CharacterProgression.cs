@@ -1,12 +1,13 @@
-using RPGame.Core.Progression;
-using RPGame.Core.Effects;
-using RPGame.Core.Statistics.Attributes;
+using System;
 using System.Collections.Generic;
+using RPGame.Core.Effects;
+using RPGame.Core.Progression;
+using RPGame.Core.Statistics.Attributes;
 using UnityEngine;
 
 namespace RPGame.Progression
 {
-    public sealed class CharacterProgression : MonoBehaviour, IExperienceReceiver
+    public sealed class CharacterProgression : MonoBehaviour, IExperienceReceiver, IExperienceProvider
     {
         [SerializeField] private List<JobDefinition> startingJobs = new();
         [SerializeField] private int availableXP;
@@ -20,6 +21,9 @@ namespace RPGame.Progression
         public JobContainer JobContainer => jobContainer;
         public JobProgression Jobs => GetJobs();
         public AttributeProgression Attributes => GetAttributes();
+        public int AvailableExperience => availableXP;
+
+        public event Action AvailableExperienceChanged;
 
         private void Awake()
         {
@@ -39,12 +43,17 @@ namespace RPGame.Progression
                 return;
             }
 
+            int previousAvailableXP = availableXP;
             availableXP = amount > int.MaxValue - availableXP ? int.MaxValue : availableXP + amount;
+            if (previousAvailableXP != availableXP)
+            {
+                AvailableExperienceChanged?.Invoke();
+            }
         }
 
         public int GetAvailableXP()
         {
-            return availableXP;
+            return AvailableExperience;
         }
 
         public PerkUnlockState GetPerkUnlockState(JobInstance job, PerkDefinition perk)
@@ -110,7 +119,12 @@ namespace RPGame.Progression
 
         private void SpendExperience(int amount)
         {
+            int previousAvailableXP = availableXP;
             availableXP = Mathf.Max(0, availableXP - amount);
+            if (previousAvailableXP != availableXP)
+            {
+                AvailableExperienceChanged?.Invoke();
+            }
         }
 
         private void AddPerkEffects(PerkDefinition perk)

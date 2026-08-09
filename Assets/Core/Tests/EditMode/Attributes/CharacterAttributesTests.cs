@@ -3,6 +3,7 @@ using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
 using RPGame.Core.Effects;
+using RPGame.Core.Progression;
 using RPGame.Core.Statistics;
 using RPGame.Core.Statistics.Attributes;
 using UnityEditor;
@@ -165,6 +166,33 @@ namespace RPGame.Core.Tests.Attributes
         }
 
         [Test]
+        public void StatisticsDataProvider_WithExperienceProvider_AddsAvailableExperienceRecord()
+        {
+            CharacterStatisticsDataProvider provider = gameObject.AddComponent<CharacterStatisticsDataProvider>();
+            TestExperienceProvider experienceProvider = new();
+            experienceProvider.SetAvailableExperience(250);
+            provider.SetExperienceProvider(experienceProvider);
+
+            DataEntry record = provider.GetStatistics().Single(entry => entry.Id == RecordId.AvailableExperience);
+
+            Assert.AreEqual("250", record.ValueText);
+        }
+
+        [Test]
+        public void StatisticsDataProvider_WhenAvailableExperienceChanges_RaisesChanged()
+        {
+            CharacterStatisticsDataProvider provider = gameObject.AddComponent<CharacterStatisticsDataProvider>();
+            TestExperienceProvider experienceProvider = new();
+            provider.SetExperienceProvider(experienceProvider);
+            int changedCount = 0;
+            provider.Changed += () => changedCount++;
+
+            experienceProvider.SetAvailableExperience(25);
+
+            Assert.AreEqual(1, changedCount);
+        }
+
+        [Test]
         public void PublicApi_ExposesAttributeValuesAsReadOnly()
         {
             PropertyInfo[] properties = typeof(ICharacterAttributes).GetProperties();
@@ -282,6 +310,19 @@ namespace RPGame.Core.Tests.Attributes
         private static bool IsFromNamespace(Type type, string namespacePrefix)
         {
             return type.Namespace != null && type.Namespace.StartsWith(namespacePrefix, StringComparison.Ordinal);
+        }
+
+        private sealed class TestExperienceProvider : IExperienceProvider
+        {
+            public event Action AvailableExperienceChanged;
+
+            public int AvailableExperience { get; private set; }
+
+            public void SetAvailableExperience(int availableExperience)
+            {
+                AvailableExperience = availableExperience;
+                AvailableExperienceChanged?.Invoke();
+            }
         }
     }
 }

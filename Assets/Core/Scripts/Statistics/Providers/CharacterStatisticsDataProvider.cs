@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using RPGame.Core.Damage;
+using RPGame.Core.Progression;
 using RPGame.Core.Spells;
 using RPGame.Core.Statistics.Attributes;
 using RPGame.Core.Statistics.CombatStats;
@@ -15,6 +16,7 @@ namespace RPGame.Core.Statistics
 
         private readonly List<DataEntry> entries = new();
         private ILastUsedSpellDamageRangeProvider lastUsedSpellDamageRangeProvider;
+        private IExperienceProvider experienceProvider;
         private IStatisticsController statistics;
 
         private void Awake()
@@ -44,6 +46,7 @@ namespace RPGame.Core.Statistics
             entries.Clear();
 
             AddVitals();
+            AddAvailableExperience();
             AddLastSpellDamage();
             AddWeaponDamage();
 
@@ -103,6 +106,19 @@ namespace RPGame.Core.Statistics
             NotifyChanged();
         }
 
+        public void SetExperienceProvider(IExperienceProvider provider)
+        {
+            if (experienceProvider == provider)
+            {
+                return;
+            }
+
+            UnsubscribeExperienceProvider();
+            experienceProvider = provider;
+            SubscribeExperienceProvider();
+            NotifyChanged();
+        }
+
         private void ResolveReferences()
         {
             if (statisticsController == null)
@@ -125,6 +141,11 @@ namespace RPGame.Core.Statistics
                 lastUsedSpellDamageRangeProvider = ResolveLastUsedSpellDamageRangeProvider();
             }
 
+            if (experienceProvider == null)
+            {
+                experienceProvider = ResolveExperienceProvider();
+            }
+
             statistics = statisticsController;
         }
 
@@ -134,6 +155,7 @@ namespace RPGame.Core.Statistics
             SubscribeAttributes();
             SubscribeWeaponDamageProvider();
             SubscribeLastUsedSpellDamageRangeProvider();
+            SubscribeExperienceProvider();
         }
 
         private void Unsubscribe()
@@ -142,6 +164,7 @@ namespace RPGame.Core.Statistics
             UnsubscribeAttributes();
             UnsubscribeWeaponDamageProvider();
             UnsubscribeLastUsedSpellDamageRangeProvider();
+            UnsubscribeExperienceProvider();
         }
 
         private void SubscribeStatistics()
@@ -222,6 +245,23 @@ namespace RPGame.Core.Statistics
             }
         }
 
+        private void SubscribeExperienceProvider()
+        {
+            if (experienceProvider != null)
+            {
+                experienceProvider.AvailableExperienceChanged -= OnAvailableExperienceChanged;
+                experienceProvider.AvailableExperienceChanged += OnAvailableExperienceChanged;
+            }
+        }
+
+        private void UnsubscribeExperienceProvider()
+        {
+            if (experienceProvider != null)
+            {
+                experienceProvider.AvailableExperienceChanged -= OnAvailableExperienceChanged;
+            }
+        }
+
         private void OnStatisticsChanged(float currentValue, float maxValue)
         {
             NotifyChanged();
@@ -238,6 +278,11 @@ namespace RPGame.Core.Statistics
         }
 
         private void OnLastUsedSpellChanged()
+        {
+            NotifyChanged();
+        }
+
+        private void OnAvailableExperienceChanged()
         {
             NotifyChanged();
         }
@@ -285,6 +330,18 @@ namespace RPGame.Core.Statistics
             }
         }
 
+        private void AddAvailableExperience()
+        {
+            if (experienceProvider == null)
+            {
+                return;
+            }
+
+            entries.Add(new DataEntry(
+                RecordId.AvailableExperience,
+                FormatInteger(experienceProvider.AvailableExperience)));
+        }
+
         private void AddWeaponDamage()
         {
             if (weaponDamageProvider == null)
@@ -306,6 +363,20 @@ namespace RPGame.Core.Statistics
             for (int i = 0; i < behaviours.Length; i++)
             {
                 if (behaviours[i] is ILastUsedSpellDamageRangeProvider provider)
+                {
+                    return provider;
+                }
+            }
+
+            return null;
+        }
+
+        private IExperienceProvider ResolveExperienceProvider()
+        {
+            MonoBehaviour[] behaviours = GetComponentsInParent<MonoBehaviour>();
+            for (int i = 0; i < behaviours.Length; i++)
+            {
+                if (behaviours[i] is IExperienceProvider provider)
                 {
                     return provider;
                 }
@@ -349,6 +420,11 @@ namespace RPGame.Core.Statistics
         private static string FormatPerSecond(float value)
         {
             return ValueFactory.Single(value).Format(Format.PerSecond());
+        }
+
+        private static string FormatInteger(float value)
+        {
+            return ValueFactory.Single(value).Format(Format.Integer);
         }
     }
 }

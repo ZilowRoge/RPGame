@@ -63,6 +63,7 @@ namespace RPGame.UI.Statistics
         {
             return new List<RecordDefinition>
             {
+                RecordDefinition.AvailableExperience(),
                 RecordDefinition.Health(),
                 RecordDefinition.Mana(),
                 RecordDefinition.Stamina(),

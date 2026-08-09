@@ -50,6 +50,28 @@ namespace RPGame.Progression.Tests
         }
 
         [Test]
+        public void AvailableExperience_ThroughCoreContract_ReturnsAvailableXP()
+        {
+            IExperienceProvider provider = progression;
+
+            progression.AddExperience(500);
+
+            Assert.AreEqual(500, provider.AvailableExperience);
+        }
+
+        [Test]
+        public void AddExperience_WhenAvailableXPChanges_RaisesAvailableExperienceChanged()
+        {
+            IExperienceProvider provider = progression;
+            int changedCount = 0;
+            provider.AvailableExperienceChanged += () => changedCount++;
+
+            progression.AddExperience(500);
+
+            Assert.AreEqual(1, changedCount);
+        }
+
+        [Test]
         public void AddExperience_WhenAmountIsNotPositive_IgnoresAmount()
         {
             progression.AddExperience(100);
