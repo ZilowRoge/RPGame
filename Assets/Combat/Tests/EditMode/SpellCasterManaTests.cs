@@ -84,6 +84,39 @@ namespace RPGame.Combat.Tests
             Assert.AreEqual(50f, statisticsController.CurrentMana);
         }
 
+        [Test]
+        public void TryCast_WhenSuccessful_UpdatesLastUsedSpell()
+        {
+            SetManaCost(spell, 20f);
+            spellCaster.SetSpell(spell);
+
+            bool wasCast = spellCaster.TryCast();
+
+            Assert.IsTrue(wasCast);
+            Assert.AreSame(spell, spellCaster.LastUsedSpellTracker.LastUsedSpell);
+        }
+
+        [Test]
+        public void TryCast_WhenNotEnoughMana_DoesNotUpdateLastUsedSpell()
+        {
+            TestSpell previousSpell = ScriptableObject.CreateInstance<TestSpell>();
+            try
+            {
+                Assert.IsTrue(spellCaster.LastUsedSpellTracker.SetLastUsedSpell(previousSpell));
+                SetManaCost(spell, 60f);
+                spellCaster.SetSpell(spell);
+
+                bool wasCast = spellCaster.TryCast();
+
+                Assert.IsFalse(wasCast);
+                Assert.AreSame(previousSpell, spellCaster.LastUsedSpellTracker.LastUsedSpell);
+            }
+            finally
+            {
+                Object.DestroyImmediate(previousSpell);
+            }
+        }
+
         private static StatisticsConfig CreateConfig(float maxMana)
         {
             StatisticsConfig statisticsConfig = ScriptableObject.CreateInstance<StatisticsConfig>();

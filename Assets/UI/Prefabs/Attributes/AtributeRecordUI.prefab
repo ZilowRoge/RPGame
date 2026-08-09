@@ -68,6 +68,7 @@ GameObject:
   - component: {fileID: 7176915748740358907}
   - component: {fileID: 5919993849496695442}
   - component: {fileID: 5242084354785196196}
+  - component: {fileID: 582740050022487281}
   m_Layer: 5
   m_Name: AtributeRecordUI
   m_TagString: Untagged
@@ -131,6 +132,14 @@ MonoBehaviour:
   valueText: {fileID: 3188446740373526899}
   increaseButton: {fileID: 2312661862628175055}
   decreaseButton: {fileID: 6242463815644866070}
+--- !u!222 &582740050022487281
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1603226074079994268}
+  m_CullTransparentMesh: 1
 --- !u!1 &3025290252405778648
 GameObject:
   m_ObjectHideFlags: 0
@@ -801,7 +810,7 @@ MonoBehaviour:
     m_Right: 5
     m_Top: 0
     m_Bottom: 0
-  m_ChildAlignment: 3
+  m_ChildAlignment: 4
   m_Spacing: 5
   m_ChildForceExpandWidth: 0
   m_ChildForceExpandHeight: 0

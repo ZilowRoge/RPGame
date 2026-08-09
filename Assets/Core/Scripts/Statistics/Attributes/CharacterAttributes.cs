@@ -12,6 +12,8 @@ namespace RPGame.Core.Statistics.Attributes
 
         private readonly Dictionary<CharacterAttributeType, int> purchasedPoints = new();
 
+        public event Action ValuesChanged;
+
         public int Strength => GetValue(CharacterAttributeType.Strength);
         public int Dexterity => GetValue(CharacterAttributeType.Dexterity);
         public int Endurance => GetValue(CharacterAttributeType.Endurance);
@@ -44,6 +46,7 @@ namespace RPGame.Core.Statistics.Attributes
             }
 
             purchasedPoints[attributeType] = GetPurchasedPoints(attributeType) + points;
+            ValuesChanged?.Invoke();
         }
 
         private void ValidateConfig()

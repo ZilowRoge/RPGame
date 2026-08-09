@@ -252,7 +252,7 @@ MonoBehaviour:
     m_Right: 0
     m_Top: 0
     m_Bottom: 0
-  m_ChildAlignment: 0
+  m_ChildAlignment: 1
   m_Spacing: 0
   m_ChildForceExpandWidth: 1
   m_ChildForceExpandHeight: 0
@@ -7749,17 +7749,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1194187627}
   m_CullTransparentMesh: 1
---- !u!114 &1230345999 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 2312661862628175055, guid: 3680d79ed95ba254bb7e009eccf4cf18, type: 3}
-  m_PrefabInstance: {fileID: 6381446101447011306}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
 --- !u!1 &1240454943
 GameObject:
   m_ObjectHideFlags: 0
@@ -8156,6 +8145,68 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1246177355}
   m_CullTransparentMesh: 1
+--- !u!1 &1260388021
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1260388022}
+  - component: {fileID: 1260388023}
+  m_Layer: 5
+  m_Name: Content
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1260388022
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1260388021}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1449805489}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1260388023
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1260388021}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 59f8146938fff824cb5fd77236b75775, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.VerticalLayoutGroup
+  m_Padding:
+    m_Left: 0
+    m_Right: 0
+    m_Top: 0
+    m_Bottom: 0
+  m_ChildAlignment: 0
+  m_Spacing: 0
+  m_ChildForceExpandWidth: 1
+  m_ChildForceExpandHeight: 0
+  m_ChildControlWidth: 1
+  m_ChildControlHeight: 1
+  m_ChildScaleWidth: 0
+  m_ChildScaleHeight: 0
+  m_ReverseArrangement: 0
 --- !u!1 &1272032218
 GameObject:
   m_ObjectHideFlags: 0
@@ -9890,6 +9941,121 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 0
+--- !u!1 &1449805488
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1449805489}
+  - component: {fileID: 1449805493}
+  - component: {fileID: 1449805492}
+  - component: {fileID: 1449805491}
+  - component: {fileID: 1449805494}
+  m_Layer: 5
+  m_Name: Statistics
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1449805489
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1449805488}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1260388022}
+  m_Father: {fileID: 2056057400}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1449805491
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1449805488}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 306cc8c2b49d7114eaa3623786fc2126, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.LayoutElement
+  m_IgnoreLayout: 0
+  m_MinWidth: 500
+  m_MinHeight: -1
+  m_PreferredWidth: 500
+  m_PreferredHeight: -1
+  m_FlexibleWidth: -1
+  m_FlexibleHeight: 1
+  m_LayoutPriority: 1
+--- !u!114 &1449805492
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1449805488}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 0.41176474, g: 0.41176474, b: 0.41176474, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 0}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &1449805493
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1449805488}
+  m_CullTransparentMesh: 1
+--- !u!114 &1449805494
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1449805488}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2c13f2af9dae450fa2655e6c8ed400b3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: RPGame.UI::RPGame.UI.Statistics.StatisticsWindowUI
+  dataProvider: {fileID: 1536372347364793601}
+  recordBuilder:
+    Definitions: []
+  recordsRoot: {fileID: 1260388022}
+  recordPrefab: {fileID: 5661744280918898752, guid: 439c75f6852401d4bb858fcd148fba63, type: 3}
 --- !u!1 &1466619172
 GameObject:
   m_ObjectHideFlags: 0
@@ -9974,9 +10140,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.LayoutElement
   m_IgnoreLayout: 0
-  m_MinWidth: -1
-  m_MinHeight: -1
-  m_PreferredWidth: 400
+  m_MinWidth: 500
+  m_MinHeight: 330
+  m_PreferredWidth: 500
   m_PreferredHeight: 330
   m_FlexibleWidth: -1
   m_FlexibleHeight: -1
@@ -11272,11 +11438,6 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 0
---- !u!1 &1667200717 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1603226074079994268, guid: 3680d79ed95ba254bb7e009eccf4cf18, type: 3}
-  m_PrefabInstance: {fileID: 6381446101447011306}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1720522475
 GameObject:
   m_ObjectHideFlags: 0
@@ -12307,17 +12468,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1934116631}
   m_CullTransparentMesh: 1
---- !u!114 &1945964428 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 6242463815644866070, guid: 3680d79ed95ba254bb7e009eccf4cf18, type: 3}
-  m_PrefabInstance: {fileID: 6381446101447011306}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Button
 --- !u!114 &1967456315 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 5242084354785196196, guid: 3680d79ed95ba254bb7e009eccf4cf18, type: 3}
@@ -12775,20 +12925,12 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 5242084354785196196, guid: 3680d79ed95ba254bb7e009eccf4cf18, type: 3}
   m_PrefabInstance: {fileID: 6381446101447011306}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1667200717}
+  m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4618b5590d4e47009b1cdd47f84452e3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: RPGame.UI::RPGame.UI.Statistics.CharacterAttributeRecordUI
---- !u!222 &2035491565
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1667200717}
-  m_CullTransparentMesh: 1
 --- !u!1 &2056057399
 GameObject:
   m_ObjectHideFlags: 0
@@ -12819,6 +12961,7 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1468046146}
+  - {fileID: 1449805489}
   m_Father: {fileID: 88242659}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -13316,13 +13459,17 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 83546019}
     - target: {fileID: 8903237724910096467, guid: db388f493d4197a42b9bf51d3fb801a9, type: 3}
-      propertyPath: combatStatsProvider
+      propertyPath: characterAttributes
       value: 
-      objectReference: {fileID: 1536372347364793591}
+      objectReference: {fileID: 1536372347364793592}
     - target: {fileID: 8903237724910096467, guid: db388f493d4197a42b9bf51d3fb801a9, type: 3}
       propertyPath: statisticsController
       value: 
       objectReference: {fileID: 917633044}
+    - target: {fileID: 8903237724910096467, guid: db388f493d4197a42b9bf51d3fb801a9, type: 3}
+      propertyPath: castOnLeftMouseButton
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -13333,6 +13480,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 8024470455656626075, guid: db388f493d4197a42b9bf51d3fb801a9, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1536372347364793592}
+    - targetCorrespondingSourceObject: {fileID: 8024470455656626075, guid: db388f493d4197a42b9bf51d3fb801a9, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1536372347364793593}
   m_SourcePrefab: {fileID: 100100000, guid: db388f493d4197a42b9bf51d3fb801a9, type: 3}
 --- !u!1 &1536372347364793586 stripped
 GameObject:
@@ -13355,19 +13505,8 @@ MonoBehaviour:
   - {fileID: 11400000, guid: fc3b41ff177dd964bbb5989d306e8440, type: 2}
   - {fileID: 11400000, guid: 60ad5cdcae3b46349027ba31b56306ec, type: 2}
   availableXP: 3000
-  effectAggregator: {fileID: 0}
-  attributes: {fileID: 0}
---- !u!114 &1536372347364793591 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 8632052528601023458, guid: db388f493d4197a42b9bf51d3fb801a9, type: 3}
-  m_PrefabInstance: {fileID: 1536372347364793585}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1536372347364793586}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9eb56bf0691347c8aab231ecbf50ef5d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: RPGame.Inventory::RPGame.Inventory.Providers.EquipmentCombatStatsProvider
+  effectAggregator: {fileID: 1536372347364793593}
+  attributes: {fileID: 1536372347364793592}
 --- !u!114 &1536372347364793592
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -13381,7 +13520,30 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: RPGame.Core::RPGame.Core.Statistics.Attributes.CharacterAttributes
   config: {fileID: 11400000, guid: 10e26523d52402442a39c18df802aaf2, type: 2}
-  effectAggregator: {fileID: 0}
+  effectAggregator: {fileID: 1536372347364793593}
+--- !u!114 &1536372347364793593
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1536372347364793586}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 36be2e3701de45868109648c25507ada, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: RPGame.Core::RPGame.Core.Effects.EffectAggregator
+--- !u!114 &1536372347364793601 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 7254131839462751042, guid: db388f493d4197a42b9bf51d3fb801a9, type: 3}
+  m_PrefabInstance: {fileID: 1536372347364793585}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1536372347364793586}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a150d575b2ba47deaae2a7fac79768a1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: RPGame.Core::RPGame.Core.Statistics.CharacterStatisticsDataProvider
 --- !u!1001 &6381446101447011306
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -13442,14 +13604,10 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5242084354785196196, guid: 3680d79ed95ba254bb7e009eccf4cf18, type: 3}
-      propertyPath: decreaseButton
-      value: 
-      objectReference: {fileID: 1945964428}
-    - target: {fileID: 5242084354785196196, guid: 3680d79ed95ba254bb7e009eccf4cf18, type: 3}
-      propertyPath: increaseButton
-      value: 
-      objectReference: {fileID: 1230345999}
+    - target: {fileID: 5830467263668283473, guid: 3680d79ed95ba254bb7e009eccf4cf18, type: 3}
+      propertyPath: m_ChildAlignment
+      value: 4
+      objectReference: {fileID: 0}
     - target: {fileID: 6532738655496002317, guid: 3680d79ed95ba254bb7e009eccf4cf18, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
@@ -13581,10 +13739,7 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 1603226074079994268, guid: 3680d79ed95ba254bb7e009eccf4cf18, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 2035491565}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 3680d79ed95ba254bb7e009eccf4cf18, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:

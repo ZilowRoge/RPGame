@@ -416,6 +416,7 @@ GameObject:
   - component: {fileID: 1416622787065215315}
   - component: {fileID: 6738148486840793266}
   - component: {fileID: 8632052528601023458}
+  - component: {fileID: 7254131839462751042}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -699,3 +700,18 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: RPGame.Inventory::RPGame.Inventory.Providers.EquipmentCombatStatsProvider
   itemManagementController: {fileID: 6738148486840793266}
+--- !u!114 &7254131839462751042
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8024470455656626075}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a150d575b2ba47deaae2a7fac79768a1, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: RPGame.Core::RPGame.Core.Statistics.CharacterStatisticsDataProvider
+  statisticsController: {fileID: 8541911369478375139}
+  characterAttributes: {fileID: 0}
+  weaponDamageProvider: {fileID: 8632052528601023458}

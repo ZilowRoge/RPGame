@@ -300,11 +300,11 @@ namespace RPGame.Inventory.Tests
         }
 
         [Test]
-        public void EquipmentCombatStatsProvider_RollDamage_ReturnsDamageFromEquippedWeapon()
+        public void EquipmentCombatStatsProvider_GetDamageRanges_ReturnsDamageRangeFromEquippedWeapon()
         {
             SetWeaponDamage(
                 weaponData,
-                new PartialDamageRange(2f, 2f, DamageType.Magical, DamageElement.None));
+                new PartialDamageRange(2f, 5f, DamageType.Magical, DamageElement.None));
 
             GameObject gameObject = new GameObject("EquipmentCombatStatsProviderTests");
             try
@@ -313,12 +313,13 @@ namespace RPGame.Inventory.Tests
                 EquipmentCombatStatsProvider provider = gameObject.AddComponent<EquipmentCombatStatsProvider>();
                 controller.Equipment.SetItem(EquipmentSlotType.MainHand, new ItemInstance(weaponDefinition));
 
-                IReadOnlyList<PartialDamage> damage = provider.RollDamage();
+                IReadOnlyList<PartialDamageRange> damageRanges = provider.GetDamageRanges();
 
-                Assert.AreEqual(1, damage.Count);
-                Assert.AreEqual(2f, damage[0].Amount);
-                Assert.AreEqual(DamageType.Magical, damage[0].DamageType);
-                Assert.AreEqual(DamageElement.None, damage[0].DamageElement);
+                Assert.AreEqual(1, damageRanges.Count);
+                Assert.AreEqual(2f, damageRanges[0].MinDamage);
+                Assert.AreEqual(5f, damageRanges[0].MaxDamage);
+                Assert.AreEqual(DamageType.Magical, damageRanges[0].DamageType);
+                Assert.AreEqual(DamageElement.None, damageRanges[0].DamageElement);
             }
             finally
             {

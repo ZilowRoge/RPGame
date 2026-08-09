@@ -3,6 +3,7 @@ using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
 using RPGame.Core.Effects;
+using RPGame.Core.Statistics;
 using RPGame.Core.Statistics.Attributes;
 using UnityEditor;
 using UnityEngine;
@@ -126,6 +127,41 @@ namespace RPGame.Core.Tests.Attributes
             Assert.AreEqual(12, config.Endurance);
             Assert.AreEqual(12, attributes.GetBaseValue(CharacterAttributeType.Endurance));
             Assert.AreEqual(15, attributes.Endurance);
+        }
+
+        [Test]
+        public void AddPurchasedPoints_WhenPointsAreAdded_RaisesValuesChanged()
+        {
+            int changedCount = 0;
+            attributes.ValuesChanged += () => changedCount++;
+
+            attributes.AddPurchasedPoints(CharacterAttributeType.Power, 1);
+
+            Assert.AreEqual(1, changedCount);
+        }
+
+        [Test]
+        public void AddPurchasedPoints_WhenPointsAreNotPositive_DoesNotRaiseValuesChanged()
+        {
+            int changedCount = 0;
+            attributes.ValuesChanged += () => changedCount++;
+
+            attributes.AddPurchasedPoints(CharacterAttributeType.Power, 0);
+
+            Assert.AreEqual(0, changedCount);
+        }
+
+        [Test]
+        public void StatisticsDataProvider_WhenAttributesChange_RaisesChanged()
+        {
+            CharacterStatisticsDataProvider provider = gameObject.AddComponent<CharacterStatisticsDataProvider>();
+            provider.SetCharacterAttributes(attributes);
+            int changedCount = 0;
+            provider.Changed += () => changedCount++;
+
+            attributes.AddPurchasedPoints(CharacterAttributeType.Power, 1);
+
+            Assert.AreEqual(1, changedCount);
         }
 
         [Test]

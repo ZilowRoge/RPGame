@@ -12,34 +12,55 @@ namespace RPGame.Inventory.Providers
     {
         [SerializeField] private ItemManagementController itemManagementController;
 
-        public override IReadOnlyList<PartialDamage> RollDamage()
+        private void OnEnable()
+        {
+            SubscribeEquipmentChanges();
+        }
+
+        private void OnDisable()
+        {
+            UnsubscribeEquipmentChanges();
+        }
+
+        public override IReadOnlyList<PartialDamageRange> GetDamageRanges()
+        {
+            ItemWeaponData weaponData = GetEquippedWeaponData();
+            return weaponData != null && weaponData.Damage != null
+                ? weaponData.Damage
+                : Array.Empty<PartialDamageRange>();
+        }
+
+        private ItemWeaponData GetEquippedWeaponData()
         {
             ItemManagementController controller = ResolveItemManagementController();
             ItemInstance item = controller != null
                 ? controller.GetEquippedItem(EquipmentSlotType.MainHand)
                 : null;
-            ItemWeaponData weaponData = item?.Definition?.GetStatBlock<ItemWeaponData>();
 
-            if (weaponData == null || weaponData.Damage == null || weaponData.Damage.Count == 0)
+            return item?.Definition?.GetStatBlock<ItemWeaponData>();
+        }
+
+        private void SubscribeEquipmentChanges()
+        {
+            ItemManagementController controller = ResolveItemManagementController();
+            if (controller != null)
             {
-                return Array.Empty<PartialDamage>();
+                controller.OnEquipmentChanged -= OnEquipmentChanged;
+                controller.OnEquipmentChanged += OnEquipmentChanged;
             }
+        }
 
-            List<PartialDamage> rolledDamage = new(weaponData.Damage.Count);
-            for (int i = 0; i < weaponData.Damage.Count; i++)
+        private void UnsubscribeEquipmentChanges()
+        {
+            if (itemManagementController != null)
             {
-                PartialDamageRange damageRange = weaponData.Damage[i];
-                int minDamage = Mathf.CeilToInt(damageRange.MinDamage);
-                int maxDamage = Mathf.Max(minDamage, Mathf.FloorToInt(damageRange.MaxDamage));
-                float amount = UnityEngine.Random.Range(minDamage, maxDamage + 1);
-
-                rolledDamage.Add(new PartialDamage(
-                    amount,
-                    damageRange.DamageType,
-                    damageRange.DamageElement));
+                itemManagementController.OnEquipmentChanged -= OnEquipmentChanged;
             }
+        }
 
-            return rolledDamage;
+        private void OnEquipmentChanged()
+        {
+            NotifyChanged();
         }
 
         private ItemManagementController ResolveItemManagementController()
