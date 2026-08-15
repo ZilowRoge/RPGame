@@ -12,6 +12,12 @@ namespace RPGame.Inventory
         public ItemDefinition Item => item;
         public int Amount => amount;
 
+        public void Initialize(ItemDefinition item, int amount)
+        {
+            this.item = item;
+            this.amount = Mathf.Max(1, amount);
+        }
+
         public override bool CanInteract(InteractionContext context)
         {
             return item != null && amount > 0 && GetItemManagementController(context) != null;

@@ -2,6 +2,7 @@
     "name": "RPGame.Loot.Tests",
     "rootNamespace": "RPGame.Loot.Tests",
     "references": [
+        "RPGame.Core",
         "RPGame.Inventory",
         "RPGame.Loot"
     ],
