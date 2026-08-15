@@ -41,6 +41,14 @@ namespace RPGame.Loot.Tests
         }
 
         [Test]
+        public void Constructor_WhenChanceIsNotProvided_DefaultsChanceToOne()
+        {
+            LootEntry entry = new LootEntry(itemDefinition, 1, 1);
+
+            Assert.AreEqual(1f, entry.Chance);
+        }
+
+        [Test]
         public void Constructor_WhenMinAmountIsLessThanOne_ClampsMinAmountToOne()
         {
             LootEntry entry = new LootEntry(itemDefinition, 0, 3);
@@ -56,6 +64,30 @@ namespace RPGame.Loot.Tests
 
             Assert.AreEqual(4, entry.MinAmount);
             Assert.AreEqual(4, entry.MaxAmount);
+        }
+
+        [Test]
+        public void Constructor_WhenChanceIsLessThanZero_ClampsChanceToZero()
+        {
+            LootEntry entry = new LootEntry(itemDefinition, 1, 1, -0.25f);
+
+            Assert.AreEqual(0f, entry.Chance);
+        }
+
+        [Test]
+        public void Constructor_WhenChanceIsGreaterThanOne_ClampsChanceToOne()
+        {
+            LootEntry entry = new LootEntry(itemDefinition, 1, 1, 1.25f);
+
+            Assert.AreEqual(1f, entry.Chance);
+        }
+
+        [Test]
+        public void Constructor_WhenChanceIsInRange_KeepsChance()
+        {
+            LootEntry entry = new LootEntry(itemDefinition, 1, 1, 0.35f);
+
+            Assert.AreEqual(0.35f, entry.Chance);
         }
     }
 }
