@@ -13,4 +13,11 @@ MonoBehaviour:
   m_Name: ItemDatabase
   m_EditorClassIdentifier: RPGame.Inventory::RPGame.Inventory.Data.ItemDatabase
   items:
+  - {fileID: 11400000, guid: 3442c8bb6c8e418d8dffb7e6dd757cac, type: 2}
+  - {fileID: 11400000, guid: 5b95d1f28cb9f574f97557452749cb8a, type: 2}
+  - {fileID: 11400000, guid: c28954b3c5e646c2afb269331558dfb6, type: 2}
+  - {fileID: 11400000, guid: 068d8fe519e44bd996b5cbb3eaee3828, type: 2}
+  - {fileID: 11400000, guid: df8b480ec667430c8ac14108c2e28d15, type: 2}
+  - {fileID: 11400000, guid: 699a026fbd5049a7aea301bb7afbd470, type: 2}
+  - {fileID: 11400000, guid: 0a833213d9b1437bbdf1cb97f310d221, type: 2}
   - {fileID: 11400000, guid: 79331882a27426b4da0f8cbea5bbde46, type: 2}
