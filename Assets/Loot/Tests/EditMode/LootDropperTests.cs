@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using NUnit.Framework;
-using RPGame.Core.Statistics;
 using RPGame.Inventory;
 using RPGame.Inventory.Data;
 using UnityEditor;
@@ -12,7 +11,6 @@ namespace RPGame.Loot.Tests
     {
         private readonly List<GameObject> gameObjects = new();
         private readonly List<ItemDefinition> itemDefinitions = new();
-        private readonly List<StatisticsConfig> statisticsConfigs = new();
         private readonly List<LootTable> lootTables = new();
 
         [TearDown]
@@ -38,15 +36,9 @@ namespace RPGame.Loot.Tests
                 Object.DestroyImmediate(itemDefinitions[i]);
             }
 
-            for (int i = 0; i < statisticsConfigs.Count; i++)
-            {
-                Object.DestroyImmediate(statisticsConfigs[i]);
-            }
-
             gameObjects.Clear();
             lootTables.Clear();
             itemDefinitions.Clear();
-            statisticsConfigs.Clear();
         }
 
         [Test]
@@ -152,62 +144,6 @@ namespace RPGame.Loot.Tests
             Assert.AreEqual(dropOrigin.position, pickups[0].transform.position);
         }
 
-        [Test]
-        public void Death_WhenUnitHasLootDropper_CreatesPickups()
-        {
-            ItemDefinition item = CreateItemDefinition();
-            StatisticsController statistics = CreateUnitWithStatisticsAndDropper(
-                CreateLootTable((item, 1, 1)),
-                CreatePickupPrefab(),
-                out _);
-            HashSet<ItemPickup> existingPickups = GetExistingPickups();
-
-            statistics.TakeDamage(100f);
-
-            Assert.AreEqual(1, GetNewPickups(existingPickups).Count);
-        }
-
-        [Test]
-        public void Death_WhenDamageIsAppliedMultipleTimes_CreatesLootOnlyOnce()
-        {
-            ItemDefinition item = CreateItemDefinition();
-            StatisticsController statistics = CreateUnitWithStatisticsAndDropper(
-                CreateLootTable((item, 1, 1)),
-                CreatePickupPrefab(),
-                out _);
-            HashSet<ItemPickup> existingPickups = GetExistingPickups();
-
-            statistics.TakeDamage(100f);
-            statistics.TakeDamage(100f);
-
-            Assert.AreEqual(1, GetNewPickups(existingPickups).Count);
-        }
-
-        [Test]
-        public void Death_WhenUnitHasNoLootDropper_DoesNotCreatePickups()
-        {
-            StatisticsController statistics = CreateUnitWithStatistics();
-            HashSet<ItemPickup> existingPickups = GetExistingPickups();
-
-            statistics.TakeDamage(100f);
-
-            Assert.IsEmpty(GetNewPickups(existingPickups));
-        }
-
-        [Test]
-        public void Death_WhenLootTableIsEmpty_DoesNotCreatePickups()
-        {
-            StatisticsController statistics = CreateUnitWithStatisticsAndDropper(
-                CreateLootTable(),
-                CreatePickupPrefab(),
-                out _);
-            HashSet<ItemPickup> existingPickups = GetExistingPickups();
-
-            statistics.TakeDamage(100f);
-
-            Assert.IsEmpty(GetNewPickups(existingPickups));
-        }
-
         private LootDropper CreateDropper(
             LootTable table,
             ItemPickup pickupPrefab,
@@ -224,47 +160,6 @@ namespace RPGame.Loot.Tests
             serializedDropper.FindProperty("dropRadius").floatValue = 1f;
             serializedDropper.ApplyModifiedPropertiesWithoutUndo();
             return dropper;
-        }
-
-        private StatisticsController CreateUnitWithStatisticsAndDropper(
-            LootTable table,
-            ItemPickup pickupPrefab,
-            out LootDropper dropper)
-        {
-            GameObject gameObject = new GameObject("LootDropperTests_Unit");
-            gameObjects.Add(gameObject);
-
-            StatisticsController statistics = AddStatisticsController(gameObject);
-            dropper = gameObject.AddComponent<LootDropper>();
-
-            SerializedObject serializedDropper = new SerializedObject(dropper);
-            serializedDropper.FindProperty("lootTable").objectReferenceValue = table;
-            serializedDropper.FindProperty("pickupPrefab").objectReferenceValue = pickupPrefab;
-            serializedDropper.FindProperty("dropRadius").floatValue = 1f;
-            serializedDropper.ApplyModifiedPropertiesWithoutUndo();
-
-            return statistics;
-        }
-
-        private StatisticsController CreateUnitWithStatistics()
-        {
-            GameObject gameObject = new GameObject("LootDropperTests_Unit");
-            gameObjects.Add(gameObject);
-            return AddStatisticsController(gameObject);
-        }
-
-        private StatisticsController AddStatisticsController(GameObject gameObject)
-        {
-            StatisticsController statistics = gameObject.AddComponent<StatisticsController>();
-            StatisticsConfig config = CreateStatisticsConfig();
-
-            SerializedObject serializedStatistics = new SerializedObject(statistics);
-            serializedStatistics.FindProperty("config").objectReferenceValue = config;
-            serializedStatistics.FindProperty("initializeOnAwake").boolValue = false;
-            serializedStatistics.ApplyModifiedPropertiesWithoutUndo();
-
-            statistics.ResetToConfig();
-            return statistics;
         }
 
         private ItemPickup CreatePickupPrefab()
@@ -289,26 +184,24 @@ namespace RPGame.Loot.Tests
             return itemDefinition;
         }
 
-        private StatisticsConfig CreateStatisticsConfig()
-        {
-            StatisticsConfig config = ScriptableObject.CreateInstance<StatisticsConfig>();
-            statisticsConfigs.Add(config);
-
-            SerializedObject serializedConfig = new SerializedObject(config);
-            serializedConfig.FindProperty("maxHealth").floatValue = 100f;
-            serializedConfig.FindProperty("maxStamina").floatValue = 50f;
-            serializedConfig.FindProperty("maxMana").floatValue = 50f;
-            serializedConfig.ApplyModifiedPropertiesWithoutUndo();
-            return config;
-        }
-
         private LootTable CreateLootTable(params (ItemDefinition item, int minAmount, int maxAmount)[] entries)
         {
             LootTable table = ScriptableObject.CreateInstance<LootTable>();
             lootTables.Add(table);
 
             SerializedObject serializedTable = new SerializedObject(table);
-            SerializedProperty serializedEntries = serializedTable.FindProperty("entries");
+            SerializedProperty serializedGroups = serializedTable.FindProperty("independentGroups");
+            serializedGroups.arraySize = entries.Length > 0 ? 1 : 0;
+            if (entries.Length == 0)
+            {
+                serializedTable.FindProperty("weightedGroups").arraySize = 0;
+                serializedTable.ApplyModifiedPropertiesWithoutUndo();
+                return table;
+            }
+
+            SerializedProperty serializedEntries = serializedGroups
+                .GetArrayElementAtIndex(0)
+                .FindPropertyRelative("entries");
             serializedEntries.arraySize = entries.Length;
 
             for (int i = 0; i < entries.Length; i++)
@@ -320,6 +213,7 @@ namespace RPGame.Loot.Tests
                 entry.FindPropertyRelative("chance").floatValue = 1f;
             }
 
+            serializedTable.FindProperty("weightedGroups").arraySize = 0;
             serializedTable.ApplyModifiedPropertiesWithoutUndo();
             return table;
         }

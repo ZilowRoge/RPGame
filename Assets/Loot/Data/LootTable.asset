@@ -12,8 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d9b6c838db91417483a4daf457289ad2, type: 3}
   m_Name: LootTable
   m_EditorClassIdentifier: RPGame.Loot::RPGame.Loot.LootTable
-  entries:
-  - item: {fileID: 11400000, guid: 79331882a27426b4da0f8cbea5bbde46, type: 2}
-    minAmount: 1
-    maxAmount: 1
-    chance: 1
+  independentGroups:
+  - entries:
+    - item: {fileID: 11400000, guid: 79331882a27426b4da0f8cbea5bbde46, type: 2}
+      minAmount: 1
+      maxAmount: 1
+      chance: 1
+  weightedGroups: []

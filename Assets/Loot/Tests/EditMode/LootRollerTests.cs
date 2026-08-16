@@ -29,27 +29,103 @@ namespace RPGame.Loot.Tests
         }
 
         [Test]
-        public void Roll_WhenAmountIsFixed_ReturnsFixedAmount()
+        public void IndependentGroup_WhenEmpty_ReturnsEmptyResults()
         {
-            ItemDefinition item = CreateItemDefinition();
-            LootTable table = CreateLootTable((item, 1, 1));
-            LootRoller roller = new LootRoller((min, max) => min);
+            IndependentLootGroup group = new();
 
-            List<LootResult> results = roller.Roll(table);
+            List<LootResult> results = group.Roll((min, max) => min, () => 0f);
 
-            Assert.AreEqual(1, results.Count);
-            Assert.AreSame(item, results[0].Item);
-            Assert.AreEqual(1, results[0].Amount);
+            Assert.IsEmpty(results);
         }
 
         [Test]
-        public void Roll_WhenAmountIsInRange_ReturnsAmountWithinRange()
+        public void IndependentGroup_WhenChanceIsZero_ReturnsEmptyResults()
+        {
+            IndependentLootGroup group = new(new IndependentLootEntry(CreateItemDefinition(), 1, 1, 0f));
+
+            List<LootResult> results = group.Roll((min, max) => min, () => 0f);
+
+            Assert.IsEmpty(results);
+        }
+
+        [Test]
+        public void IndependentGroup_WhenChanceIsOne_ReturnsResult()
         {
             ItemDefinition item = CreateItemDefinition();
-            LootTable table = CreateLootTable((item, 2, 5));
-            LootRoller roller = new LootRoller((min, max) => 4);
+            IndependentLootGroup group = new(new IndependentLootEntry(item, 1, 1, 1f));
 
-            List<LootResult> results = roller.Roll(table);
+            List<LootResult> results = group.Roll((min, max) => min, () => 0.99f);
+
+            Assert.AreEqual(1, results.Count);
+            Assert.AreSame(item, results[0].Item);
+        }
+
+        [Test]
+        public void IndependentGroup_WhenChanceRollIsBelowThreshold_ReturnsResult()
+        {
+            ItemDefinition item = CreateItemDefinition();
+            IndependentLootGroup group = new(new IndependentLootEntry(item, 1, 1, 0.5f));
+
+            List<LootResult> results = group.Roll((min, max) => min, () => 0.25f);
+
+            Assert.AreEqual(1, results.Count);
+            Assert.AreSame(item, results[0].Item);
+        }
+
+        [Test]
+        public void IndependentGroup_WhenChanceRollIsEqualToThreshold_ReturnsEmptyResults()
+        {
+            IndependentLootGroup group = new(new IndependentLootEntry(CreateItemDefinition(), 1, 1, 0.5f));
+
+            List<LootResult> results = group.Roll((min, max) => min, () => 0.5f);
+
+            Assert.IsEmpty(results);
+        }
+
+        [Test]
+        public void IndependentGroup_WhenChanceRollIsAboveThreshold_ReturnsEmptyResults()
+        {
+            IndependentLootGroup group = new(new IndependentLootEntry(CreateItemDefinition(), 1, 1, 0.5f));
+
+            List<LootResult> results = group.Roll((min, max) => min, () => 0.75f);
+
+            Assert.IsEmpty(results);
+        }
+
+        [Test]
+        public void IndependentGroup_WhenMultipleEntriesSucceed_ReturnsMultipleResults()
+        {
+            ItemDefinition firstItem = CreateItemDefinition();
+            ItemDefinition secondItem = CreateItemDefinition();
+            IndependentLootGroup group = new(
+                new IndependentLootEntry(firstItem, 1, 1, 0.5f),
+                new IndependentLootEntry(secondItem, 1, 1, 0.5f));
+
+            List<LootResult> results = group.Roll((min, max) => min, () => 0.25f);
+
+            Assert.AreEqual(2, results.Count);
+            Assert.AreSame(firstItem, results[0].Item);
+            Assert.AreSame(secondItem, results[1].Item);
+        }
+
+        [Test]
+        public void IndependentGroup_WhenAllEntriesFail_ReturnsEmptyResults()
+        {
+            IndependentLootGroup group = new(
+                new IndependentLootEntry(CreateItemDefinition(), 1, 1, 0.5f),
+                new IndependentLootEntry(CreateItemDefinition(), 1, 1, 0.5f));
+
+            List<LootResult> results = group.Roll((min, max) => min, () => 0.75f);
+
+            Assert.IsEmpty(results);
+        }
+
+        [Test]
+        public void IndependentGroup_WhenAmountIsRolled_ReturnsAmountWithinRange()
+        {
+            IndependentLootGroup group = new(new IndependentLootEntry(CreateItemDefinition(), 2, 5, 1f));
+
+            List<LootResult> results = group.Roll((min, max) => 4, () => 0f);
 
             Assert.AreEqual(1, results.Count);
             Assert.GreaterOrEqual(results[0].Amount, 2);
@@ -57,54 +133,118 @@ namespace RPGame.Loot.Tests
         }
 
         [Test]
-        public void Roll_WhenRandomizerReturnsLowerBound_ReturnsMinAmount()
+        public void IndependentGroup_WhenAmountRandomizerReturnsLowerBound_ReturnsMinAmount()
         {
-            ItemDefinition item = CreateItemDefinition();
-            LootTable table = CreateLootTable((item, 2, 5));
-            LootRoller roller = new LootRoller((min, max) => min);
+            IndependentLootGroup group = new(new IndependentLootEntry(CreateItemDefinition(), 2, 5, 1f));
 
-            List<LootResult> results = roller.Roll(table);
+            List<LootResult> results = group.Roll((min, max) => min, () => 0f);
 
             Assert.AreEqual(2, results[0].Amount);
         }
 
         [Test]
-        public void Roll_WhenRandomizerReturnsUpperBound_ReturnsMaxAmount()
+        public void IndependentGroup_WhenAmountRandomizerReturnsUpperBound_ReturnsMaxAmount()
         {
-            ItemDefinition item = CreateItemDefinition();
-            LootTable table = CreateLootTable((item, 2, 5));
-            LootRoller roller = new LootRoller((min, max) => max);
+            IndependentLootGroup group = new(new IndependentLootEntry(CreateItemDefinition(), 2, 5, 1f));
 
-            List<LootResult> results = roller.Roll(table);
+            List<LootResult> results = group.Roll((min, max) => max, () => 0f);
 
             Assert.AreEqual(5, results[0].Amount);
         }
 
         [Test]
-        public void Roll_WhenTableHasMultipleEntries_ReturnsOneResultPerEntry()
+        public void WeightedGroup_WithOneEntry_SelectsThatEntry()
         {
-            ItemDefinition firstItem = CreateItemDefinition();
-            ItemDefinition secondItem = CreateItemDefinition();
-            ItemDefinition thirdItem = CreateItemDefinition();
-            LootTable table = CreateLootTable(
-                (firstItem, 1, 1),
-                (secondItem, 2, 2),
-                (thirdItem, 3, 3));
-            LootRoller roller = new LootRoller((min, max) => min);
+            ItemDefinition item = CreateItemDefinition();
+            WeightedLootGroup group = new(new WeightedLootEntry(item, 1, 1, 1f));
 
-            List<LootResult> results = roller.Roll(table);
+            List<LootResult> results = group.Roll((min, max) => min, max => 0f);
 
-            Assert.AreEqual(3, results.Count);
-            Assert.AreSame(firstItem, results[0].Item);
-            Assert.AreSame(secondItem, results[1].Item);
-            Assert.AreSame(thirdItem, results[2].Item);
+            Assert.AreEqual(1, results.Count);
+            Assert.AreSame(item, results[0].Item);
+        }
+
+        [Test]
+        public void WeightedGroup_WhenEntryHasZeroWeight_DoesNotSelectIt()
+        {
+            ItemDefinition zeroWeightItem = CreateItemDefinition();
+            ItemDefinition positiveWeightItem = CreateItemDefinition();
+            WeightedLootGroup group = new(
+                new WeightedLootEntry(zeroWeightItem, 1, 1, 0f),
+                new WeightedLootEntry(positiveWeightItem, 1, 1, 1f));
+
+            List<LootResult> results = group.Roll((min, max) => min, max => 0f);
+
+            Assert.AreEqual(1, results.Count);
+            Assert.AreSame(positiveWeightItem, results[0].Item);
+        }
+
+        [Test]
+        public void WeightedGroup_WhenAllWeightsAreZero_ReturnsEmptyResults()
+        {
+            WeightedLootGroup group = new(
+                new WeightedLootEntry(CreateItemDefinition(), 1, 1, 0f),
+                new WeightedLootEntry(CreateItemDefinition(), 1, 1, 0f));
+
+            List<LootResult> results = group.Roll((min, max) => min, max => 0f);
+
+            Assert.IsEmpty(results);
+        }
+
+        [TestCase(0f, 0)]
+        [TestCase(49.99f, 0)]
+        [TestCase(50f, 1)]
+        [TestCase(79.99f, 1)]
+        [TestCase(80f, 2)]
+        [TestCase(99.99f, 2)]
+        public void WeightedGroup_WithMultipleEntries_SelectsEntryByWeightRange(float roll, int expectedIndex)
+        {
+            ItemDefinition[] items =
+            {
+                CreateItemDefinition(),
+                CreateItemDefinition(),
+                CreateItemDefinition()
+            };
+            WeightedLootGroup group = new(
+                new WeightedLootEntry(items[0], 1, 1, 50f),
+                new WeightedLootEntry(items[1], 1, 1, 30f),
+                new WeightedLootEntry(items[2], 1, 1, 20f));
+
+            List<LootResult> results = group.Roll((min, max) => min, max => roll);
+
+            Assert.AreEqual(1, results.Count);
+            Assert.AreSame(items[expectedIndex], results[0].Item);
+        }
+
+        [Test]
+        public void WeightedGroup_ReturnsAtMostOneResult()
+        {
+            WeightedLootGroup group = new(
+                new WeightedLootEntry(CreateItemDefinition(), 1, 1, 1f),
+                new WeightedLootEntry(CreateItemDefinition(), 1, 1, 1f));
+
+            List<LootResult> results = group.Roll((min, max) => min, max => 0f);
+
+            Assert.AreEqual(1, results.Count);
+        }
+
+        [Test]
+        public void WeightedGroup_WhenAmountIsRolled_ReturnsAmountWithinRange()
+        {
+            WeightedLootGroup group = new(new WeightedLootEntry(CreateItemDefinition(), 2, 5, 1f));
+
+            List<LootResult> results = group.Roll((min, max) => 4, max => 0f);
+
+            Assert.AreEqual(1, results.Count);
+            Assert.GreaterOrEqual(results[0].Amount, 2);
+            Assert.LessOrEqual(results[0].Amount, 5);
         }
 
         [Test]
         public void Roll_WhenTableIsEmpty_ReturnsEmptyResults()
         {
             LootTable table = CreateLootTable();
-            LootRoller roller = new LootRoller((min, max) => min);
+            LootRoller roller = new((min, max) => min);
 
             List<LootResult> results = roller.Roll(table);
 
@@ -115,133 +255,55 @@ namespace RPGame.Loot.Tests
         public void Roll_DoesNotModifyLootTableEntries()
         {
             ItemDefinition item = CreateItemDefinition();
-            LootTable table = CreateLootTableWithChance((item, 2, 5, 0.75f));
-            LootRoller roller = new LootRoller((min, max) => max);
+            LootTable table = CreateLootTable(
+                new[] { new[] { (item, 2, 5, 0.75f) } },
+                null);
+            LootRoller roller = new((min, max) => max);
 
             roller.Roll(table);
 
-            Assert.AreEqual(2, table.Entries[0].MinAmount);
-            Assert.AreEqual(5, table.Entries[0].MaxAmount);
-            Assert.AreEqual(0.75f, table.Entries[0].Chance);
+            IndependentLootEntry entry = table.IndependentGroups[0].Entries[0];
+            Assert.AreEqual(2, entry.MinAmount);
+            Assert.AreEqual(5, entry.MaxAmount);
+            Assert.AreEqual(0.75f, entry.Chance);
         }
 
         [Test]
-        public void Roll_WhenChanceIsZero_DoesNotReturnEntry()
+        public void Roll_WhenTableHasMultipleWeightedGroups_ReturnsOneResultPerGroup()
         {
-            ItemDefinition item = CreateItemDefinition();
-            LootTable table = CreateLootTableWithChance((item, 1, 1, 0f));
-            LootRoller roller = new LootRoller((min, max) => min, () => 0f);
-
-            List<LootResult> results = roller.Roll(table);
-
-            Assert.IsEmpty(results);
-        }
-
-        [Test]
-        public void Roll_WhenChanceIsOne_ReturnsEntry()
-        {
-            ItemDefinition item = CreateItemDefinition();
-            LootTable table = CreateLootTableWithChance((item, 1, 1, 1f));
-            LootRoller roller = new LootRoller((min, max) => min, () => 0.99f);
-
-            List<LootResult> results = roller.Roll(table);
-
-            Assert.AreEqual(1, results.Count);
-            Assert.AreSame(item, results[0].Item);
-        }
-
-        [Test]
-        public void Roll_WhenChanceRollIsBelowThreshold_ReturnsEntry()
-        {
-            ItemDefinition item = CreateItemDefinition();
-            LootTable table = CreateLootTableWithChance((item, 1, 1, 0.5f));
-            LootRoller roller = new LootRoller((min, max) => min, () => 0.25f);
-
-            List<LootResult> results = roller.Roll(table);
-
-            Assert.AreEqual(1, results.Count);
-            Assert.AreSame(item, results[0].Item);
-        }
-
-        [Test]
-        public void Roll_WhenChanceRollIsAboveThreshold_DoesNotReturnEntry()
-        {
-            ItemDefinition item = CreateItemDefinition();
-            LootTable table = CreateLootTableWithChance((item, 1, 1, 0.5f));
-            LootRoller roller = new LootRoller((min, max) => min, () => 0.75f);
-
-            List<LootResult> results = roller.Roll(table);
-
-            Assert.IsEmpty(results);
-        }
-
-        [Test]
-        public void Roll_WhenMultipleEntriesRollIndependently_ReturnsOnlySuccessfulEntries()
-        {
-            ItemDefinition firstItem = CreateItemDefinition();
-            ItemDefinition secondItem = CreateItemDefinition();
-            ItemDefinition thirdItem = CreateItemDefinition();
-            LootTable table = CreateLootTableWithChance(
-                (firstItem, 1, 1, 0.5f),
-                (secondItem, 1, 1, 0.5f),
-                (thirdItem, 1, 1, 0.5f));
-            Queue<float> chanceRolls = new Queue<float>(new[] { 0.25f, 0.75f, 0.25f });
-            LootRoller roller = new LootRoller((min, max) => min, chanceRolls.Dequeue);
+            ItemDefinition sword = CreateItemDefinition();
+            ItemDefinition iron = CreateItemDefinition();
+            LootTable table = CreateLootTable(
+                null,
+                new[]
+                {
+                    new[] { (sword, 1, 1, 1f) },
+                    new[] { (iron, 1, 1, 1f) }
+                });
+            LootRoller roller = new((min, max) => min, () => 0f, max => 0f);
 
             List<LootResult> results = roller.Roll(table);
 
             Assert.AreEqual(2, results.Count);
-            Assert.AreSame(firstItem, results[0].Item);
-            Assert.AreSame(thirdItem, results[1].Item);
+            Assert.AreSame(sword, results[0].Item);
+            Assert.AreSame(iron, results[1].Item);
         }
 
         [Test]
-        public void Roll_WhenAllChanceRollsFail_ReturnsEmptyResults()
+        public void Roll_WhenTableHasIndependentAndWeightedGroups_ReturnsResultsFromBoth()
         {
-            ItemDefinition firstItem = CreateItemDefinition();
-            ItemDefinition secondItem = CreateItemDefinition();
-            LootTable table = CreateLootTableWithChance(
-                (firstItem, 1, 1, 0.5f),
-                (secondItem, 1, 1, 0.5f));
-            LootRoller roller = new LootRoller((min, max) => min, () => 0.75f);
+            ItemDefinition potion = CreateItemDefinition();
+            ItemDefinition sword = CreateItemDefinition();
+            LootTable table = CreateLootTable(
+                new[] { new[] { (potion, 1, 1, 1f) } },
+                new[] { new[] { (sword, 1, 1, 1f) } });
+            LootRoller roller = new((min, max) => min, () => 0f, max => 0f);
 
             List<LootResult> results = roller.Roll(table);
 
-            Assert.IsEmpty(results);
-        }
-
-        [Test]
-        public void Roll_WhenChanceSucceeds_RollsAmountWithinRange()
-        {
-            ItemDefinition item = CreateItemDefinition();
-            LootTable table = CreateLootTableWithChance((item, 2, 5, 1f));
-            LootRoller roller = new LootRoller((min, max) => 4, () => 0f);
-
-            List<LootResult> results = roller.Roll(table);
-
-            Assert.AreEqual(1, results.Count);
-            Assert.GreaterOrEqual(results[0].Amount, 2);
-            Assert.LessOrEqual(results[0].Amount, 5);
-        }
-
-        [Test]
-        public void Roll_WhenChanceFails_DoesNotRollAmount()
-        {
-            ItemDefinition item = CreateItemDefinition();
-            LootTable table = CreateLootTableWithChance((item, 1, 1, 0.5f));
-            int amountRolls = 0;
-            LootRoller roller = new LootRoller(
-                (min, max) =>
-                {
-                    amountRolls++;
-                    return min;
-                },
-                () => 0.75f);
-
-            List<LootResult> results = roller.Roll(table);
-
-            Assert.IsEmpty(results);
-            Assert.AreEqual(0, amountRolls);
+            Assert.AreEqual(2, results.Count);
+            Assert.AreSame(potion, results[0].Item);
+            Assert.AreSame(sword, results[1].Item);
         }
 
         private ItemDefinition CreateItemDefinition()
@@ -251,40 +313,64 @@ namespace RPGame.Loot.Tests
             return itemDefinition;
         }
 
-        private LootTable CreateLootTable(params (ItemDefinition item, int minAmount, int maxAmount)[] entries)
-        {
-            (ItemDefinition item, int minAmount, int maxAmount, float chance)[] entriesWithChance =
-                new (ItemDefinition item, int minAmount, int maxAmount, float chance)[entries.Length];
-
-            for (int i = 0; i < entries.Length; i++)
-            {
-                entriesWithChance[i] = (entries[i].item, entries[i].minAmount, entries[i].maxAmount, 1f);
-            }
-
-            return CreateLootTableWithChance(entriesWithChance);
-        }
-
-        private LootTable CreateLootTableWithChance(
-            params (ItemDefinition item, int minAmount, int maxAmount, float chance)[] entries)
+        private LootTable CreateLootTable(
+            IReadOnlyList<(ItemDefinition item, int minAmount, int maxAmount, float chance)[]> independentGroups = null,
+            IReadOnlyList<(ItemDefinition item, int minAmount, int maxAmount, float weight)[]> weightedGroups = null)
         {
             LootTable table = ScriptableObject.CreateInstance<LootTable>();
             lootTables.Add(table);
 
-            SerializedObject serializedTable = new SerializedObject(table);
-            SerializedProperty serializedEntries = serializedTable.FindProperty("entries");
-            serializedEntries.arraySize = entries.Length;
-
-            for (int i = 0; i < entries.Length; i++)
-            {
-                SerializedProperty entry = serializedEntries.GetArrayElementAtIndex(i);
-                entry.FindPropertyRelative("item").objectReferenceValue = entries[i].item;
-                entry.FindPropertyRelative("minAmount").intValue = entries[i].minAmount;
-                entry.FindPropertyRelative("maxAmount").intValue = entries[i].maxAmount;
-                entry.FindPropertyRelative("chance").floatValue = entries[i].chance;
-            }
-
+            SerializedObject serializedTable = new(table);
+            WriteIndependentGroups(serializedTable.FindProperty("independentGroups"), independentGroups);
+            WriteWeightedGroups(serializedTable.FindProperty("weightedGroups"), weightedGroups);
             serializedTable.ApplyModifiedPropertiesWithoutUndo();
             return table;
+        }
+
+        private static void WriteIndependentGroups(
+            SerializedProperty serializedGroups,
+            IReadOnlyList<(ItemDefinition item, int minAmount, int maxAmount, float chance)[]> groups)
+        {
+            serializedGroups.arraySize = groups?.Count ?? 0;
+            for (int groupIndex = 0; groupIndex < serializedGroups.arraySize; groupIndex++)
+            {
+                SerializedProperty serializedEntries = serializedGroups
+                    .GetArrayElementAtIndex(groupIndex)
+                    .FindPropertyRelative("entries");
+                serializedEntries.arraySize = groups[groupIndex].Length;
+
+                for (int entryIndex = 0; entryIndex < groups[groupIndex].Length; entryIndex++)
+                {
+                    SerializedProperty entry = serializedEntries.GetArrayElementAtIndex(entryIndex);
+                    entry.FindPropertyRelative("item").objectReferenceValue = groups[groupIndex][entryIndex].item;
+                    entry.FindPropertyRelative("minAmount").intValue = groups[groupIndex][entryIndex].minAmount;
+                    entry.FindPropertyRelative("maxAmount").intValue = groups[groupIndex][entryIndex].maxAmount;
+                    entry.FindPropertyRelative("chance").floatValue = groups[groupIndex][entryIndex].chance;
+                }
+            }
+        }
+
+        private static void WriteWeightedGroups(
+            SerializedProperty serializedGroups,
+            IReadOnlyList<(ItemDefinition item, int minAmount, int maxAmount, float weight)[]> groups)
+        {
+            serializedGroups.arraySize = groups?.Count ?? 0;
+            for (int groupIndex = 0; groupIndex < serializedGroups.arraySize; groupIndex++)
+            {
+                SerializedProperty serializedEntries = serializedGroups
+                    .GetArrayElementAtIndex(groupIndex)
+                    .FindPropertyRelative("entries");
+                serializedEntries.arraySize = groups[groupIndex].Length;
+
+                for (int entryIndex = 0; entryIndex < groups[groupIndex].Length; entryIndex++)
+                {
+                    SerializedProperty entry = serializedEntries.GetArrayElementAtIndex(entryIndex);
+                    entry.FindPropertyRelative("item").objectReferenceValue = groups[groupIndex][entryIndex].item;
+                    entry.FindPropertyRelative("minAmount").intValue = groups[groupIndex][entryIndex].minAmount;
+                    entry.FindPropertyRelative("maxAmount").intValue = groups[groupIndex][entryIndex].maxAmount;
+                    entry.FindPropertyRelative("weight").floatValue = groups[groupIndex][entryIndex].weight;
+                }
+            }
         }
     }
 }

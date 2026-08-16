@@ -6,15 +6,22 @@ namespace RPGame.Loot
     [CreateAssetMenu(fileName = "LootTable", menuName = "RPGame/Loot/Loot Table")]
     public sealed class LootTable : ScriptableObject
     {
-        [SerializeField] private List<LootEntry> entries = new();
+        [SerializeField] private List<IndependentLootGroup> independentGroups = new();
+        [SerializeField] private List<WeightedLootGroup> weightedGroups = new();
 
-        public IReadOnlyList<LootEntry> Entries => entries;
+        public IReadOnlyList<IndependentLootGroup> IndependentGroups => independentGroups;
+        public IReadOnlyList<WeightedLootGroup> WeightedGroups => weightedGroups;
 
         private void OnValidate()
         {
-            for (int i = 0; i < entries.Count; i++)
+            for (int i = 0; i < independentGroups.Count; i++)
             {
-                entries[i]?.ValidateAmounts();
+                independentGroups[i]?.Validate();
+            }
+
+            for (int i = 0; i < weightedGroups.Count; i++)
+            {
+                weightedGroups[i]?.Validate();
             }
         }
     }

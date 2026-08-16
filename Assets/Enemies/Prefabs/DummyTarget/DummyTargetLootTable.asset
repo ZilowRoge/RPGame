@@ -12,16 +12,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d9b6c838db91417483a4daf457289ad2, type: 3}
   m_Name: DummyTargetLootTable
   m_EditorClassIdentifier: RPGame.Loot::RPGame.Loot.LootTable
-  entries:
-  - item: {fileID: 11400000, guid: 3442c8bb6c8e418d8dffb7e6dd757cac, type: 2}
-    minAmount: 1
-    maxAmount: 2
-    chance: 0.3
-  - item: {fileID: 11400000, guid: 0a833213d9b1437bbdf1cb97f310d221, type: 2}
-    minAmount: 2
-    maxAmount: 4
-    chance: 0.5
-  - item: {fileID: 11400000, guid: 699a026fbd5049a7aea301bb7afbd470, type: 2}
-    minAmount: 1
-    maxAmount: 1
-    chance: 0.05
+  independentGroups:
+  - entries:
+    - item: {fileID: 11400000, guid: 3442c8bb6c8e418d8dffb7e6dd757cac, type: 2}
+      minAmount: 1
+      maxAmount: 2
+      chance: 0.3
+    - item: {fileID: 11400000, guid: 0a833213d9b1437bbdf1cb97f310d221, type: 2}
+      minAmount: 2
+      maxAmount: 4
+      chance: 0.5
+    - item: {fileID: 11400000, guid: 699a026fbd5049a7aea301bb7afbd470, type: 2}
+      minAmount: 1
+      maxAmount: 1
+      chance: 0.05
+  weightedGroups: []
