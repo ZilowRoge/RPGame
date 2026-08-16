@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using RPGame.Core.Statistics;
 using RPGame.Inventory;
 using UnityEngine;
 
@@ -9,11 +10,23 @@ namespace RPGame.Loot
         [SerializeField] private LootTable lootTable;
         [SerializeField] private ItemPickup pickupPrefab;
         [SerializeField] private Transform dropOrigin;
+        [SerializeField] private StatisticsController deathSource;
         [SerializeField, Min(0f)] private float dropRadius = 0.5f;
         [SerializeField] private bool logDrops = false;
 
         private readonly LootRoller lootRoller = new();
+        private StatisticsController subscribedDeathSource;
         private bool hasDropped;
+
+        private void OnEnable()
+        {
+            SubscribeDeathSource();
+        }
+
+        private void OnDisable()
+        {
+            UnsubscribeDeathSource();
+        }
 
         public void DropLoot()
         {
@@ -73,6 +86,38 @@ namespace RPGame.Loot
             float angle = Mathf.PI * 2f * index / totalCount;
             Vector3 offset = new Vector3(Mathf.Cos(angle), 0f, Mathf.Sin(angle)) * dropRadius;
             return origin + offset;
+        }
+
+        private void SubscribeDeathSource()
+        {
+            StatisticsController resolvedDeathSource = ResolveDeathSource();
+            if (resolvedDeathSource == null)
+            {
+                return;
+            }
+
+            resolvedDeathSource.Died -= DropLoot;
+            resolvedDeathSource.Died += DropLoot;
+            subscribedDeathSource = resolvedDeathSource;
+        }
+
+        private void UnsubscribeDeathSource()
+        {
+            if (subscribedDeathSource != null)
+            {
+                subscribedDeathSource.Died -= DropLoot;
+                subscribedDeathSource = null;
+            }
+        }
+
+        private StatisticsController ResolveDeathSource()
+        {
+            if (deathSource == null)
+            {
+                deathSource = GetComponentInParent<StatisticsController>();
+            }
+
+            return deathSource;
         }
 
         private void OnValidate()
