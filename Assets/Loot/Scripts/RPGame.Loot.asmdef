@@ -1,0 +1,17 @@
+{
+    "name": "RPGame.Loot",
+    "rootNamespace": "RPGame.Loot",
+    "references": [
+        "RPGame.Core",
+        "RPGame.Inventory"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

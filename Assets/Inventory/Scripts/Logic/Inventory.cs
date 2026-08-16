@@ -34,24 +34,31 @@ namespace RPGame.Inventory.Logic
             }
         }
 
-        public bool AddItem(ItemInstance item, int amount = 1)
+        public bool AddItem(ItemDefinition definition, int amount)
         {
-            if (!CanAddItem(item, amount))
+            if (!CanAddItem(definition, amount))
             {
                 return false;
             }
 
-            if (item.Definition.MaxStack <= 1)
+            int remainingAmount = amount;
+            FillExistingStacks(definition, ref remainingAmount);
+            FillEmptySlots(definition, ref remainingAmount, null);
+
+            OnInventoryChanged?.Invoke();
+            return true;
+        }
+
+        public bool AddItem(ItemInstance item)
+        {
+            if (!CanAddItem(item))
             {
-                InventorySlot emptySlot = FindEmptySlot();
-                emptySlot.SetItem(item);
-                OnInventoryChanged?.Invoke();
-                return true;
+                return false;
             }
 
-            int remainingAmount = amount;
+            int remainingAmount = item.StackSize;
             FillExistingStacks(item.Definition, ref remainingAmount);
-            FillEmptySlots(item, ref remainingAmount);
+            FillEmptySlots(item.Definition, ref remainingAmount, item);
 
             OnInventoryChanged?.Invoke();
             return true;
@@ -163,20 +170,19 @@ namespace RPGame.Inventory.Logic
             return true;
         }
 
-        public bool CanAddItem(ItemInstance item, int amount = 1)
+        public bool CanAddItem(ItemDefinition definition, int amount)
         {
-            if (item == null || item.Definition == null || amount <= 0 || amount > item.StackSize)
+            if (definition == null || amount <= 0)
             {
                 return false;
             }
 
-            ItemDefinition definition = item.Definition;
-            if (definition.MaxStack <= 1)
-            {
-                return FindEmptySlot() != null;
-            }
-
             return GetAvailableStackSpace(definition) >= amount;
+        }
+
+        public bool CanAddItem(ItemInstance item)
+        {
+            return item != null && CanAddItem(item.Definition, item.StackSize);
         }
 
         public InventorySlot GetSlot(int index)
@@ -205,13 +211,15 @@ namespace RPGame.Inventory.Logic
             }
         }
 
-        private void FillEmptySlots(ItemInstance item, ref int remainingAmount)
+        private void FillEmptySlots(ItemDefinition definition, ref int remainingAmount, ItemInstance sourceItem)
         {
             while (remainingAmount > 0)
             {
                 InventorySlot emptySlot = FindEmptySlot();
-                int amountToAdd = Math.Min(item.Definition.MaxStack, remainingAmount);
-                ItemInstance slotItem = amountToAdd == item.StackSize ? item : new ItemInstance(item.Definition, amountToAdd);
+                int amountToAdd = Math.Min(definition.MaxStack, remainingAmount);
+                ItemInstance slotItem = sourceItem != null && amountToAdd == sourceItem.StackSize
+                    ? sourceItem
+                    : new ItemInstance(definition, amountToAdd);
                 emptySlot.SetItem(slotItem);
                 remainingAmount -= amountToAdd;
             }
