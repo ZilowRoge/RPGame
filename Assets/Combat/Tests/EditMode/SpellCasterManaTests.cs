@@ -49,9 +49,8 @@ namespace RPGame.Combat.Tests
         public void TryCast_WhenEnoughMana_SpendsManaAndCastsSpell()
         {
             SetManaCost(spell, 20f);
-            spellCaster.SetSpell(spell);
 
-            bool wasCast = spellCaster.TryCast();
+            bool wasCast = spellCaster.TryCast(spell, CreateCasterData());
 
             Assert.IsTrue(wasCast);
             Assert.AreEqual(1, spell.CastCount);
@@ -62,9 +61,8 @@ namespace RPGame.Combat.Tests
         public void TryCast_WhenNotEnoughMana_DoesNotCastSpell()
         {
             SetManaCost(spell, 60f);
-            spellCaster.SetSpell(spell);
 
-            bool wasCast = spellCaster.TryCast();
+            bool wasCast = spellCaster.TryCast(spell, CreateCasterData());
 
             Assert.IsFalse(wasCast);
             Assert.AreEqual(0, spell.CastCount);
@@ -75,9 +73,8 @@ namespace RPGame.Combat.Tests
         public void TryCast_WhenSpellHasNoManaCost_CastsSpell()
         {
             SetManaCost(spell, 0f);
-            spellCaster.SetSpell(spell);
 
-            bool wasCast = spellCaster.TryCast();
+            bool wasCast = spellCaster.TryCast(spell, CreateCasterData());
 
             Assert.IsTrue(wasCast);
             Assert.AreEqual(1, spell.CastCount);
@@ -88,9 +85,8 @@ namespace RPGame.Combat.Tests
         public void TryCast_WhenSuccessful_UpdatesLastUsedSpell()
         {
             SetManaCost(spell, 20f);
-            spellCaster.SetSpell(spell);
 
-            bool wasCast = spellCaster.TryCast();
+            bool wasCast = spellCaster.TryCast(spell, CreateCasterData());
 
             Assert.IsTrue(wasCast);
             Assert.AreSame(spell, spellCaster.LastUsedSpellTracker.LastUsedSpell);
@@ -104,9 +100,8 @@ namespace RPGame.Combat.Tests
             {
                 Assert.IsTrue(spellCaster.LastUsedSpellTracker.SetLastUsedSpell(previousSpell));
                 SetManaCost(spell, 60f);
-                spellCaster.SetSpell(spell);
 
-                bool wasCast = spellCaster.TryCast();
+                bool wasCast = spellCaster.TryCast(spell, CreateCasterData());
 
                 Assert.IsFalse(wasCast);
                 Assert.AreSame(previousSpell, spellCaster.LastUsedSpellTracker.LastUsedSpell);
@@ -146,6 +141,11 @@ namespace RPGame.Combat.Tests
             SerializedObject serializedSpell = new SerializedObject(targetSpell);
             serializedSpell.FindProperty("manaCost").floatValue = manaCost;
             serializedSpell.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private CasterData CreateCasterData()
+        {
+            return new CasterData(gameObject, gameObject.transform, null);
         }
     }
 }

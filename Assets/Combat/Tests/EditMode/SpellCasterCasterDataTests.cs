@@ -24,7 +24,6 @@ namespace RPGame.Combat.Tests
             SetAttributesConfig(attributes, config);
             spellCaster = gameObject.AddComponent<SpellCaster>();
             spell = ScriptableObject.CreateInstance<CaptureCasterDataSpell>();
-            spellCaster.SetSpell(spell);
         }
 
         [TearDown]
@@ -38,11 +37,59 @@ namespace RPGame.Combat.Tests
         [Test]
         public void TryCast_PassesCurrentCharacterAttributes()
         {
-            bool wasCast = spellCaster.TryCast();
+            CasterData casterData = new CasterDataBuilder(gameObject, gameObject.transform, null)
+                .WithAttributes(attributes)
+                .Build();
+
+            bool wasCast = spellCaster.TryCast(spell, casterData);
 
             Assert.IsTrue(wasCast);
             Assert.IsNotNull(spell.LastCasterData.Attributes);
             Assert.AreEqual(6, spell.LastCasterData.Attributes.Power);
+        }
+
+        [Test]
+        public void TryCast_UsesProvidedCasterData()
+        {
+            GameObject targetObject = new("Target");
+            try
+            {
+                CasterData casterData = new CasterData(gameObject, gameObject.transform, targetObject.transform);
+
+                bool wasCast = spellCaster.TryCast(spell, casterData);
+
+                Assert.IsTrue(wasCast);
+                Assert.AreSame(gameObject, spell.LastCasterData.CasterObject);
+                Assert.AreSame(gameObject.transform, spell.LastCasterData.CastOrigin);
+                Assert.AreSame(targetObject.transform, spell.LastCasterData.Target);
+            }
+            finally
+            {
+                Object.DestroyImmediate(targetObject);
+            }
+        }
+
+        [Test]
+        public void TryCast_DoesNotKeepTargetBetweenCasts()
+        {
+            GameObject targetObject = new("Target");
+            CaptureCasterDataSpell secondSpell = ScriptableObject.CreateInstance<CaptureCasterDataSpell>();
+            try
+            {
+                CasterData targetedCastData = new CasterData(gameObject, gameObject.transform, targetObject.transform);
+                CasterData untargetedCastData = new CasterData(gameObject, gameObject.transform, null);
+
+                Assert.IsTrue(spellCaster.TryCast(spell, targetedCastData));
+                Assert.IsTrue(spellCaster.TryCast(secondSpell, untargetedCastData));
+
+                Assert.AreSame(targetObject.transform, spell.LastCasterData.Target);
+                Assert.IsNull(secondSpell.LastCasterData.Target);
+            }
+            finally
+            {
+                Object.DestroyImmediate(targetObject);
+                Object.DestroyImmediate(secondSpell);
+            }
         }
 
         private static CharacterAttributesConfig CreateConfig(int power)

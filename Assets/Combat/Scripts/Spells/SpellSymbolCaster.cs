@@ -7,6 +7,8 @@ namespace RPGame.Combat.Spells
 {
     public sealed class SpellSymbolCaster : SymbolReceiverBase
     {
+        public event Action<Spell> SpellSelected;
+
         [Serializable]
         private sealed class SpellSymbolEntry
         {
@@ -17,22 +19,13 @@ namespace RPGame.Combat.Spells
             public Spell Spell => spell;
         }
 
-        [SerializeField] private SpellCaster spellCaster;
         [SerializeField] private SpellSymbolEntry[] spellsBySymbol;
-
-        private void Awake()
-        {
-            if (spellCaster == null)
-            {
-                spellCaster = GetComponent<SpellCaster>();
-            }
-        }
 
         public override void ReceiveSymbol(SymbolRecognitionResult result)
         {
-            if (!result.IsRecognized || spellCaster == null)
+            if (!result.IsRecognized)
             {
-                Debug.LogWarning($"Symbol spell cast skipped. Recognized: {result.IsRecognized}, SpellCaster assigned: {spellCaster != null}.", this);
+                Debug.LogWarning("Symbol spell selection skipped because symbol was not recognized.", this);
                 return;
             }
 
@@ -42,12 +35,7 @@ namespace RPGame.Combat.Spells
                 return;
             }
 
-            spellCaster.SetSpell(spell);
-            bool wasCast = spellCaster.TryCast();
-            if (!wasCast)
-            {
-                Debug.LogWarning($"SpellCaster.TryCast failed for '{spell.name}'.", this);
-            }
+            SpellSelected?.Invoke(spell);
         }
 
         private bool TryGetSpell(int symbolId, out Spell spell)
