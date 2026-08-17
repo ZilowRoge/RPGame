@@ -127,6 +127,7 @@ GameObject:
   - component: {fileID: 8625157718538374978}
   - component: {fileID: 3017068494284744781}
   - component: {fileID: 6554515424060599941}
+  - component: {fileID: 6392579005161567043}
   m_Layer: 0
   m_Name: DummyTarget
   m_TagString: Untagged
@@ -163,7 +164,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: RPGame.Combat::RPGame.Combat.Damage.DamageReceiver
   statisticsController: {fileID: 8625157718538374978}
-  loggingEnabled: 0
+  loggingEnabled: 1
 --- !u!114 &8625157718538374978
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -195,7 +196,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: RPGame.Loot::RPGame.Loot.LootDropper
   lootTable: {fileID: 11400000, guid: 168b43f97f83bbf48b86e0b163feaa92, type: 2}
-  pickupPrefab: {fileID: 1140000000000000000, guid: e8ffb298e0954fc7b7971bffa75bfd66, type: 3}
+  pickupPrefab: {fileID: 0}
   dropOrigin: {fileID: 0}
   deathSource: {fileID: 8625157718538374978}
   dropRadius: 0.5
@@ -213,3 +214,16 @@ MonoBehaviour:
   m_Name:
   m_EditorClassIdentifier: RPGame.Core::RPGame.Core.Statistics.DestroyOnDeath
   deathSource: {fileID: 8625157718538374978}
+--- !u!114 &6392579005161567043
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5002067795063873075}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 53b2648afbe349deaf0f2220a4c6370e, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: RPGame.Core::RPGame.Core.Targeting.Targetable
+  targetPoint: {fileID: 2203366921733877923}

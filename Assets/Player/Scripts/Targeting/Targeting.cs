@@ -13,18 +13,41 @@ namespace RPGame.Player.Targeting
 
         private void LateUpdate()
         {
-            CurrentTarget = TargetSelector.SelectBest(
+            ITargetable selectedTarget = TargetSelector.SelectBest(
                 TargetRegistry.Targets,
                 playerCamera,
                 transform.position,
                 maxTargetDistance,
                 targetingRadius);
+
+            if (selectedTarget == CurrentTarget)
+            {
+                return;
+            }
+
+            CurrentTarget = selectedTarget;
+            Debug.Log($"[Targeting] Current target: {FormatTarget(CurrentTarget)}", this);
         }
 
         private void OnValidate()
         {
             maxTargetDistance = Mathf.Max(0f, maxTargetDistance);
             targetingRadius = Mathf.Clamp01(targetingRadius);
+        }
+
+        private static string FormatTarget(ITargetable target)
+        {
+            if (target == null)
+            {
+                return "None";
+            }
+
+            if (target is Object unityObject)
+            {
+                return unityObject.name;
+            }
+
+            return target.TargetPoint != null ? target.TargetPoint.name : target.ToString();
         }
     }
 }

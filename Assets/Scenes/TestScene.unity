@@ -13635,10 +13635,26 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5501000000000000001, guid: db388f493d4197a42b9bf51d3fb801a9, type: 3}
+      propertyPath: maxTargetDistance
+      value: 50
+      objectReference: {fileID: 0}
+    - target: {fileID: 5501000000000000002, guid: db388f493d4197a42b9bf51d3fb801a9, type: 3}
+      propertyPath: characterAttributes
+      value:
+      objectReference: {fileID: 1536372347364793592}
+    - target: {fileID: 7254131839462751042, guid: db388f493d4197a42b9bf51d3fb801a9, type: 3}
+      propertyPath: characterAttributes
+      value:
+      objectReference: {fileID: 1536372347364793592}
     - target: {fileID: 8024470455656626075, guid: db388f493d4197a42b9bf51d3fb801a9, type: 3}
       propertyPath: m_Name
       value: Player
       objectReference: {fileID: 0}
+    - target: {fileID: 8541911369478375139, guid: db388f493d4197a42b9bf51d3fb801a9, type: 3}
+      propertyPath: attributes
+      value:
+      objectReference: {fileID: 1536372347364793592}
     - target: {fileID: 8903237724910096467, guid: db388f493d4197a42b9bf51d3fb801a9, type: 3}
       propertyPath: target
       value: 
