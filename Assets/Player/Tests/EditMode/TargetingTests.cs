@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace RPGame.Player.Tests
 {
-    public sealed class PlayerTargetingTests
+    public sealed class TargetingTests
     {
         private readonly List<GameObject> createdObjects = new();
         private readonly List<ITargetable> targets = new();
@@ -134,7 +134,7 @@ namespace RPGame.Player.Tests
 
         private ITargetable SelectBest(float maxTargetDistance = 20f, float targetingRadius = 0.25f)
         {
-            return PlayerTargetSelector.SelectBest(
+            return TargetSelector.SelectBest(
                 targets,
                 playerCamera,
                 Vector3.zero,
@@ -179,3 +179,4 @@ namespace RPGame.Player.Tests
         }
     }
 }
+

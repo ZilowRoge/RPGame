@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace RPGame.Player.Targeting
 {
-    public sealed class PlayerTargeting : MonoBehaviour
+    public sealed class Targeting : MonoBehaviour
     {
         [SerializeField] private Camera playerCamera;
         [SerializeField] private float maxTargetDistance = 25f;
@@ -13,7 +13,7 @@ namespace RPGame.Player.Targeting
 
         private void LateUpdate()
         {
-            CurrentTarget = PlayerTargetSelector.SelectBest(
+            CurrentTarget = TargetSelector.SelectBest(
                 TargetRegistry.Targets,
                 playerCamera,
                 transform.position,
@@ -28,3 +28,4 @@ namespace RPGame.Player.Targeting
         }
     }
 }
+

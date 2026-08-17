@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using RPGame.Core.Damage;
+using RPGame.Core.Statistics;
 using RPGame.Core.Statistics.Attributes;
 using UnityEngine;
 
@@ -15,12 +16,14 @@ namespace RPGame.Core.Spells
             Transform castOrigin,
             Transform target,
             ICharacterAttributes attributes = null,
+            IStatisticsController statistics = null,
             IReadOnlyList<PartialDamageRange> damageRanges = null)
         {
             CasterObject = casterObject;
             CastOrigin = castOrigin;
             Target = target;
             Attributes = attributes;
+            Statistics = statistics;
             DamageRanges = CopyDamageRanges(damageRanges);
         }
 
@@ -28,6 +31,7 @@ namespace RPGame.Core.Spells
         public Transform CastOrigin { get; }
         public Transform Target { get; }
         public ICharacterAttributes Attributes { get; }
+        public IStatisticsController Statistics { get; }
         public IReadOnlyList<PartialDamageRange> DamageRanges { get; }
 
         private static IReadOnlyList<PartialDamageRange> CopyDamageRanges(IReadOnlyList<PartialDamageRange> damageRanges)

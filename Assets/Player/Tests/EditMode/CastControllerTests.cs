@@ -1,34 +1,34 @@
+using System.Collections.Generic;
 using System.Reflection;
 using NUnit.Framework;
 using RPGame.Combat.Spells;
+using RPGame.Core.Damage;
 using RPGame.Core.Spells;
 using RPGame.Core.Spells.Symbols;
+using RPGame.Core.Statistics;
 using RPGame.Core.Targeting;
 using RPGame.Player.Spells;
-using RPGame.Player.Targeting;
+using PlayerTargeting = RPGame.Player.Targeting.Targeting;
 using UnityEngine;
 
 namespace RPGame.Player.Tests
 {
-    public sealed class PlayerSpellCastControllerTests
+    public sealed class CastControllerTests
     {
         private GameObject playerObject;
-        private PlayerTargeting playerTargeting;
-        private SpellCaster spellCaster;
-        private PlayerSpellCastController controller;
+        private PlayerTargeting targeting;
+        private CastController controller;
         private CaptureCasterDataSpell spell;
 
         [SetUp]
         public void SetUp()
         {
-            playerObject = new GameObject("PlayerSpellCastControllerTests");
-            playerTargeting = playerObject.AddComponent<PlayerTargeting>();
-            spellCaster = playerObject.AddComponent<SpellCaster>();
-            controller = playerObject.AddComponent<PlayerSpellCastController>();
+            playerObject = new GameObject("CastControllerTests");
+            targeting = playerObject.AddComponent<PlayerTargeting>();
+            controller = playerObject.AddComponent<CastController>();
             spell = ScriptableObject.CreateInstance<CaptureCasterDataSpell>();
 
-            SetField(controller, "playerTargeting", playerTargeting);
-            SetField(controller, "spellCaster", spellCaster);
+            SetField(controller, "targeting", targeting);
             SetField(controller, "casterObject", playerObject);
             SetField(controller, "castOrigin", playerObject.transform);
         }
@@ -48,9 +48,8 @@ namespace RPGame.Player.Tests
             {
                 SetCurrentTarget(new TestTargetable(targetObject.transform));
 
-                bool wasCast = InvokeCastSpell(spell);
+                InvokeCastSpell(spell);
 
-                Assert.IsTrue(wasCast);
                 Assert.AreSame(targetObject.transform, spell.LastCasterData.Target);
             }
             finally
@@ -64,9 +63,8 @@ namespace RPGame.Player.Tests
         {
             SetCurrentTarget(null);
 
-            bool wasCast = InvokeCastSpell(spell);
+            InvokeCastSpell(spell);
 
-            Assert.IsTrue(wasCast);
             Assert.IsNull(spell.LastCasterData.Target);
         }
 
@@ -92,7 +90,17 @@ namespace RPGame.Player.Tests
         }
 
         [Test]
-        public void SpellSymbolCaster_DoesNotDependOnPlayerTargeting()
+        public void CreateCasterData_IncludesPlayerStatistics()
+        {
+            StatisticsController statisticsController = playerObject.AddComponent<StatisticsController>();
+
+            CasterData casterData = InvokeCreateCasterData();
+
+            Assert.AreSame(statisticsController, casterData.Statistics);
+        }
+
+        [Test]
+        public void SpellSymbolCaster_DoesNotDependOnTargeting()
         {
             FieldInfo[] fields = typeof(SpellSymbolCaster).GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
 
@@ -116,7 +124,7 @@ namespace RPGame.Player.Tests
         }
 
         [Test]
-        public void PlayerSpellCastController_CastsSpellSelectedBySpellSymbolCaster()
+        public void CastController_CastsSpellSelectedBySpellSymbolCaster()
         {
             SpellSymbolCaster symbolCaster = playerObject.AddComponent<SpellSymbolCaster>();
             SetSpellSymbolEntries(symbolCaster, symbolId: 5, spell);
@@ -129,28 +137,58 @@ namespace RPGame.Player.Tests
             Assert.AreSame(playerObject, spell.LastCasterData.CasterObject);
         }
 
-        private bool InvokeCastSpell(Spell selectedSpell)
+        [Test]
+        public void CastSpell_WhenSuccessful_UpdatesLastUsedSpellDamageRanges()
         {
-            MethodInfo method = typeof(PlayerSpellCastController).GetMethod("CastSpell", BindingFlags.Instance | BindingFlags.NonPublic);
-            return (bool)method.Invoke(controller, new object[] { selectedSpell });
+            DamageRangeSpell damageRangeSpell = ScriptableObject.CreateInstance<DamageRangeSpell>();
+            try
+            {
+                InvokeCastSpell(damageRangeSpell);
+
+                Assert.IsTrue(controller.TryGetLastUsedSpellDamageRanges(out IReadOnlyList<PartialDamageRange> damageRanges));
+                Assert.AreEqual(1, damageRanges.Count);
+                Assert.AreEqual(3f, damageRanges[0].MinDamage);
+                Assert.AreEqual(7f, damageRanges[0].MaxDamage);
+            }
+            finally
+            {
+                Object.DestroyImmediate(damageRangeSpell);
+            }
+        }
+
+        [Test]
+        public void CastSpell_WhenLastUsedSpellChanges_RaisesDamageRangeChanged()
+        {
+            int changedCount = 0;
+            controller.LastUsedSpellDamageRangeChanged += () => changedCount++;
+
+            InvokeCastSpell(spell);
+
+            Assert.AreEqual(1, changedCount);
+        }
+
+        private void InvokeCastSpell(Spell selectedSpell)
+        {
+            MethodInfo method = typeof(CastController).GetMethod("CastSpell", BindingFlags.Instance | BindingFlags.NonPublic);
+            method.Invoke(controller, new object[] { selectedSpell });
         }
 
         private CasterData InvokeCreateCasterData()
         {
-            MethodInfo method = typeof(PlayerSpellCastController).GetMethod("CreateCasterData", BindingFlags.Instance | BindingFlags.NonPublic);
+            MethodInfo method = typeof(CastController).GetMethod("CreateCasterData", BindingFlags.Instance | BindingFlags.NonPublic);
             return (CasterData)method.Invoke(controller, null);
         }
 
         private void InvokeLifecycle(string methodName)
         {
-            MethodInfo method = typeof(PlayerSpellCastController).GetMethod(methodName, BindingFlags.Instance | BindingFlags.NonPublic);
+            MethodInfo method = typeof(CastController).GetMethod(methodName, BindingFlags.Instance | BindingFlags.NonPublic);
             method.Invoke(controller, null);
         }
 
         private void SetCurrentTarget(ITargetable target)
         {
             FieldInfo field = typeof(PlayerTargeting).GetField("<CurrentTarget>k__BackingField", BindingFlags.Instance | BindingFlags.NonPublic);
-            field.SetValue(playerTargeting, target);
+            field.SetValue(targeting, target);
         }
 
         private static void SetField(object target, string fieldName, object value)
@@ -190,5 +228,23 @@ namespace RPGame.Player.Tests
                 LastCasterData = casterData;
             }
         }
+
+        private sealed class DamageRangeSpell : Spell, ICasterDamageRangeProvider
+        {
+            private static readonly IReadOnlyList<PartialDamageRange> DamageRanges = new[]
+            {
+                new PartialDamageRange(3f, 7f, DamageType.Magical, DamageElement.Fire)
+            };
+
+            public override void OnCast(CasterData casterData)
+            {
+            }
+
+            public IReadOnlyList<PartialDamageRange> GetDamageRanges(CasterData casterData)
+            {
+                return DamageRanges;
+            }
+        }
     }
 }
+

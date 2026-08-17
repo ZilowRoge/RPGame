@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace RPGame.Player.Targeting
 {
-    public static class PlayerTargetSelector
+    public static class TargetSelector
     {
         public static ITargetable SelectBest(
             IReadOnlyList<ITargetable> targets,
@@ -67,3 +67,4 @@ namespace RPGame.Player.Targeting
         }
     }
 }
+

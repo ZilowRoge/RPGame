@@ -22,7 +22,7 @@ namespace RPGame.Combat.Tests
             gameObject = new GameObject("SpellCasterCasterDataTests");
             attributes = gameObject.AddComponent<CharacterAttributes>();
             SetAttributesConfig(attributes, config);
-            spellCaster = gameObject.AddComponent<SpellCaster>();
+            spellCaster = new SpellCaster();
             spell = ScriptableObject.CreateInstance<CaptureCasterDataSpell>();
         }
 
@@ -32,6 +32,14 @@ namespace RPGame.Combat.Tests
             Object.DestroyImmediate(gameObject);
             Object.DestroyImmediate(config);
             Object.DestroyImmediate(spell);
+        }
+
+        [Test]
+        public void SpellCaster_CanBeCreatedWithoutGameObject()
+        {
+            SpellCaster caster = new SpellCaster();
+
+            Assert.IsNotNull(caster);
         }
 
         [Test]
@@ -89,6 +97,21 @@ namespace RPGame.Combat.Tests
             {
                 Object.DestroyImmediate(targetObject);
                 Object.DestroyImmediate(secondSpell);
+            }
+        }
+
+        [Test]
+        public void SpellCaster_DoesNotStorePlayerSpecificReferences()
+        {
+            System.Reflection.FieldInfo[] fields = typeof(SpellCaster).GetFields(
+                System.Reflection.BindingFlags.Instance
+                | System.Reflection.BindingFlags.Public
+                | System.Reflection.BindingFlags.NonPublic);
+
+            for (int i = 0; i < fields.Length; i++)
+            {
+                Assert.AreNotEqual("RPGame.Player.Targeting.Targeting", fields[i].FieldType.FullName);
+                Assert.AreNotEqual("RPGame.Player.Spells.CastController", fields[i].FieldType.FullName);
             }
         }
 
