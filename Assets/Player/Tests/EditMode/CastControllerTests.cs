@@ -8,7 +8,7 @@ using RPGame.Core.Spells.Symbols;
 using RPGame.Core.Statistics;
 using RPGame.Core.Targeting;
 using RPGame.Player.Spells;
-using PlayerTargeting = RPGame.Player.Targeting.Targeting;
+using TargetingController = RPGame.Player.Targeting.TargetingController;
 using UnityEngine;
 
 namespace RPGame.Player.Tests
@@ -16,7 +16,7 @@ namespace RPGame.Player.Tests
     public sealed class CastControllerTests
     {
         private GameObject playerObject;
-        private PlayerTargeting targeting;
+        private TargetingController targeting;
         private CastController controller;
         private CaptureCasterDataSpell spell;
 
@@ -24,7 +24,7 @@ namespace RPGame.Player.Tests
         public void SetUp()
         {
             playerObject = new GameObject("CastControllerTests");
-            targeting = playerObject.AddComponent<PlayerTargeting>();
+            targeting = playerObject.AddComponent<TargetingController>();
             controller = playerObject.AddComponent<CastController>();
             spell = ScriptableObject.CreateInstance<CaptureCasterDataSpell>();
 
@@ -106,7 +106,7 @@ namespace RPGame.Player.Tests
 
             for (int i = 0; i < fields.Length; i++)
             {
-                Assert.AreNotSame(typeof(PlayerTargeting), fields[i].FieldType);
+                Assert.AreNotSame(typeof(TargetingController), fields[i].FieldType);
             }
         }
 
@@ -187,7 +187,7 @@ namespace RPGame.Player.Tests
 
         private void SetCurrentTarget(ITargetable target)
         {
-            FieldInfo field = typeof(PlayerTargeting).GetField("<CurrentTarget>k__BackingField", BindingFlags.Instance | BindingFlags.NonPublic);
+            FieldInfo field = typeof(TargetingController).GetField("<CurrentTarget>k__BackingField", BindingFlags.Instance | BindingFlags.NonPublic);
             field.SetValue(targeting, target);
         }
 

@@ -1,7 +1,9 @@
 using System.Collections.Generic;
+using System.Reflection;
 using NUnit.Framework;
 using RPGame.Core.Targeting;
 using RPGame.Player.Targeting;
+using TargetingController = RPGame.Player.Targeting.TargetingController;
 using UnityEngine;
 
 namespace RPGame.Player.Tests
@@ -11,13 +13,25 @@ namespace RPGame.Player.Tests
         private readonly List<GameObject> createdObjects = new();
         private readonly List<ITargetable> targets = new();
         private Camera playerCamera;
+        private TargetingController targeting;
 
         [SetUp]
         public void SetUp()
         {
+            ClearTargetRegistry();
+
             GameObject cameraObject = CreateObject("PlayerCamera", Vector3.zero);
             playerCamera = cameraObject.AddComponent<Camera>();
+            playerCamera.aspect = 1f;
             playerCamera.transform.rotation = Quaternion.identity;
+
+            GameObject targetingObject = CreateObject("Targeting", Vector3.zero);
+            targeting = targetingObject.AddComponent<TargetingController>();
+            SetField(targeting, "playerCamera", playerCamera);
+            SetField(targeting, "maxTargetDistance", 20f);
+            SetField(targeting, "targetingRadius", 0.2f);
+            SetField(targeting, "targetSwitchThreshold", 0.03f);
+            SetField(targeting, "targetRetentionTime", 0.5f);
         }
 
         [TearDown]
@@ -30,6 +44,7 @@ namespace RPGame.Player.Tests
 
             createdObjects.Clear();
             targets.Clear();
+            ClearTargetRegistry();
         }
 
         [Test]
@@ -132,6 +147,133 @@ namespace RPGame.Player.Tests
             Assert.IsNull(selectedTarget);
         }
 
+        [Test]
+        public void Targeting_KeepsCurrentTargetWhenCandidateIsOnlySlightlyBetter()
+        {
+            Targetable currentTarget = CreateRegisteredTargetAtViewport("Current", new Vector3(0.62f, 0.5f, 8f));
+            CreateRegisteredTargetAtViewport("Candidate", new Vector3(0.61f, 0.5f, 8f));
+            SetCurrentTarget(currentTarget);
+
+            InvokeTargetingUpdate(0.016f);
+
+            Assert.AreSame(currentTarget, targeting.CurrentTarget);
+        }
+
+        [Test]
+        public void Targeting_SwitchesTargetWhenCandidateExceedsSwitchThreshold()
+        {
+            Targetable currentTarget = CreateRegisteredTargetAtViewport("Current", new Vector3(0.62f, 0.5f, 8f));
+            Targetable candidate = CreateRegisteredTargetAtViewport("Candidate", new Vector3(0.57f, 0.5f, 8f));
+            SetCurrentTarget(currentTarget);
+
+            InvokeTargetingUpdate(0.016f);
+
+            Assert.AreSame(candidate, targeting.CurrentTarget);
+        }
+
+        [Test]
+        public void Targeting_KeepsCurrentTargetDuringRetentionAfterSoftInvalidation()
+        {
+            Targetable currentTarget = CreateRegisteredTargetAtViewport("Current", new Vector3(0.75f, 0.5f, 8f));
+            SetCurrentTarget(currentTarget);
+
+            InvokeTargetingUpdate(0.25f);
+
+            Assert.AreSame(currentTarget, targeting.CurrentTarget);
+        }
+
+        [Test]
+        public void Targeting_DoesNotLoseRecoveredTargetBeforeRetentionExpires()
+        {
+            Targetable currentTarget = CreateRegisteredTargetAtViewport("Current", new Vector3(0.75f, 0.5f, 8f));
+            SetCurrentTarget(currentTarget);
+
+            InvokeTargetingUpdate(0.25f);
+            currentTarget.transform.position = playerCamera.ViewportToWorldPoint(new Vector3(0.6f, 0.5f, 8f));
+            InvokeTargetingUpdate(0.1f);
+            currentTarget.transform.position = playerCamera.ViewportToWorldPoint(new Vector3(0.75f, 0.5f, 8f));
+            InvokeTargetingUpdate(0.25f);
+
+            Assert.AreSame(currentTarget, targeting.CurrentTarget);
+        }
+
+        [Test]
+        public void Targeting_ReplacesCurrentTargetAfterRetentionExpires()
+        {
+            Targetable currentTarget = CreateRegisteredTargetAtViewport("Current", new Vector3(0.75f, 0.5f, 8f));
+            Targetable replacement = CreateRegisteredTargetAtViewport("Replacement", new Vector3(0.5f, 0.5f, 8f));
+            SetCurrentTarget(currentTarget);
+
+            InvokeTargetingUpdate(0.51f);
+
+            Assert.AreSame(replacement, targeting.CurrentTarget);
+        }
+
+        [Test]
+        public void Targeting_RemovesCurrentTargetImmediatelyWhenBeyondMaxTargetDistance()
+        {
+            Targetable currentTarget = CreateRegisteredTarget("Current", new Vector3(0f, 0f, 30f));
+            Targetable replacement = CreateRegisteredTargetAtViewport("Replacement", new Vector3(0.5f, 0.5f, 8f));
+            SetCurrentTarget(currentTarget);
+
+            InvokeTargetingUpdate(0.016f);
+
+            Assert.AreSame(replacement, targeting.CurrentTarget);
+        }
+
+        [Test]
+        public void Targeting_RemovesCurrentTargetImmediatelyWhenBehindCamera()
+        {
+            Targetable currentTarget = CreateRegisteredTarget("Current", new Vector3(0f, 0f, -5f));
+            Targetable replacement = CreateRegisteredTargetAtViewport("Replacement", new Vector3(0.5f, 0.5f, 8f));
+            SetCurrentTarget(currentTarget);
+
+            InvokeTargetingUpdate(0.016f);
+
+            Assert.AreSame(replacement, targeting.CurrentTarget);
+        }
+
+        [Test]
+        public void Targeting_RemovesCurrentTargetImmediatelyWhenDeactivated()
+        {
+            Targetable currentTarget = CreateRegisteredTargetAtViewport("Current", new Vector3(0.5f, 0.5f, 8f));
+            Targetable replacement = CreateRegisteredTargetAtViewport("Replacement", new Vector3(0.55f, 0.5f, 8f));
+            SetCurrentTarget(currentTarget);
+
+            currentTarget.gameObject.SetActive(false);
+            InvokeTargetingUpdate(0.016f);
+
+            Assert.AreSame(replacement, targeting.CurrentTarget);
+        }
+
+        [Test]
+        public void Targeting_RemovesCurrentTargetImmediatelyWhenDestroyed()
+        {
+            Targetable currentTarget = CreateRegisteredTargetAtViewport("Current", new Vector3(0.5f, 0.5f, 8f));
+            Targetable replacement = CreateRegisteredTargetAtViewport("Replacement", new Vector3(0.55f, 0.5f, 8f));
+            SetCurrentTarget(currentTarget);
+
+            GameObject currentTargetObject = currentTarget.gameObject;
+            createdObjects.Remove(currentTargetObject);
+            Object.DestroyImmediate(currentTargetObject);
+            InvokeTargetingUpdate(0.016f);
+
+            Assert.AreSame(replacement, targeting.CurrentTarget);
+        }
+
+        [Test]
+        public void Targeting_WhenSwitchThresholdIsZero_SelectsBetterTarget()
+        {
+            Targetable currentTarget = CreateRegisteredTargetAtViewport("Current", new Vector3(0.62f, 0.5f, 8f));
+            Targetable candidate = CreateRegisteredTargetAtViewport("Candidate", new Vector3(0.61f, 0.5f, 8f));
+            SetField(targeting, "targetSwitchThreshold", 0f);
+            SetCurrentTarget(currentTarget);
+
+            InvokeTargetingUpdate(0.016f);
+
+            Assert.AreSame(candidate, targeting.CurrentTarget);
+        }
+
         private ITargetable SelectBest(float maxTargetDistance = 20f, float targetingRadius = 0.25f)
         {
             return TargetSelector.SelectBest(
@@ -155,6 +297,17 @@ namespace RPGame.Player.Tests
             return targetable;
         }
 
+        private Targetable CreateRegisteredTargetAtViewport(string objectName, Vector3 viewportPosition)
+        {
+            return CreateRegisteredTarget(objectName, playerCamera.ViewportToWorldPoint(viewportPosition));
+        }
+
+        private Targetable CreateRegisteredTarget(string objectName, Vector3 position)
+        {
+            GameObject gameObject = CreateObject(objectName, position);
+            return gameObject.AddComponent<Targetable>();
+        }
+
         private GameObject CreateObject(string objectName)
         {
             return CreateObject(objectName, Vector3.zero);
@@ -166,6 +319,30 @@ namespace RPGame.Player.Tests
             gameObject.transform.position = position;
             createdObjects.Add(gameObject);
             return gameObject;
+        }
+
+        private void InvokeTargetingUpdate(float deltaTime)
+        {
+            MethodInfo method = typeof(TargetingController).GetMethod("UpdateCurrentTarget", BindingFlags.Instance | BindingFlags.NonPublic);
+            method.Invoke(targeting, new object[] { deltaTime });
+        }
+
+        private void SetCurrentTarget(ITargetable target)
+        {
+            FieldInfo field = typeof(TargetingController).GetField("<CurrentTarget>k__BackingField", BindingFlags.Instance | BindingFlags.NonPublic);
+            field.SetValue(targeting, target);
+        }
+
+        private static void SetField(object target, string fieldName, object value)
+        {
+            FieldInfo field = target.GetType().GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
+            field.SetValue(target, value);
+        }
+
+        private static void ClearTargetRegistry()
+        {
+            MethodInfo method = typeof(TargetRegistry).GetMethod("Clear", BindingFlags.Static | BindingFlags.NonPublic);
+            method.Invoke(null, null);
         }
 
         private sealed class TestTargetable : ITargetable

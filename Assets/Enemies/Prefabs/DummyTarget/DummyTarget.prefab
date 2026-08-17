@@ -161,7 +161,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: cbccdc8f4b27455daff49c84b15b1fc4, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: RPGame.Combat::RPGame.Combat.Damage.DamageReceiver
   statisticsController: {fileID: 8625157718538374978}
   loggingEnabled: 1
@@ -175,7 +175,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8a228d74ae0d45788e3d884cac2b0c3d, type: 3}
-  m_Name: 
+  m_Name:
   m_EditorClassIdentifier: RPGame.Core::RPGame.Core.Statistics.StatisticsController
   config: {fileID: 11400000, guid: e75a8681f00b5314f98891d138043f5e, type: 2}
   attributes: {fileID: 0}
@@ -196,7 +196,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: RPGame.Loot::RPGame.Loot.LootDropper
   lootTable: {fileID: 11400000, guid: 168b43f97f83bbf48b86e0b163feaa92, type: 2}
-  pickupPrefab: {fileID: 0}
+  pickupPrefab: {fileID: 1140000000000000000, guid: e8ffb298e0954fc7b7971bffa75bfd66, type: 3}
   dropOrigin: {fileID: 0}
   deathSource: {fileID: 8625157718538374978}
   dropRadius: 0.5

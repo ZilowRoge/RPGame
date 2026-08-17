@@ -6,7 +6,7 @@ using RPGame.Core.Spells;
 using RPGame.Core.Statistics;
 using RPGame.Core.Statistics.Attributes;
 using RPGame.Core.Targeting;
-using PlayerTargeting = RPGame.Player.Targeting.Targeting;
+using TargetingController = RPGame.Player.Targeting.TargetingController;
 using UnityEngine;
 
 namespace RPGame.Player.Spells
@@ -14,7 +14,7 @@ namespace RPGame.Player.Spells
     public sealed class CastController : MonoBehaviour, ILastUsedSpellDamageRangeProvider
     {
         [SerializeField] private SpellSymbolCaster spellSymbolCaster;
-        [SerializeField] private PlayerTargeting targeting;
+        [SerializeField] private TargetingController targeting;
         [SerializeField] private StatisticsController statisticsController;
         [SerializeField] private GameObject casterObject;
         [SerializeField] private Transform castOrigin;
@@ -137,7 +137,7 @@ namespace RPGame.Player.Spells
 
             if (targeting == null)
             {
-                targeting = GetComponent<PlayerTargeting>();
+                targeting = GetComponent<TargetingController>();
             }
 
             if (casterObject == null)

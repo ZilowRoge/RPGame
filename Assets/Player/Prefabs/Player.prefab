@@ -657,7 +657,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 64d67216a67c4d86a01e4672d6398d5f, type: 3}
   m_Name:
-  m_EditorClassIdentifier: RPGame.Player::RPGame.Player.Targeting.Targeting
+  m_EditorClassIdentifier: RPGame.Player::RPGame.Player.Targeting.TargetingController
   playerCamera: {fileID: 5288368037219562554}
   maxTargetDistance: 25
   targetingRadius: 0.2
