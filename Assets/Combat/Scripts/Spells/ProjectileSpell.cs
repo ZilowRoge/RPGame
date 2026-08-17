@@ -39,6 +39,8 @@ namespace RPGame.Combat.Spells
         private CasterData CreateProjectileCasterData(CasterData casterData)
         {
             return new CasterDataBuilder(casterData.CasterObject, casterData.CastOrigin, casterData.Target)
+                .WithAttributes(casterData.Attributes)
+                .WithStatistics(casterData.Statistics)
                 .WithDamageRanges(GetDamageRanges(casterData))
                 .Build();
         }

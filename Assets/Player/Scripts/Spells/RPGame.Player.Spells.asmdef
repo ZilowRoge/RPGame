@@ -1,0 +1,18 @@
+{
+    "name": "RPGame.Player.Spells",
+    "rootNamespace": "RPGame.Player.Spells",
+    "references": [
+        "RPGame.Core",
+        "RPGame.Combat",
+        "RPGame.Player"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

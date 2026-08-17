@@ -33,7 +33,7 @@ namespace RPGame.Combat.Tests
             statisticsController = gameObject.AddComponent<StatisticsController>();
             SetControllerConfig(statisticsController, config);
             statisticsController.ResetToConfig();
-            spellCaster = gameObject.AddComponent<SpellCaster>();
+            spellCaster = new SpellCaster();
             spell = ScriptableObject.CreateInstance<TestSpell>();
         }
 
@@ -49,9 +49,8 @@ namespace RPGame.Combat.Tests
         public void TryCast_WhenEnoughMana_SpendsManaAndCastsSpell()
         {
             SetManaCost(spell, 20f);
-            spellCaster.SetSpell(spell);
 
-            bool wasCast = spellCaster.TryCast();
+            bool wasCast = spellCaster.TryCast(spell, CreateCasterData());
 
             Assert.IsTrue(wasCast);
             Assert.AreEqual(1, spell.CastCount);
@@ -62,9 +61,8 @@ namespace RPGame.Combat.Tests
         public void TryCast_WhenNotEnoughMana_DoesNotCastSpell()
         {
             SetManaCost(spell, 60f);
-            spellCaster.SetSpell(spell);
 
-            bool wasCast = spellCaster.TryCast();
+            bool wasCast = spellCaster.TryCast(spell, CreateCasterData());
 
             Assert.IsFalse(wasCast);
             Assert.AreEqual(0, spell.CastCount);
@@ -75,9 +73,8 @@ namespace RPGame.Combat.Tests
         public void TryCast_WhenSpellHasNoManaCost_CastsSpell()
         {
             SetManaCost(spell, 0f);
-            spellCaster.SetSpell(spell);
 
-            bool wasCast = spellCaster.TryCast();
+            bool wasCast = spellCaster.TryCast(spell, CreateCasterData());
 
             Assert.IsTrue(wasCast);
             Assert.AreEqual(1, spell.CastCount);
@@ -85,36 +82,27 @@ namespace RPGame.Combat.Tests
         }
 
         [Test]
-        public void TryCast_WhenSuccessful_UpdatesLastUsedSpell()
+        public void TryCast_WhenManaCostRequiresStatisticsAndStatisticsAreMissing_DoesNotCastSpell()
         {
             SetManaCost(spell, 20f);
-            spellCaster.SetSpell(spell);
 
-            bool wasCast = spellCaster.TryCast();
+            bool wasCast = spellCaster.TryCast(spell, CreateCasterDataWithoutStatistics());
 
-            Assert.IsTrue(wasCast);
-            Assert.AreSame(spell, spellCaster.LastUsedSpellTracker.LastUsedSpell);
+            Assert.IsFalse(wasCast);
+            Assert.AreEqual(0, spell.CastCount);
+            Assert.AreEqual(50f, statisticsController.CurrentMana);
         }
 
         [Test]
-        public void TryCast_WhenNotEnoughMana_DoesNotUpdateLastUsedSpell()
+        public void TryCast_WhenSpellHasNoManaCostAndStatisticsAreMissing_CastsSpell()
         {
-            TestSpell previousSpell = ScriptableObject.CreateInstance<TestSpell>();
-            try
-            {
-                Assert.IsTrue(spellCaster.LastUsedSpellTracker.SetLastUsedSpell(previousSpell));
-                SetManaCost(spell, 60f);
-                spellCaster.SetSpell(spell);
+            SetManaCost(spell, 0f);
 
-                bool wasCast = spellCaster.TryCast();
+            bool wasCast = spellCaster.TryCast(spell, CreateCasterDataWithoutStatistics());
 
-                Assert.IsFalse(wasCast);
-                Assert.AreSame(previousSpell, spellCaster.LastUsedSpellTracker.LastUsedSpell);
-            }
-            finally
-            {
-                Object.DestroyImmediate(previousSpell);
-            }
+            Assert.IsTrue(wasCast);
+            Assert.AreEqual(1, spell.CastCount);
+            Assert.AreEqual(50f, statisticsController.CurrentMana);
         }
 
         private static StatisticsConfig CreateConfig(float maxMana)
@@ -146,6 +134,19 @@ namespace RPGame.Combat.Tests
             SerializedObject serializedSpell = new SerializedObject(targetSpell);
             serializedSpell.FindProperty("manaCost").floatValue = manaCost;
             serializedSpell.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private CasterData CreateCasterData()
+        {
+            return new CasterDataBuilder(gameObject, gameObject.transform, null)
+                .WithStatistics(statisticsController)
+                .Build();
+        }
+
+        private CasterData CreateCasterDataWithoutStatistics()
+        {
+            return new CasterDataBuilder(gameObject, gameObject.transform, null)
+                .Build();
         }
     }
 }

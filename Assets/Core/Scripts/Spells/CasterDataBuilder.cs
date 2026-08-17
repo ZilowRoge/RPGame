@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using RPGame.Core.Damage;
+using RPGame.Core.Statistics;
 using RPGame.Core.Statistics.Attributes;
 using UnityEngine;
 
@@ -15,6 +16,7 @@ namespace RPGame.Core.Spells
         private readonly Transform target;
         private IReadOnlyList<PartialDamageRange> damageRanges = EmptyDamageRanges;
         private ICharacterAttributes attributes;
+        private IStatisticsController statistics;
 
         public CasterDataBuilder(GameObject casterObject, Transform castOrigin, Transform target)
         {
@@ -29,6 +31,12 @@ namespace RPGame.Core.Spells
             return this;
         }
 
+        public CasterDataBuilder WithStatistics(IStatisticsController statistics)
+        {
+            this.statistics = statistics;
+            return this;
+        }
+
         public CasterDataBuilder WithDamageRanges(IReadOnlyList<PartialDamageRange> damageRanges)
         {
             this.damageRanges = damageRanges ?? EmptyDamageRanges;
@@ -37,7 +45,7 @@ namespace RPGame.Core.Spells
 
         public CasterData Build()
         {
-            return new CasterData(casterObject, castOrigin, target, attributes, damageRanges);
+            return new CasterData(casterObject, castOrigin, target, attributes, statistics, damageRanges);
         }
     }
 }

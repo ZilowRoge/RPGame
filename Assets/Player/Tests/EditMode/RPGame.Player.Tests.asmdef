@@ -1,0 +1,24 @@
+{
+    "name": "RPGame.Player.Tests",
+    "rootNamespace": "RPGame.Player.Tests",
+    "references": [
+        "RPGame.Core",
+        "RPGame.Combat",
+        "RPGame.Player",
+        "RPGame.Player.Spells"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false,
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ]
+}
