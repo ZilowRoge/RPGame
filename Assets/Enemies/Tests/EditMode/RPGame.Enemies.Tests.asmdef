@@ -1,0 +1,22 @@
+{
+    "name": "RPGame.Enemies.Tests",
+    "rootNamespace": "RPGame.Enemies.Tests",
+    "references": [
+        "RPGame.Core",
+        "RPGame.Enemies"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false,
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ]
+}

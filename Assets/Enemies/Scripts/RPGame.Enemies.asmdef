@@ -1,0 +1,16 @@
+{
+    "name": "RPGame.Enemies",
+    "rootNamespace": "RPGame.Enemies",
+    "references": [
+        "RPGame.Core"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

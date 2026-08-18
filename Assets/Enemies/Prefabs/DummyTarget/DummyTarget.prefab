@@ -223,7 +223,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 5002067795063873075}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 53b2648afbe349deaf0f2220a4c6370e, type: 3}
+  m_Script: {fileID: 11500000, guid: 066bd027c7274840988d9a4de93ccd8a, type: 3}
   m_Name:
-  m_EditorClassIdentifier: RPGame.Core::RPGame.Core.Targeting.Targetable
+  m_EditorClassIdentifier: RPGame.Core::RPGame.Core.Targeting.EnemyTargetable
   targetPoint: {fileID: 2203366921733877923}

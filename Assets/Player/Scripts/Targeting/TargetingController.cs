@@ -53,7 +53,7 @@ namespace RPGame.Player.Targeting
         private ITargetable SelectBestTarget()
         {
             ITargetable selectedTarget = TargetSelector.SelectBest(
-                TargetRegistry.Targets,
+                TargetRegistry.EnemyTargets,
                 playerCamera,
                 transform.position,
                 maxTargetDistance,
@@ -65,7 +65,7 @@ namespace RPGame.Player.Targeting
         private void TrySwitchToBetterTarget(float currentScore)
         {
             TargetSelector.Candidate candidate = TargetSelector.SelectBestCandidate(
-                TargetRegistry.Targets,
+                TargetRegistry.EnemyTargets,
                 playerCamera,
                 transform.position,
                 maxTargetDistance,
@@ -85,7 +85,7 @@ namespace RPGame.Player.Targeting
         {
             currentScore = 0f;
 
-            if (!ContainsTarget(TargetRegistry.Targets, CurrentTarget))
+            if (!ContainsTarget(TargetRegistry.EnemyTargets, CurrentTarget))
             {
                 return false;
             }

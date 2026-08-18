@@ -150,7 +150,7 @@ namespace RPGame.Player.Tests
         [Test]
         public void Targeting_KeepsCurrentTargetWhenCandidateIsOnlySlightlyBetter()
         {
-            Targetable currentTarget = CreateRegisteredTargetAtViewport("Current", new Vector3(0.62f, 0.5f, 8f));
+            EnemyTargetable currentTarget = CreateRegisteredTargetAtViewport("Current", new Vector3(0.62f, 0.5f, 8f));
             CreateRegisteredTargetAtViewport("Candidate", new Vector3(0.61f, 0.5f, 8f));
             SetCurrentTarget(currentTarget);
 
@@ -162,8 +162,8 @@ namespace RPGame.Player.Tests
         [Test]
         public void Targeting_SwitchesTargetWhenCandidateExceedsSwitchThreshold()
         {
-            Targetable currentTarget = CreateRegisteredTargetAtViewport("Current", new Vector3(0.62f, 0.5f, 8f));
-            Targetable candidate = CreateRegisteredTargetAtViewport("Candidate", new Vector3(0.57f, 0.5f, 8f));
+            EnemyTargetable currentTarget = CreateRegisteredTargetAtViewport("Current", new Vector3(0.62f, 0.5f, 8f));
+            EnemyTargetable candidate = CreateRegisteredTargetAtViewport("Candidate", new Vector3(0.57f, 0.5f, 8f));
             SetCurrentTarget(currentTarget);
 
             InvokeTargetingUpdate(0.016f);
@@ -174,7 +174,7 @@ namespace RPGame.Player.Tests
         [Test]
         public void Targeting_KeepsCurrentTargetDuringRetentionAfterSoftInvalidation()
         {
-            Targetable currentTarget = CreateRegisteredTargetAtViewport("Current", new Vector3(0.75f, 0.5f, 8f));
+            EnemyTargetable currentTarget = CreateRegisteredTargetAtViewport("Current", new Vector3(0.75f, 0.5f, 8f));
             SetCurrentTarget(currentTarget);
 
             InvokeTargetingUpdate(0.25f);
@@ -185,7 +185,7 @@ namespace RPGame.Player.Tests
         [Test]
         public void Targeting_DoesNotLoseRecoveredTargetBeforeRetentionExpires()
         {
-            Targetable currentTarget = CreateRegisteredTargetAtViewport("Current", new Vector3(0.75f, 0.5f, 8f));
+            EnemyTargetable currentTarget = CreateRegisteredTargetAtViewport("Current", new Vector3(0.75f, 0.5f, 8f));
             SetCurrentTarget(currentTarget);
 
             InvokeTargetingUpdate(0.25f);
@@ -200,8 +200,8 @@ namespace RPGame.Player.Tests
         [Test]
         public void Targeting_ReplacesCurrentTargetAfterRetentionExpires()
         {
-            Targetable currentTarget = CreateRegisteredTargetAtViewport("Current", new Vector3(0.75f, 0.5f, 8f));
-            Targetable replacement = CreateRegisteredTargetAtViewport("Replacement", new Vector3(0.5f, 0.5f, 8f));
+            EnemyTargetable currentTarget = CreateRegisteredTargetAtViewport("Current", new Vector3(0.75f, 0.5f, 8f));
+            EnemyTargetable replacement = CreateRegisteredTargetAtViewport("Replacement", new Vector3(0.5f, 0.5f, 8f));
             SetCurrentTarget(currentTarget);
 
             InvokeTargetingUpdate(0.51f);
@@ -212,8 +212,8 @@ namespace RPGame.Player.Tests
         [Test]
         public void Targeting_RemovesCurrentTargetImmediatelyWhenBeyondMaxTargetDistance()
         {
-            Targetable currentTarget = CreateRegisteredTarget("Current", new Vector3(0f, 0f, 30f));
-            Targetable replacement = CreateRegisteredTargetAtViewport("Replacement", new Vector3(0.5f, 0.5f, 8f));
+            EnemyTargetable currentTarget = CreateRegisteredTarget("Current", new Vector3(0f, 0f, 30f));
+            EnemyTargetable replacement = CreateRegisteredTargetAtViewport("Replacement", new Vector3(0.5f, 0.5f, 8f));
             SetCurrentTarget(currentTarget);
 
             InvokeTargetingUpdate(0.016f);
@@ -224,8 +224,8 @@ namespace RPGame.Player.Tests
         [Test]
         public void Targeting_RemovesCurrentTargetImmediatelyWhenBehindCamera()
         {
-            Targetable currentTarget = CreateRegisteredTarget("Current", new Vector3(0f, 0f, -5f));
-            Targetable replacement = CreateRegisteredTargetAtViewport("Replacement", new Vector3(0.5f, 0.5f, 8f));
+            EnemyTargetable currentTarget = CreateRegisteredTarget("Current", new Vector3(0f, 0f, -5f));
+            EnemyTargetable replacement = CreateRegisteredTargetAtViewport("Replacement", new Vector3(0.5f, 0.5f, 8f));
             SetCurrentTarget(currentTarget);
 
             InvokeTargetingUpdate(0.016f);
@@ -236,8 +236,8 @@ namespace RPGame.Player.Tests
         [Test]
         public void Targeting_RemovesCurrentTargetImmediatelyWhenDeactivated()
         {
-            Targetable currentTarget = CreateRegisteredTargetAtViewport("Current", new Vector3(0.5f, 0.5f, 8f));
-            Targetable replacement = CreateRegisteredTargetAtViewport("Replacement", new Vector3(0.55f, 0.5f, 8f));
+            EnemyTargetable currentTarget = CreateRegisteredTargetAtViewport("Current", new Vector3(0.5f, 0.5f, 8f));
+            EnemyTargetable replacement = CreateRegisteredTargetAtViewport("Replacement", new Vector3(0.55f, 0.5f, 8f));
             SetCurrentTarget(currentTarget);
 
             currentTarget.gameObject.SetActive(false);
@@ -249,8 +249,8 @@ namespace RPGame.Player.Tests
         [Test]
         public void Targeting_RemovesCurrentTargetImmediatelyWhenDestroyed()
         {
-            Targetable currentTarget = CreateRegisteredTargetAtViewport("Current", new Vector3(0.5f, 0.5f, 8f));
-            Targetable replacement = CreateRegisteredTargetAtViewport("Replacement", new Vector3(0.55f, 0.5f, 8f));
+            EnemyTargetable currentTarget = CreateRegisteredTargetAtViewport("Current", new Vector3(0.5f, 0.5f, 8f));
+            EnemyTargetable replacement = CreateRegisteredTargetAtViewport("Replacement", new Vector3(0.55f, 0.5f, 8f));
             SetCurrentTarget(currentTarget);
 
             GameObject currentTargetObject = currentTarget.gameObject;
@@ -264,8 +264,8 @@ namespace RPGame.Player.Tests
         [Test]
         public void Targeting_WhenSwitchThresholdIsZero_SelectsBetterTarget()
         {
-            Targetable currentTarget = CreateRegisteredTargetAtViewport("Current", new Vector3(0.62f, 0.5f, 8f));
-            Targetable candidate = CreateRegisteredTargetAtViewport("Candidate", new Vector3(0.61f, 0.5f, 8f));
+            EnemyTargetable currentTarget = CreateRegisteredTargetAtViewport("Current", new Vector3(0.62f, 0.5f, 8f));
+            EnemyTargetable candidate = CreateRegisteredTargetAtViewport("Candidate", new Vector3(0.61f, 0.5f, 8f));
             SetField(targeting, "targetSwitchThreshold", 0f);
             SetCurrentTarget(currentTarget);
 
@@ -297,15 +297,15 @@ namespace RPGame.Player.Tests
             return targetable;
         }
 
-        private Targetable CreateRegisteredTargetAtViewport(string objectName, Vector3 viewportPosition)
+        private EnemyTargetable CreateRegisteredTargetAtViewport(string objectName, Vector3 viewportPosition)
         {
             return CreateRegisteredTarget(objectName, playerCamera.ViewportToWorldPoint(viewportPosition));
         }
 
-        private Targetable CreateRegisteredTarget(string objectName, Vector3 position)
+        private EnemyTargetable CreateRegisteredTarget(string objectName, Vector3 position)
         {
             GameObject gameObject = CreateObject(objectName, position);
-            return gameObject.AddComponent<Targetable>();
+            return gameObject.AddComponent<EnemyTargetable>();
         }
 
         private GameObject CreateObject(string objectName)

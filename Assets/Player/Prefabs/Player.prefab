@@ -418,6 +418,7 @@ GameObject:
   - component: {fileID: 6738148486840793266}
   - component: {fileID: 8632052528601023458}
   - component: {fileID: 7254131839462751042}
+  - component: {fileID: 5501000000000000003}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -661,6 +662,19 @@ MonoBehaviour:
   playerCamera: {fileID: 5288368037219562554}
   maxTargetDistance: 25
   targetingRadius: 0.2
+--- !u!114 &5501000000000000003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8024470455656626075}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7de9cf695fb8416fa115ea1fbfad89b6, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: RPGame.Core::RPGame.Core.Targeting.PlayerTargetable
+  targetPoint: {fileID: 0}
 --- !u!114 &5501000000000000002
 MonoBehaviour:
   m_ObjectHideFlags: 0
