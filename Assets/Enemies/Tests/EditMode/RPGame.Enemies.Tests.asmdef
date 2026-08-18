@@ -3,6 +3,7 @@
     "rootNamespace": "RPGame.Enemies.Tests",
     "references": [
         "RPGame.Core",
+        "RPGame.Combat",
         "RPGame.Enemies"
     ],
     "includePlatforms": [
