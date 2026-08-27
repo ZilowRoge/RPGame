@@ -15,15 +15,21 @@ namespace RPGame.Enemies
 
         public float MoveSpeed => moveSpeed;
 
-        private void Awake()
+        private void Start()
         {
+            CacheRequiredComponents();
+            if (!HasRequiredComponents())
+            {
+                enabled = false;
+                return;
+            }
+
             ConfigureAgent();
         }
 
         public void MoveTo(Vector3 position)
         {
-            NavMeshAgent resolvedAgent = ResolveAgent();
-            if (!CanUseAgent(resolvedAgent))
+            if (!CanUseAgent())
             {
                 return;
             }
@@ -32,12 +38,12 @@ namespace RPGame.Enemies
 
             if (hasDestination && IsSameDestination(position))
             {
-                resolvedAgent.isStopped = false;
+                agent.isStopped = false;
                 return;
             }
 
-            resolvedAgent.isStopped = false;
-            if (resolvedAgent.SetDestination(position))
+            agent.isStopped = false;
+            if (agent.SetDestination(position))
             {
                 lastDestination = position;
                 hasDestination = true;
@@ -46,40 +52,47 @@ namespace RPGame.Enemies
 
         public void Stop()
         {
-            NavMeshAgent resolvedAgent = ResolveAgent();
-            if (!CanUseAgent(resolvedAgent))
+            if (!CanUseAgent())
             {
                 return;
             }
 
-            resolvedAgent.isStopped = true;
+            agent.isStopped = true;
         }
 
         private void ConfigureAgent()
         {
-            NavMeshAgent resolvedAgent = ResolveAgent();
-            if (resolvedAgent != null)
+            if (agent != null)
             {
-                resolvedAgent.speed = moveSpeed;
+                agent.speed = moveSpeed;
             }
         }
 
-        private NavMeshAgent ResolveAgent()
+        private void CacheRequiredComponents()
         {
             if (agent == null)
             {
                 agent = GetComponent<NavMeshAgent>();
             }
-
-            return agent;
         }
 
-        private bool CanUseAgent(NavMeshAgent resolvedAgent)
+        private bool HasRequiredComponents()
         {
-            return resolvedAgent != null
-                && resolvedAgent.enabled
-                && resolvedAgent.gameObject.activeInHierarchy
-                && resolvedAgent.isOnNavMesh;
+            if (agent != null)
+            {
+                return true;
+            }
+
+            Debug.LogError("Missing field agent.", this);
+            return false;
+        }
+
+        private bool CanUseAgent()
+        {
+            return agent != null
+                && agent.enabled
+                && agent.gameObject.activeInHierarchy
+                && agent.isOnNavMesh;
         }
 
         private bool IsSameDestination(Vector3 position)

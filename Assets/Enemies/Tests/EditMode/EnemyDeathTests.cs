@@ -14,17 +14,20 @@ using UnityEngine.TestTools;
 
 namespace RPGame.Enemies.Tests
 {
-    public sealed class EnemyControllerTests
+    public sealed class EnemyDeathTests
     {
         private readonly List<GameObject> createdObjects = new();
         private readonly List<ScriptableObject> createdAssets = new();
 
         private NavMeshDataInstance navMeshDataInstance;
         private GameObject enemyObject;
+        private StatisticsController enemyStatistics;
         private NavMeshAgent agent;
-        private Detection detection;
+        private Movement movement;
         private Attack attack;
         private EnemyController controller;
+        private EnemyTargetable targetable;
+        private EnemyDeath death;
 
         [SetUp]
         public void SetUp()
@@ -34,14 +37,20 @@ namespace RPGame.Enemies.Tests
 
             enemyObject = CreateObject("Enemy");
             enemyObject.transform.position = Vector3.zero;
+            enemyStatistics = enemyObject.AddComponent<StatisticsController>();
+            SetControllerConfig(enemyStatistics, CreateConfig(100f));
+            enemyStatistics.ResetToConfig();
+
             agent = enemyObject.AddComponent<NavMeshAgent>();
             agent.Warp(Vector3.zero);
-            detection = enemyObject.AddComponent<Detection>();
-            enemyObject.AddComponent<Movement>();
+            enemyObject.AddComponent<Detection>();
+            movement = enemyObject.AddComponent<Movement>();
             attack = enemyObject.AddComponent<Attack>();
-            ConfigureAttack(attack, 1.5f, 0.1f, 10f);
+            ConfigureAttack(attack, 2f, 0.1f, 10f);
             controller = enemyObject.AddComponent<EnemyController>();
-            InvokeStart(controller);
+            targetable = enemyObject.AddComponent<EnemyTargetable>();
+            death = enemyObject.AddComponent<EnemyDeath>();
+            InvokeStart(death);
         }
 
         [TearDown]
@@ -65,106 +74,87 @@ namespace RPGame.Enemies.Tests
         }
 
         [UnityTest]
-        public IEnumerator Tick_WhenNoTarget_StopsMovementAndDoesNotAttack()
+        public IEnumerator DeathEvent_StopsMovement()
         {
-            agent.isStopped = false;
-
-            controller.Tick();
-
+            movement.MoveTo(new Vector3(2f, 0f, 0f));
             yield return null;
+
+            KillEnemy();
 
             Assert.IsTrue(agent.isStopped);
         }
 
-        [UnityTest]
-        public IEnumerator Tick_WhenTargetIsOutsideAttackRange_ChasesTarget()
+        [Test]
+        public void DeathEvent_DisablesController()
         {
-            TargetFixture target = CreateDamageableTarget("Target", new Vector3(3f, 0f, 0f));
-            detection.RefreshDetection();
+            KillEnemy();
 
+            Assert.IsFalse(controller.enabled);
+        }
+
+        [Test]
+        public void DeathEvent_PreventsControllerFromRunningFurtherLogic()
+        {
+            TargetFixture target = CreateDamageablePlayerTarget("PlayerTarget", new Vector3(1f, 0f, 0f));
+
+            KillEnemy();
             controller.Tick();
 
-            yield return null;
-
-            Assert.IsFalse(agent.isStopped);
-            AssertVectorApproximately(target.Targetable.TargetPoint.position, agent.destination);
             Assert.AreEqual(100f, target.Statistics.CurrentHealth);
         }
 
-        [UnityTest]
-        public IEnumerator Tick_WhenTargetIsInAttackRange_StopsMovement()
+        [Test]
+        public void DeathEvent_PreventsFurtherAttacks()
         {
-            CreateDamageableTarget("Target", new Vector3(1f, 0f, 0f));
-            detection.RefreshDetection();
-            agent.isStopped = false;
+            TargetFixture target = CreateDamageablePlayerTarget("PlayerTarget", new Vector3(1f, 0f, 0f));
 
-            controller.Tick();
+            KillEnemy();
+            bool attacked = attack.TryAttack(target.Targetable);
 
-            yield return null;
-
-            Assert.IsTrue(agent.isStopped);
+            Assert.IsFalse(attack.enabled);
+            Assert.IsFalse(attacked);
+            Assert.AreEqual(100f, target.Statistics.CurrentHealth);
         }
 
         [Test]
-        public void Tick_WhenTargetIsInAttackRange_TriesAttack()
+        public void DeathEvent_DisablesTargetable()
         {
-            TargetFixture target = CreateDamageableTarget("Target", new Vector3(1f, 0f, 0f));
-            detection.RefreshDetection();
+            KillEnemy();
 
-            controller.Tick();
-
-            Assert.AreEqual(90f, target.Statistics.CurrentHealth);
-        }
-
-        [UnityTest]
-        public IEnumerator Tick_WhenTargetLeavesAttackRange_ChasesAgain()
-        {
-            TargetFixture target = CreateDamageableTarget("Target", new Vector3(1f, 0f, 0f));
-            detection.RefreshDetection();
-            controller.Tick();
-
-            target.Targetable.transform.position = new Vector3(3f, 0f, 0f);
-            controller.Tick();
-
-            yield return null;
-
-            Assert.IsFalse(agent.isStopped);
-            AssertVectorApproximately(target.Targetable.TargetPoint.position, agent.destination);
-        }
-
-        [UnityTest]
-        public IEnumerator Tick_WhenTargetIsLost_StopsMovement()
-        {
-            TargetFixture target = CreateDamageableTarget("Target", new Vector3(3f, 0f, 0f));
-            detection.RefreshDetection();
-            controller.Tick();
-            yield return null;
-
-            target.Targetable.gameObject.SetActive(false);
-            detection.RefreshDetection();
-            controller.Tick();
-
-            Assert.IsTrue(agent.isStopped);
+            Assert.IsFalse(targetable.enabled);
         }
 
         [Test]
-        public void EnemyController_DoesNotStoreAttackCooldown()
+        public void DeathEvent_RemovesEnemyFromTargetRegistry()
         {
-            bool hasCooldownField = typeof(EnemyController)
-                .GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-                .Any(field => field.FieldType == typeof(float) || field.Name.ToLowerInvariant().Contains("cooldown"));
+            Assert.Contains(targetable, (System.Collections.ICollection)TargetRegistry.EnemyTargets);
 
-            Assert.IsFalse(hasCooldownField);
+            KillEnemy();
+
+            CollectionAssert.DoesNotContain(TargetRegistry.EnemyTargets, targetable);
         }
 
         [Test]
-        public void EnemyController_DoesNotReferencePlayerCombatDamageOrNavMesh()
+        public void DeathEvent_IsHandledOnlyOnce()
         {
-            bool referencesForbiddenAssembly = typeof(EnemyController).Assembly
+            KillEnemy();
+
+            Assert.DoesNotThrow(InvokeHandleDeathDirectly);
+
+            Assert.IsTrue(death.IsDead);
+            Assert.IsFalse(controller.enabled);
+            Assert.IsFalse(attack.enabled);
+            Assert.IsFalse(targetable.enabled);
+        }
+
+        [Test]
+        public void EnemyDeath_DoesNotContainDamageMovementOrAttackLogic()
+        {
+            bool referencesForbiddenAssembly = typeof(EnemyDeath).Assembly
                 .GetReferencedAssemblies()
-                .Any(assemblyName => assemblyName.Name == "RPGame.Player" || assemblyName.Name == "RPGame.Combat");
+                .Any(assemblyName => assemblyName.Name == "RPGame.Combat" || assemblyName.Name == "RPGame.Player");
 
-            bool hasForbiddenField = typeof(EnemyController)
+            bool hasForbiddenField = typeof(EnemyDeath)
                 .GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
                 .Any(field =>
                     field.FieldType == typeof(DamageData)
@@ -175,21 +165,50 @@ namespace RPGame.Enemies.Tests
             Assert.IsFalse(hasForbiddenField);
         }
 
-        private TargetFixture CreateDamageableTarget(string objectName, Vector3 position)
+        [Test]
+        public void CoreAndCombat_DoNotReferenceEnemies()
+        {
+            bool coreReferencesEnemies = typeof(StatisticsController).Assembly
+                .GetReferencedAssemblies()
+                .Any(assemblyName => assemblyName.Name == "RPGame.Enemies");
+
+            bool combatReferencesEnemies = typeof(DamageReceiver).Assembly
+                .GetReferencedAssemblies()
+                .Any(assemblyName => assemblyName.Name == "RPGame.Enemies");
+
+            Assert.IsFalse(coreReferencesEnemies);
+            Assert.IsFalse(combatReferencesEnemies);
+        }
+
+        private void KillEnemy()
+        {
+            enemyStatistics.TakeDamage(100f);
+        }
+
+        private void InvokeHandleDeathDirectly()
+        {
+            MethodInfo method = typeof(EnemyDeath).GetMethod("HandleDeath", BindingFlags.Instance | BindingFlags.NonPublic);
+            method.Invoke(death, null);
+        }
+
+        private static void InvokeStart(EnemyDeath enemyDeath)
+        {
+            MethodInfo method = typeof(EnemyDeath).GetMethod("Start", BindingFlags.Instance | BindingFlags.NonPublic);
+            method.Invoke(enemyDeath, null);
+        }
+
+        private TargetFixture CreateDamageablePlayerTarget(string objectName, Vector3 position)
         {
             GameObject targetObject = CreateObject(objectName);
             targetObject.transform.position = position;
 
-            StatisticsConfig config = CreateConfig(100f);
             StatisticsController statistics = targetObject.AddComponent<StatisticsController>();
-            SetControllerConfig(statistics, config);
+            SetControllerConfig(statistics, CreateConfig(100f));
             statistics.ResetToConfig();
+            targetObject.AddComponent<DamageReceiver>();
 
-            DamageReceiver damageReceiver = targetObject.AddComponent<DamageReceiver>();
-            SetDamageReceiverLogging(damageReceiver, false);
-
-            PlayerTargetable targetable = targetObject.AddComponent<PlayerTargetable>();
-            return new TargetFixture(targetable, statistics);
+            PlayerTargetable playerTargetable = targetObject.AddComponent<PlayerTargetable>();
+            return new TargetFixture(playerTargetable, statistics);
         }
 
         private void EnsureNavMesh()
@@ -247,6 +266,14 @@ namespace RPGame.Enemies.Tests
             return statisticsConfig;
         }
 
+        private static void SetControllerConfig(StatisticsController controller, StatisticsConfig statisticsConfig)
+        {
+            SerializedObject serializedController = new(controller);
+            serializedController.FindProperty("config").objectReferenceValue = statisticsConfig;
+            serializedController.FindProperty("initializeOnAwake").boolValue = false;
+            serializedController.ApplyModifiedPropertiesWithoutUndo();
+        }
+
         private static void ConfigureAttack(Attack attack, float attackRange, float attackInterval, float damageAmount)
         {
             SerializedObject serializedAttack = new(attack);
@@ -264,38 +291,10 @@ namespace RPGame.Enemies.Tests
             serializedAttack.ApplyModifiedPropertiesWithoutUndo();
         }
 
-        private static void SetControllerConfig(StatisticsController controller, StatisticsConfig statisticsConfig)
-        {
-            SerializedObject serializedController = new(controller);
-            serializedController.FindProperty("config").objectReferenceValue = statisticsConfig;
-            serializedController.FindProperty("initializeOnAwake").boolValue = false;
-            serializedController.ApplyModifiedPropertiesWithoutUndo();
-        }
-
-        private static void SetDamageReceiverLogging(DamageReceiver damageReceiver, bool loggingEnabled)
-        {
-            SerializedObject serializedReceiver = new(damageReceiver);
-            serializedReceiver.FindProperty("loggingEnabled").boolValue = loggingEnabled;
-            serializedReceiver.ApplyModifiedPropertiesWithoutUndo();
-        }
-
-        private static void AssertVectorApproximately(Vector3 expected, Vector3 actual)
-        {
-            Assert.AreEqual(expected.x, actual.x, 0.05f);
-            Assert.AreEqual(expected.y, actual.y, 0.05f);
-            Assert.AreEqual(expected.z, actual.z, 0.05f);
-        }
-
         private static void ClearTargetRegistry()
         {
             MethodInfo method = typeof(TargetRegistry).GetMethod("Clear", BindingFlags.Static | BindingFlags.NonPublic);
             method.Invoke(null, null);
-        }
-
-        private static void InvokeStart(EnemyController enemyController)
-        {
-            MethodInfo method = typeof(EnemyController).GetMethod("Start", BindingFlags.Instance | BindingFlags.NonPublic);
-            method.Invoke(enemyController, null);
         }
 
         private readonly struct TargetFixture

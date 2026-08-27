@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using NUnit.Framework;
 using RPGame.Enemies;
 using UnityEditor;
@@ -128,14 +129,18 @@ namespace RPGame.Enemies.Tests
             agent = gameObject.AddComponent<NavMeshAgent>();
             agent.Warp(Vector3.zero);
 
-            return gameObject.AddComponent<Movement>();
+            Movement movement = gameObject.AddComponent<Movement>();
+            InvokeStart(movement);
+            return movement;
         }
 
         private Movement CreateMovementWithoutNavMesh(out NavMeshAgent agent)
         {
             GameObject gameObject = CreateObject("MovementWithoutNavMesh");
             agent = gameObject.AddComponent<NavMeshAgent>();
-            return gameObject.AddComponent<Movement>();
+            Movement movement = gameObject.AddComponent<Movement>();
+            InvokeStart(movement);
+            return movement;
         }
 
         private void EnsureNavMesh()
@@ -180,6 +185,12 @@ namespace RPGame.Enemies.Tests
             SerializedObject serializedObject = new(movement);
             serializedObject.FindProperty("moveSpeed").floatValue = moveSpeed;
             serializedObject.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private static void InvokeStart(Movement movement)
+        {
+            MethodInfo method = typeof(Movement).GetMethod("Start", BindingFlags.Instance | BindingFlags.NonPublic);
+            method.Invoke(movement, null);
         }
 
         private static void AssertVectorApproximately(Vector3 expected, Vector3 actual)

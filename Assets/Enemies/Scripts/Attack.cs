@@ -33,7 +33,7 @@ namespace RPGame.Enemies
 
         public bool TryAttack(ITargetable target)
         {
-            if (!CanAttack || !IsInRange(target) || !TryGetDamageable(target, out IDamageable damageable))
+            if (!isActiveAndEnabled || !CanAttack || !IsInRange(target) || !TryGetDamageable(target, out IDamageable damageable))
             {
                 return false;
             }

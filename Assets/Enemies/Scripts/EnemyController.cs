@@ -12,9 +12,13 @@ namespace RPGame.Enemies
         [SerializeField] private Movement movement;
         [SerializeField] private Attack attack;
 
-        private void Awake()
+        private void Start()
         {
-            ResolveComponents();
+            CacheRequiredComponents();
+            if (!HasRequiredComponents())
+            {
+                enabled = false;
+            }
         }
 
         private void Update()
@@ -24,11 +28,14 @@ namespace RPGame.Enemies
 
         public void Tick()
         {
-            ResolveComponents();
-
-            if (detection == null || movement == null || attack == null || !detection.HasTarget)
+            if (!isActiveAndEnabled)
             {
-                movement?.Stop();
+                return;
+            }
+
+            if (!detection.HasTarget)
+            {
+                movement.Stop();
                 return;
             }
 
@@ -49,7 +56,7 @@ namespace RPGame.Enemies
             movement.MoveTo(target.TargetPoint.position);
         }
 
-        private void ResolveComponents()
+        private void CacheRequiredComponents()
         {
             if (detection == null)
             {
@@ -65,6 +72,29 @@ namespace RPGame.Enemies
             {
                 attack = GetComponent<Attack>();
             }
+        }
+
+        private bool HasRequiredComponents()
+        {
+            if (detection == null)
+            {
+                Debug.LogError("Missing field detection.", this);
+                return false;
+            }
+
+            if (movement == null)
+            {
+                Debug.LogError("Missing field movement.", this);
+                return false;
+            }
+
+            if (attack == null)
+            {
+                Debug.LogError("Missing field attack.", this);
+                return false;
+            }
+
+            return true;
         }
     }
 }
