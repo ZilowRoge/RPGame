@@ -148,6 +148,29 @@ namespace RPGame.Enemies.Tests
         }
 
         [Test]
+        public void Start_WhenStatisticsHasNoHealthConfig_DoesNotTriggerDeathCleanup()
+        {
+            GameObject unconfiguredEnemy = CreateObject("UnconfiguredEnemy");
+            unconfiguredEnemy.AddComponent<StatisticsController>();
+            unconfiguredEnemy.AddComponent<NavMeshAgent>();
+            unconfiguredEnemy.AddComponent<Detection>();
+
+            Movement unconfiguredMovement = unconfiguredEnemy.AddComponent<Movement>();
+            Attack unconfiguredAttack = unconfiguredEnemy.AddComponent<Attack>();
+            EnemyController unconfiguredController = unconfiguredEnemy.AddComponent<EnemyController>();
+            EnemyTargetable unconfiguredTargetable = unconfiguredEnemy.AddComponent<EnemyTargetable>();
+            EnemyDeath unconfiguredDeath = unconfiguredEnemy.AddComponent<EnemyDeath>();
+
+            InvokeStart(unconfiguredDeath);
+
+            Assert.IsFalse(unconfiguredDeath.IsDead);
+            Assert.IsTrue(unconfiguredController.enabled);
+            Assert.IsTrue(unconfiguredAttack.enabled);
+            Assert.IsTrue(unconfiguredTargetable.enabled);
+            Assert.IsTrue(unconfiguredMovement.enabled);
+        }
+
+        [Test]
         public void EnemyDeath_DoesNotContainDamageMovementOrAttackLogic()
         {
             bool referencesForbiddenAssembly = typeof(EnemyDeath).Assembly

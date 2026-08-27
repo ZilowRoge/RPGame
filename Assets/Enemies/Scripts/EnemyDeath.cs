@@ -57,11 +57,6 @@ namespace RPGame.Enemies
             deathSource.Died -= HandleDeath;
             deathSource.Died += HandleDeath;
             subscribedDeathSource = deathSource;
-
-            if (!deathSource.IsAlive)
-            {
-                HandleDeath();
-            }
         }
 
         private void UnsubscribeDeathSource()
