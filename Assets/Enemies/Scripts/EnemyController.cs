@@ -1,3 +1,4 @@
+using RPGame.Combat.Damage;
 using RPGame.Core.Targeting;
 using UnityEngine;
 
@@ -6,6 +7,9 @@ namespace RPGame.Enemies
     [RequireComponent(typeof(Detection))]
     [RequireComponent(typeof(Movement))]
     [RequireComponent(typeof(Attack))]
+    [RequireComponent(typeof(EnemyTargetable))]
+    [RequireComponent(typeof(DamageReceiver))]
+    [RequireComponent(typeof(EnemyDeath))]
     public sealed class EnemyController : MonoBehaviour
     {
         [SerializeField] private Detection detection;

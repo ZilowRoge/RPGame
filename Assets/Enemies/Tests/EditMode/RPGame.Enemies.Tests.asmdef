@@ -4,7 +4,9 @@
     "references": [
         "RPGame.Core",
         "RPGame.Combat",
-        "RPGame.Enemies"
+        "RPGame.Enemies",
+        "RPGame.Inventory",
+        "RPGame.Loot"
     ],
     "includePlatforms": [
         "Editor"

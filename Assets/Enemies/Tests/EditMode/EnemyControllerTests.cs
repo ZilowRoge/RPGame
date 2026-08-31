@@ -158,11 +158,22 @@ namespace RPGame.Enemies.Tests
         }
 
         [Test]
-        public void EnemyController_DoesNotReferencePlayerCombatDamageOrNavMesh()
+        public void EnemyController_RequiresCoreEnemyComponents()
+        {
+            Assert.IsTrue(RequiresComponent<Detection>());
+            Assert.IsTrue(RequiresComponent<Movement>());
+            Assert.IsTrue(RequiresComponent<Attack>());
+            Assert.IsTrue(RequiresComponent<EnemyTargetable>());
+            Assert.IsTrue(RequiresComponent<DamageReceiver>());
+            Assert.IsTrue(RequiresComponent<EnemyDeath>());
+        }
+
+        [Test]
+        public void EnemyController_DoesNotReferencePlayerDamageOrNavMeshLogic()
         {
             bool referencesForbiddenAssembly = typeof(EnemyController).Assembly
                 .GetReferencedAssemblies()
-                .Any(assemblyName => assemblyName.Name == "RPGame.Player" || assemblyName.Name == "RPGame.Combat");
+                .Any(assemblyName => assemblyName.Name == "RPGame.Player");
 
             bool hasForbiddenField = typeof(EnemyController)
                 .GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
@@ -290,6 +301,16 @@ namespace RPGame.Enemies.Tests
         {
             MethodInfo method = typeof(TargetRegistry).GetMethod("Clear", BindingFlags.Static | BindingFlags.NonPublic);
             method.Invoke(null, null);
+        }
+
+        private static bool RequiresComponent<T>()
+        {
+            return typeof(EnemyController)
+                .GetCustomAttributes<RequireComponent>()
+                .Any(attribute =>
+                    attribute.m_Type0 == typeof(T)
+                    || attribute.m_Type1 == typeof(T)
+                    || attribute.m_Type2 == typeof(T));
         }
 
         private static void InvokeStart(EnemyController enemyController)

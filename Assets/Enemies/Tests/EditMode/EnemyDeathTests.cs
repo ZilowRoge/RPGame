@@ -5,8 +5,12 @@ using System.Reflection;
 using NUnit.Framework;
 using RPGame.Combat.Damage;
 using RPGame.Core.Damage;
+using RPGame.Core.Interaction;
 using RPGame.Core.Statistics;
 using RPGame.Core.Targeting;
+using RPGame.Inventory;
+using RPGame.Inventory.Data;
+using RPGame.Loot;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.AI;
@@ -18,6 +22,7 @@ namespace RPGame.Enemies.Tests
     {
         private readonly List<GameObject> createdObjects = new();
         private readonly List<ScriptableObject> createdAssets = new();
+        private readonly List<GameObject> spawnedPickups = new();
 
         private NavMeshDataInstance navMeshDataInstance;
         private GameObject enemyObject;
@@ -57,6 +62,7 @@ namespace RPGame.Enemies.Tests
         public void TearDown()
         {
             navMeshDataInstance.Remove();
+            DestroySpawnedPickups();
 
             for (int i = createdObjects.Count - 1; i >= 0; i--)
             {
@@ -148,6 +154,83 @@ namespace RPGame.Enemies.Tests
         }
 
         [Test]
+        public void DeathEvent_TriggersExistingLootDropper()
+        {
+            ItemDefinition item = CreateItemDefinition();
+            AddLootDropper(CreateLootTable((item, 1, 1)), CreatePickupPrefab(), null);
+            HashSet<ItemPickup> existingPickups = GetExistingPickups();
+
+            KillEnemy();
+
+            Assert.AreEqual(1, GetNewPickups(existingPickups).Count);
+        }
+
+        [Test]
+        public void DeathEvent_GeneratesLootFromExistingConfiguration()
+        {
+            ItemDefinition item = CreateItemDefinition();
+            AddLootDropper(CreateLootTable((item, 3, 3)), CreatePickupPrefab(), null);
+            HashSet<ItemPickup> existingPickups = GetExistingPickups();
+
+            KillEnemy();
+
+            List<ItemPickup> pickups = GetNewPickups(existingPickups);
+            Assert.AreEqual(1, pickups.Count);
+            Assert.AreSame(item, pickups[0].Item);
+            Assert.AreEqual(3, pickups[0].Amount);
+        }
+
+        [Test]
+        public void DeathEvent_DropsLootAtConfiguredOrigin()
+        {
+            ItemDefinition item = CreateItemDefinition();
+            Transform dropOrigin = CreateDropOrigin(new Vector3(2f, 0f, 3f));
+            AddLootDropper(CreateLootTable((item, 1, 1)), CreatePickupPrefab(), dropOrigin);
+            HashSet<ItemPickup> existingPickups = GetExistingPickups();
+
+            KillEnemy();
+
+            List<ItemPickup> pickups = GetNewPickups(existingPickups);
+            Assert.AreEqual(1, pickups.Count);
+            Assert.AreEqual(dropOrigin.position, pickups[0].transform.position);
+        }
+
+        [Test]
+        public void DeathEvent_DropsLootOnlyOnce()
+        {
+            ItemDefinition item = CreateItemDefinition();
+            AddLootDropper(CreateLootTable((item, 1, 1)), CreatePickupPrefab(), null);
+            HashSet<ItemPickup> existingPickups = GetExistingPickups();
+
+            KillEnemy();
+            InvokeHandleDeathDirectly();
+
+            Assert.AreEqual(1, GetNewPickups(existingPickups).Count);
+        }
+
+        [Test]
+        public void DroppedPickup_CanBePickedUpIntoExistingInventory()
+        {
+            ItemDefinition item = CreateItemDefinition();
+            AddLootDropper(CreateLootTable((item, 1, 1)), CreatePickupPrefab(), null);
+            HashSet<ItemPickup> existingPickups = GetExistingPickups();
+            GameObject playerObject = CreateObject("Player");
+            ItemManagementController inventoryController = playerObject.AddComponent<ItemManagementController>();
+
+            KillEnemy();
+
+            ItemPickup pickup = GetNewPickups(existingPickups)[0];
+            InteractionContext context = new(playerObject, playerObject.transform);
+
+            Assert.IsTrue(pickup.CanInteract(context));
+
+            pickup.Interact(context);
+
+            Assert.IsTrue(inventoryController.Inventory.GetSlot(0).HasItem);
+            Assert.AreSame(item, inventoryController.Inventory.GetSlot(0).Item.Definition);
+        }
+
+        [Test]
         public void Start_WhenStatisticsHasNoHealthConfig_DoesNotTriggerDeathCleanup()
         {
             GameObject unconfiguredEnemy = CreateObject("UnconfiguredEnemy");
@@ -175,7 +258,7 @@ namespace RPGame.Enemies.Tests
         {
             bool referencesForbiddenAssembly = typeof(EnemyDeath).Assembly
                 .GetReferencedAssemblies()
-                .Any(assemblyName => assemblyName.Name == "RPGame.Combat" || assemblyName.Name == "RPGame.Player");
+                .Any(assemblyName => assemblyName.Name == "RPGame.Player");
 
             bool hasForbiddenField = typeof(EnemyDeath)
                 .GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
@@ -189,15 +272,31 @@ namespace RPGame.Enemies.Tests
         }
 
         [Test]
-        public void CoreAndCombat_DoNotReferenceEnemies()
+        public void EnemyDeath_DoesNotContainLootRollingLogic()
+        {
+            bool hasForbiddenLootField = typeof(EnemyDeath)
+                .GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+                .Any(field =>
+                    field.FieldType == typeof(LootRoller)
+                    || field.FieldType == typeof(LootTable)
+                    || field.FieldType == typeof(IndependentLootGroup)
+                    || field.FieldType == typeof(IndependentLootEntry)
+                    || field.FieldType == typeof(WeightedLootGroup)
+                    || field.FieldType == typeof(WeightedLootEntry));
+
+            Assert.IsFalse(hasForbiddenLootField);
+        }
+
+        [Test]
+        public void CoreAndCombat_DoNotReferenceEnemiesOrLoot()
         {
             bool coreReferencesEnemies = typeof(StatisticsController).Assembly
                 .GetReferencedAssemblies()
-                .Any(assemblyName => assemblyName.Name == "RPGame.Enemies");
+                .Any(assemblyName => assemblyName.Name == "RPGame.Enemies" || assemblyName.Name == "RPGame.Loot");
 
             bool combatReferencesEnemies = typeof(DamageReceiver).Assembly
                 .GetReferencedAssemblies()
-                .Any(assemblyName => assemblyName.Name == "RPGame.Enemies");
+                .Any(assemblyName => assemblyName.Name == "RPGame.Enemies" || assemblyName.Name == "RPGame.Loot");
 
             Assert.IsFalse(coreReferencesEnemies);
             Assert.IsFalse(combatReferencesEnemies);
@@ -232,6 +331,80 @@ namespace RPGame.Enemies.Tests
 
             PlayerTargetable playerTargetable = targetObject.AddComponent<PlayerTargetable>();
             return new TargetFixture(playerTargetable, statistics);
+        }
+
+        private LootDropper AddLootDropper(
+            LootTable lootTable,
+            ItemPickup pickupPrefab,
+            Transform dropOrigin)
+        {
+            LootDropper dropper = enemyObject.AddComponent<LootDropper>();
+            SerializedObject serializedDropper = new(dropper);
+            serializedDropper.FindProperty("lootTable").objectReferenceValue = lootTable;
+            serializedDropper.FindProperty("pickupPrefab").objectReferenceValue = pickupPrefab;
+            serializedDropper.FindProperty("dropOrigin").objectReferenceValue = dropOrigin;
+            serializedDropper.FindProperty("deathSource").objectReferenceValue = enemyStatistics;
+            serializedDropper.FindProperty("dropRadius").floatValue = 0f;
+            serializedDropper.ApplyModifiedPropertiesWithoutUndo();
+
+            SetEnemyDeathLootDropper(dropper);
+            dropper.enabled = false;
+            return dropper;
+        }
+
+        private void SetEnemyDeathLootDropper(LootDropper dropper)
+        {
+            SerializedObject serializedDeath = new(death);
+            serializedDeath.FindProperty("lootDropper").objectReferenceValue = dropper;
+            serializedDeath.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private ItemPickup CreatePickupPrefab()
+        {
+            GameObject pickupObject = CreateObject("PickupPrefab");
+            return pickupObject.AddComponent<ItemPickup>();
+        }
+
+        private Transform CreateDropOrigin(Vector3 position)
+        {
+            GameObject dropOriginObject = CreateObject("DropOrigin");
+            dropOriginObject.transform.position = position;
+            return dropOriginObject.transform;
+        }
+
+        private ItemDefinition CreateItemDefinition()
+        {
+            ItemDefinition itemDefinition = ScriptableObject.CreateInstance<ItemDefinition>();
+            createdAssets.Add(itemDefinition);
+            return itemDefinition;
+        }
+
+        private LootTable CreateLootTable(params (ItemDefinition item, int minAmount, int maxAmount)[] entries)
+        {
+            LootTable table = ScriptableObject.CreateInstance<LootTable>();
+            createdAssets.Add(table);
+
+            SerializedObject serializedTable = new(table);
+            SerializedProperty serializedGroups = serializedTable.FindProperty("independentGroups");
+            serializedGroups.arraySize = 1;
+
+            SerializedProperty serializedEntries = serializedGroups
+                .GetArrayElementAtIndex(0)
+                .FindPropertyRelative("entries");
+            serializedEntries.arraySize = entries.Length;
+
+            for (int i = 0; i < entries.Length; i++)
+            {
+                SerializedProperty entry = serializedEntries.GetArrayElementAtIndex(i);
+                entry.FindPropertyRelative("item").objectReferenceValue = entries[i].item;
+                entry.FindPropertyRelative("minAmount").intValue = entries[i].minAmount;
+                entry.FindPropertyRelative("maxAmount").intValue = entries[i].maxAmount;
+                entry.FindPropertyRelative("chance").floatValue = 1f;
+            }
+
+            serializedTable.FindProperty("weightedGroups").arraySize = 0;
+            serializedTable.ApplyModifiedPropertiesWithoutUndo();
+            return table;
         }
 
         private void EnsureNavMesh()
@@ -318,6 +491,45 @@ namespace RPGame.Enemies.Tests
         {
             MethodInfo method = typeof(TargetRegistry).GetMethod("Clear", BindingFlags.Static | BindingFlags.NonPublic);
             method.Invoke(null, null);
+        }
+
+        private static HashSet<ItemPickup> GetExistingPickups()
+        {
+            return new HashSet<ItemPickup>(Object.FindObjectsByType<ItemPickup>());
+        }
+
+        private List<ItemPickup> GetNewPickups(HashSet<ItemPickup> existingPickups)
+        {
+            ItemPickup[] pickups = Object.FindObjectsByType<ItemPickup>();
+            List<ItemPickup> newPickups = new();
+            for (int i = 0; i < pickups.Length; i++)
+            {
+                if (existingPickups.Contains(pickups[i]))
+                {
+                    continue;
+                }
+
+                newPickups.Add(pickups[i]);
+                if (!spawnedPickups.Contains(pickups[i].gameObject))
+                {
+                    spawnedPickups.Add(pickups[i].gameObject);
+                }
+            }
+
+            return newPickups;
+        }
+
+        private void DestroySpawnedPickups()
+        {
+            for (int i = spawnedPickups.Count - 1; i >= 0; i--)
+            {
+                if (spawnedPickups[i] != null)
+                {
+                    Object.DestroyImmediate(spawnedPickups[i]);
+                }
+            }
+
+            spawnedPickups.Clear();
         }
 
         private readonly struct TargetFixture

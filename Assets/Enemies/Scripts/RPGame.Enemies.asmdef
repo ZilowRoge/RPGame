@@ -2,7 +2,9 @@
     "name": "RPGame.Enemies",
     "rootNamespace": "RPGame.Enemies",
     "references": [
-        "RPGame.Core"
+        "RPGame.Combat",
+        "RPGame.Core",
+        "RPGame.Loot"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
