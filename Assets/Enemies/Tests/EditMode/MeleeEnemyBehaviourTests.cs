@@ -194,6 +194,7 @@ namespace RPGame.Enemies.Tests
             public int MoveToCount { get; private set; }
             public int StopCount { get; private set; }
             public Vector3 LastDestination { get; private set; }
+            public Vector3 Position { get; set; }
 
             public void MoveTo(Vector3 position)
             {
@@ -204,6 +205,12 @@ namespace RPGame.Enemies.Tests
             public void Stop()
             {
                 StopCount++;
+            }
+
+            public bool TryResolvePosition(Vector3 desiredPosition, out Vector3 validPosition)
+            {
+                validPosition = desiredPosition;
+                return true;
             }
         }
 

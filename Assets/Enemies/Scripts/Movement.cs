@@ -13,6 +13,8 @@ namespace RPGame.Enemies
         private Vector3 lastDestination;
         private bool hasDestination;
 
+        private Vector3 Position => transform.position;
+
         private void Start()
         {
             CacheRequiredComponents();
@@ -56,6 +58,23 @@ namespace RPGame.Enemies
             }
 
             agent.isStopped = true;
+        }
+
+        private bool TryResolvePosition(Vector3 desiredPosition, out Vector3 validPosition)
+        {
+            validPosition = default;
+            if (agent == null)
+            {
+                return false;
+            }
+
+            if (!NavMesh.SamplePosition(desiredPosition, out NavMeshHit hit, agent.height, agent.areaMask))
+            {
+                return false;
+            }
+
+            validPosition = hit.position;
+            return true;
         }
 
         private void ConfigureAgent()
@@ -114,6 +133,13 @@ namespace RPGame.Enemies
         void IEnemyMovement.Stop()
         {
             Stop();
+        }
+
+        Vector3 IEnemyMovement.Position => Position;
+
+        bool IEnemyMovement.TryResolvePosition(Vector3 desiredPosition, out Vector3 validPosition)
+        {
+            return TryResolvePosition(desiredPosition, out validPosition);
         }
     }
 }
