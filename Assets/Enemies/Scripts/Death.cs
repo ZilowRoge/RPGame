@@ -14,7 +14,7 @@ namespace RPGame.Enemies
 
         private StatisticsController subscribedDeathSource;
 
-        public bool IsDead { get; private set; }
+        internal bool IsDead { get; private set; }
 
         private void Start()
         {

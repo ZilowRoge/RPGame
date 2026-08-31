@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace RPGame.Enemies
 {
-    public sealed class Attack : MonoBehaviour
+    public sealed class Attack : MonoBehaviour, IEnemyAttack
     {
         [SerializeField] private float attackRange = 1.5f;
         [SerializeField] private float attackInterval = 1f;
@@ -16,11 +16,9 @@ namespace RPGame.Enemies
 
         private float nextAttackTime;
 
-        public float AttackRange => attackRange;
-        public float AttackInterval => attackInterval;
-        public bool CanAttack => Time.time >= nextAttackTime;
+        private bool CanAttack => Time.time >= nextAttackTime;
 
-        public bool IsInRange(ITargetable target)
+        private bool IsInRange(ITargetable target)
         {
             if (target == null || target.TargetPoint == null)
             {
@@ -31,7 +29,12 @@ namespace RPGame.Enemies
             return (target.TargetPoint.position - transform.position).sqrMagnitude <= attackRangeSqr;
         }
 
-        public bool TryAttack(ITargetable target)
+        bool IEnemyAttack.IsInRange(SelectedTarget target)
+        {
+            return target.IsValid && IsInRange(target.Targetable);
+        }
+
+        private bool TryAttack(ITargetable target)
         {
             if (!isActiveAndEnabled || !CanAttack || !IsInRange(target) || !TryGetDamageable(target, out IDamageable damageable))
             {
@@ -46,6 +49,11 @@ namespace RPGame.Enemies
 
             nextAttackTime = Time.time + attackInterval;
             return true;
+        }
+
+        bool IEnemyAttack.TryAttack(SelectedTarget target)
+        {
+            return target.IsValid && TryAttack(target.Targetable);
         }
 
         private DamageData BuildDamageData()

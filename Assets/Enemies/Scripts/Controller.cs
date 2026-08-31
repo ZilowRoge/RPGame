@@ -18,48 +18,33 @@ namespace RPGame.Enemies
         [SerializeField] private Movement movement;
         [SerializeField] private Attack attack;
 
+        private IEnemyBehaviour behaviour;
+
         private void Start()
         {
             CacheRequiredComponents();
             if (!HasRequiredComponents())
             {
                 enabled = false;
+                return;
             }
+
+            behaviour = new MeleeEnemyBehaviour(detection, movement, attack);
         }
 
         private void Update()
         {
-            Tick();
+            behaviour?.Tick(Time.deltaTime);
         }
 
-        public void Tick()
+        internal void Tick()
         {
             if (!isActiveAndEnabled)
             {
                 return;
             }
 
-            if (!detection.HasTarget)
-            {
-                movement.Stop();
-                return;
-            }
-
-            ITargetable target = detection.CurrentTarget;
-            if (target == null || target.TargetPoint == null)
-            {
-                movement.Stop();
-                return;
-            }
-
-            if (attack.IsInRange(target))
-            {
-                movement.Stop();
-                attack.TryAttack(target);
-                return;
-            }
-
-            movement.MoveTo(target.TargetPoint.position);
+            behaviour?.Tick(Time.deltaTime);
         }
 
         private void CacheRequiredComponents()

@@ -90,7 +90,7 @@ namespace RPGame.Enemies.Tests
             TargetFixture target = CreateDamageablePlayerTarget("PlayerTarget", new Vector3(1f, 0f, 0f));
 
             KillEnemy();
-            bool attacked = attack.TryAttack(target.Targetable);
+            bool attacked = ((IEnemyAttack)attack).TryAttack(CreateSelectedTarget(target.Targetable));
 
             Assert.IsFalse(attack.enabled);
             Assert.IsFalse(attacked);
@@ -269,6 +269,11 @@ namespace RPGame.Enemies.Tests
         {
             MethodInfo method = typeof(TargetRegistry).GetMethod("Clear", BindingFlags.Static | BindingFlags.NonPublic);
             method.Invoke(null, null);
+        }
+
+        private static SelectedTarget CreateSelectedTarget(PlayerTargetable targetable)
+        {
+            return new SelectedTarget(targetable, targetable.TargetPoint.position);
         }
 
         private readonly struct TargetFixture

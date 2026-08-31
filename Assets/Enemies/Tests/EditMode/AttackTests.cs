@@ -49,8 +49,8 @@ namespace RPGame.Enemies.Tests
         {
             PlayerTargetable target = CreateDamageableTarget("Target", new Vector3(3f, 0f, 0f)).Targetable;
 
-            Assert.IsFalse(attack.IsInRange(target));
-            Assert.IsFalse(attack.TryAttack(target));
+            Assert.IsFalse(AttackInterface.IsInRange(CreateSelectedTarget(target)));
+            Assert.IsFalse(AttackInterface.TryAttack(CreateSelectedTarget(target)));
         }
 
         [Test]
@@ -58,7 +58,7 @@ namespace RPGame.Enemies.Tests
         {
             PlayerTargetable target = CreateDamageableTarget("Target", new Vector3(1f, 0f, 0f)).Targetable;
 
-            Assert.IsTrue(attack.IsInRange(target));
+            Assert.IsTrue(AttackInterface.IsInRange(CreateSelectedTarget(target)));
         }
 
         [Test]
@@ -68,7 +68,7 @@ namespace RPGame.Enemies.Tests
             DamageResult receivedResult = default;
             target.DamageReceiver.DamageReceived += result => receivedResult = result;
 
-            bool attacked = attack.TryAttack(target.Targetable);
+            bool attacked = AttackInterface.TryAttack(CreateSelectedTarget(target.Targetable));
 
             Assert.IsTrue(attacked);
             Assert.IsTrue(receivedResult.WasApplied);
@@ -83,7 +83,7 @@ namespace RPGame.Enemies.Tests
         {
             TargetFixture target = CreateDamageableTarget("Target", new Vector3(1f, 0f, 0f));
 
-            bool attacked = attack.TryAttack(target.Targetable);
+            bool attacked = AttackInterface.TryAttack(CreateSelectedTarget(target.Targetable));
 
             Assert.IsTrue(attacked);
             Assert.AreEqual(90f, target.Statistics.CurrentHealth);
@@ -94,8 +94,8 @@ namespace RPGame.Enemies.Tests
         {
             TargetFixture target = CreateDamageableTarget("Target", new Vector3(1f, 0f, 0f));
 
-            Assert.IsTrue(attack.TryAttack(target.Targetable));
-            Assert.IsFalse(attack.TryAttack(target.Targetable));
+            Assert.IsTrue(AttackInterface.TryAttack(CreateSelectedTarget(target.Targetable)));
+            Assert.IsFalse(AttackInterface.TryAttack(CreateSelectedTarget(target.Targetable)));
             Assert.AreEqual(90f, target.Statistics.CurrentHealth);
         }
 
@@ -105,11 +105,11 @@ namespace RPGame.Enemies.Tests
             ConfigureAttack(attack, 2f, 0.05f, 10f);
             TargetFixture target = CreateDamageableTarget("Target", new Vector3(1f, 0f, 0f));
 
-            Assert.IsTrue(attack.TryAttack(target.Targetable));
+            Assert.IsTrue(AttackInterface.TryAttack(CreateSelectedTarget(target.Targetable)));
 
             SetNextAttackTime(attack, Time.time);
 
-            Assert.IsTrue(attack.TryAttack(target.Targetable));
+            Assert.IsTrue(AttackInterface.TryAttack(CreateSelectedTarget(target.Targetable)));
             Assert.AreEqual(80f, target.Statistics.CurrentHealth);
         }
 
@@ -207,6 +207,13 @@ namespace RPGame.Enemies.Tests
             FieldInfo field = typeof(Attack).GetField("nextAttackTime", BindingFlags.Instance | BindingFlags.NonPublic);
             field.SetValue(attack, nextAttackTime);
         }
+
+        private static SelectedTarget CreateSelectedTarget(PlayerTargetable targetable)
+        {
+            return new SelectedTarget(targetable, targetable.TargetPoint.position);
+        }
+
+        private IEnemyAttack AttackInterface => attack;
 
         private readonly struct TargetFixture
         {

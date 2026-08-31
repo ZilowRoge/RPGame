@@ -4,7 +4,7 @@ using UnityEngine.AI;
 namespace RPGame.Enemies
 {
     [RequireComponent(typeof(NavMeshAgent))]
-    public sealed class Movement : MonoBehaviour
+    public sealed class Movement : MonoBehaviour, IEnemyMovement
     {
         [SerializeField] private float moveSpeed = 3.5f;
         [SerializeField] private float destinationChangeThreshold = 0.05f;
@@ -12,8 +12,6 @@ namespace RPGame.Enemies
         private NavMeshAgent agent;
         private Vector3 lastDestination;
         private bool hasDestination;
-
-        public float MoveSpeed => moveSpeed;
 
         private void Start()
         {
@@ -27,7 +25,7 @@ namespace RPGame.Enemies
             ConfigureAgent();
         }
 
-        public void MoveTo(Vector3 position)
+        internal void MoveTo(Vector3 position)
         {
             if (!CanUseAgent())
             {
@@ -50,7 +48,7 @@ namespace RPGame.Enemies
             }
         }
 
-        public void Stop()
+        internal void Stop()
         {
             if (!CanUseAgent())
             {
@@ -106,6 +104,16 @@ namespace RPGame.Enemies
             moveSpeed = Mathf.Max(0f, moveSpeed);
             destinationChangeThreshold = Mathf.Max(0f, destinationChangeThreshold);
             ConfigureAgent();
+        }
+
+        void IEnemyMovement.MoveTo(Vector3 position)
+        {
+            MoveTo(position);
+        }
+
+        void IEnemyMovement.Stop()
+        {
+            Stop();
         }
     }
 }
