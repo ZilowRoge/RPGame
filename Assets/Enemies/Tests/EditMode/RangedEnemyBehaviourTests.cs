@@ -16,13 +16,15 @@ namespace RPGame.Enemies.Tests
         {
             FakeDetection detection = new();
             FakeMovement movement = new();
-            RangedEnemyBehaviour behaviour = CreateBehaviour(detection, movement);
+            FakeLineOfSight lineOfSight = new();
+            RangedEnemyBehaviour behaviour = CreateBehaviour(detection, movement, lineOfSight);
 
             behaviour.Tick(0.1f);
 
             Assert.AreEqual(RangedBehaviourState.Idle, behaviour.State);
             Assert.AreEqual(1, movement.StopCount);
             Assert.AreEqual(0, movement.MoveToCount);
+            Assert.AreEqual(0, lineOfSight.CheckCount);
         }
 
         [Test]
@@ -172,6 +174,50 @@ namespace RPGame.Enemies.Tests
         }
 
         [Test]
+        public void CanStartAttack_WhenTargetHasLineOfSight_ReturnsTrue()
+        {
+            FakeDetection detection = CreateDetectionWithTarget(new Vector3(4f, 0f, 0f));
+            FakeMovement movement = new();
+            FakeLineOfSight lineOfSight = new();
+            lineOfSight.HasLineOfSightResult = true;
+            RangedEnemyBehaviour behaviour = CreateBehaviour(detection, movement, lineOfSight);
+
+            bool canStartAttack = behaviour.CanStartAttack();
+
+            Assert.IsTrue(canStartAttack);
+            Assert.AreEqual(1, lineOfSight.CheckCount);
+            Assert.AreEqual(new Vector3(4f, 0f, 0f), lineOfSight.LastTargetPosition);
+        }
+
+        [Test]
+        public void CanStartAttack_WhenTargetHasNoLineOfSight_ReturnsFalse()
+        {
+            FakeDetection detection = CreateDetectionWithTarget(new Vector3(4f, 0f, 0f));
+            FakeMovement movement = new();
+            FakeLineOfSight lineOfSight = new();
+            lineOfSight.HasLineOfSightResult = false;
+            RangedEnemyBehaviour behaviour = CreateBehaviour(detection, movement, lineOfSight);
+
+            bool canStartAttack = behaviour.CanStartAttack();
+
+            Assert.IsFalse(canStartAttack);
+            Assert.AreEqual(1, lineOfSight.CheckCount);
+        }
+
+        [Test]
+        public void Tick_DoesNotCheckLineOfSight()
+        {
+            FakeDetection detection = CreateDetectionWithTarget(new Vector3(4f, 0f, 0f));
+            FakeMovement movement = new();
+            FakeLineOfSight lineOfSight = new();
+            RangedEnemyBehaviour behaviour = CreateBehaviour(detection, movement, lineOfSight);
+
+            behaviour.Tick(0.1f);
+
+            Assert.AreEqual(0, lineOfSight.CheckCount);
+        }
+
+        [Test]
         public void RangedEnemyBehaviour_DoesNotDependOnMonoBehaviourNavMeshAgentOrPhysics()
         {
             Assert.IsFalse(typeof(RangedEnemyBehaviour).IsSubclassOf(typeof(MonoBehaviour)));
@@ -198,6 +244,35 @@ namespace RPGame.Enemies.Tests
             Assert.IsFalse(hasForbiddenField);
             Assert.IsFalse(source.Contains("NavMesh", StringComparison.Ordinal));
             Assert.IsFalse(source.Contains("Physics", StringComparison.Ordinal));
+        }
+
+        [Test]
+        public void MovementAndDetection_DoNotUseLineOfSight()
+        {
+            string movementSource = File.ReadAllText(Path.Combine(
+                Application.dataPath,
+                "Enemies",
+                "Scripts",
+                "Movement.cs"));
+
+            string detectionSource = File.ReadAllText(Path.Combine(
+                Application.dataPath,
+                "Enemies",
+                "Scripts",
+                "Detection.cs"));
+
+            Assert.IsFalse(movementSource.Contains("LineOfSight", StringComparison.Ordinal));
+            Assert.IsFalse(detectionSource.Contains("LineOfSight", StringComparison.Ordinal));
+        }
+
+        [Test]
+        public void RangedEnemyBehaviour_DoesNotReferencePlayer()
+        {
+            bool referencesPlayer = typeof(RangedEnemyBehaviour).Assembly
+                .GetReferencedAssemblies()
+                .Any(assemblyName => assemblyName.Name == "RPGame.Player");
+
+            Assert.IsFalse(referencesPlayer);
         }
 
         [Test]
@@ -238,9 +313,18 @@ namespace RPGame.Enemies.Tests
 
         private RangedEnemyBehaviour CreateBehaviour(FakeDetection detection, FakeMovement movement)
         {
+            return CreateBehaviour(detection, movement, new FakeLineOfSight());
+        }
+
+        private RangedEnemyBehaviour CreateBehaviour(
+            FakeDetection detection,
+            FakeMovement movement,
+            FakeLineOfSight lineOfSight)
+        {
             return new RangedEnemyBehaviour(
                 detection,
                 movement,
+                lineOfSight,
                 CreateConfig(2f, 5f, 0.5f));
         }
 
@@ -303,6 +387,20 @@ namespace RPGame.Enemies.Tests
                 LastDesiredPosition = desiredPosition;
                 validPosition = desiredPosition;
                 return CanResolvePosition;
+            }
+        }
+
+        private sealed class FakeLineOfSight : IEnemyLineOfSight
+        {
+            public bool HasLineOfSightResult { get; set; } = true;
+            public int CheckCount { get; private set; }
+            public Vector3 LastTargetPosition { get; private set; }
+
+            public bool HasLineOfSight(Vector3 targetPosition)
+            {
+                CheckCount++;
+                LastTargetPosition = targetPosition;
+                return HasLineOfSightResult;
             }
         }
 

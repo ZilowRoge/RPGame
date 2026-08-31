@@ -8,6 +8,7 @@ namespace RPGame.Enemies
 
         private readonly IEnemyDetection detection;
         private readonly IEnemyMovement movement;
+        private readonly IEnemyLineOfSight lineOfSight;
         private readonly IRangedEnemyBehaviourConfig config;
 
         internal RangedBehaviourState State { get; private set; } = RangedBehaviourState.Idle;
@@ -15,11 +16,19 @@ namespace RPGame.Enemies
         public RangedEnemyBehaviour(
             IEnemyDetection detection,
             IEnemyMovement movement,
+            IEnemyLineOfSight lineOfSight,
             IRangedEnemyBehaviourConfig config)
         {
             this.detection = detection;
             this.movement = movement;
+            this.lineOfSight = lineOfSight;
             this.config = config;
+        }
+
+        public bool CanStartAttack()
+        {
+            return detection.TryGetTarget(out SelectedTarget target)
+                && lineOfSight.HasLineOfSight(target.Position);
         }
 
         public void Tick(float deltaTime)
