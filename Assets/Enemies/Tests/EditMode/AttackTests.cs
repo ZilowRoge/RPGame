@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -9,7 +8,6 @@ using RPGame.Core.Statistics;
 using RPGame.Core.Targeting;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.TestTools;
 
 namespace RPGame.Enemies.Tests
 {
@@ -101,15 +99,15 @@ namespace RPGame.Enemies.Tests
             Assert.AreEqual(90f, target.Statistics.CurrentHealth);
         }
 
-        [UnityTest]
-        public IEnumerator TryAttack_AfterAttackIntervalExpires_IsAllowedAgain()
+        [Test]
+        public void TryAttack_WhenAttackIntervalExpired_IsAllowedAgain()
         {
             ConfigureAttack(attack, 2f, 0.05f, 10f);
             TargetFixture target = CreateDamageableTarget("Target", new Vector3(1f, 0f, 0f));
 
             Assert.IsTrue(attack.TryAttack(target.Targetable));
 
-            yield return new WaitForSeconds(0.08f);
+            SetNextAttackTime(attack, Time.time);
 
             Assert.IsTrue(attack.TryAttack(target.Targetable));
             Assert.AreEqual(80f, target.Statistics.CurrentHealth);
@@ -202,6 +200,12 @@ namespace RPGame.Enemies.Tests
             SerializedObject serializedReceiver = new(damageReceiver);
             serializedReceiver.FindProperty("loggingEnabled").boolValue = loggingEnabled;
             serializedReceiver.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private static void SetNextAttackTime(Attack attack, float nextAttackTime)
+        {
+            FieldInfo field = typeof(Attack).GetField("nextAttackTime", BindingFlags.Instance | BindingFlags.NonPublic);
+            field.SetValue(attack, nextAttackTime);
         }
 
         private readonly struct TargetFixture

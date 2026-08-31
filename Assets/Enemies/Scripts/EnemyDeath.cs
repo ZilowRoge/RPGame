@@ -1,16 +1,9 @@
 using RPGame.Core.Statistics;
 using RPGame.Core.Targeting;
-using RPGame.Loot;
 using UnityEngine;
 
 namespace RPGame.Enemies
 {
-    [RequireComponent(typeof(StatisticsController))]
-    [RequireComponent(typeof(Movement))]
-    [RequireComponent(typeof(EnemyController))]
-    [RequireComponent(typeof(Attack))]
-    [RequireComponent(typeof(EnemyTargetable))]
-    [RequireComponent(typeof(LootDropper))]
     public sealed class EnemyDeath : MonoBehaviour
     {
         [SerializeField] private StatisticsController deathSource;
@@ -18,7 +11,6 @@ namespace RPGame.Enemies
         [SerializeField] private EnemyController controller;
         [SerializeField] private Attack attack;
         [SerializeField] private EnemyTargetable targetable;
-        [SerializeField] private LootDropper lootDropper;
 
         private StatisticsController subscribedDeathSource;
 
@@ -50,7 +42,6 @@ namespace RPGame.Enemies
 
             IsDead = true;
             movement.Stop();
-            lootDropper?.DropLoot();
             controller.enabled = false;
             attack.enabled = false;
             targetable.enabled = false;
@@ -102,11 +93,6 @@ namespace RPGame.Enemies
             if (targetable == null)
             {
                 targetable = GetComponent<EnemyTargetable>();
-            }
-
-            if (lootDropper == null)
-            {
-                lootDropper = GetComponent<LootDropper>();
             }
         }
 

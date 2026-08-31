@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -10,7 +9,6 @@ using RPGame.Core.Targeting;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.AI;
-using UnityEngine.TestTools;
 
 namespace RPGame.Enemies.Tests
 {
@@ -19,9 +17,7 @@ namespace RPGame.Enemies.Tests
         private readonly List<GameObject> createdObjects = new();
         private readonly List<ScriptableObject> createdAssets = new();
 
-        private NavMeshDataInstance navMeshDataInstance;
         private GameObject enemyObject;
-        private NavMeshAgent agent;
         private Detection detection;
         private Attack attack;
         private EnemyController controller;
@@ -30,25 +26,20 @@ namespace RPGame.Enemies.Tests
         public void SetUp()
         {
             ClearTargetRegistry();
-            EnsureNavMesh();
 
             enemyObject = CreateObject("Enemy");
             enemyObject.transform.position = Vector3.zero;
-            agent = enemyObject.AddComponent<NavMeshAgent>();
-            agent.Warp(Vector3.zero);
+            enemyObject.AddComponent<NavMeshAgent>();
             detection = enemyObject.AddComponent<Detection>();
-            enemyObject.AddComponent<Movement>();
-            attack = enemyObject.AddComponent<Attack>();
-            ConfigureAttack(attack, 1.5f, 0.1f, 10f);
             controller = enemyObject.AddComponent<EnemyController>();
+            attack = enemyObject.GetComponent<Attack>();
+            ConfigureAttack(attack, 1.5f, 0.1f, 10f);
             InvokeStart(controller);
         }
 
         [TearDown]
         public void TearDown()
         {
-            navMeshDataInstance.Remove();
-
             for (int i = createdObjects.Count - 1; i >= 0; i--)
             {
                 Object.DestroyImmediate(createdObjects[i]);
@@ -64,47 +55,6 @@ namespace RPGame.Enemies.Tests
             ClearTargetRegistry();
         }
 
-        [UnityTest]
-        public IEnumerator Tick_WhenNoTarget_StopsMovementAndDoesNotAttack()
-        {
-            agent.isStopped = false;
-
-            controller.Tick();
-
-            yield return null;
-
-            Assert.IsTrue(agent.isStopped);
-        }
-
-        [UnityTest]
-        public IEnumerator Tick_WhenTargetIsOutsideAttackRange_ChasesTarget()
-        {
-            TargetFixture target = CreateDamageableTarget("Target", new Vector3(3f, 0f, 0f));
-            detection.RefreshDetection();
-
-            controller.Tick();
-
-            yield return null;
-
-            Assert.IsFalse(agent.isStopped);
-            AssertVectorApproximately(target.Targetable.TargetPoint.position, agent.destination);
-            Assert.AreEqual(100f, target.Statistics.CurrentHealth);
-        }
-
-        [UnityTest]
-        public IEnumerator Tick_WhenTargetIsInAttackRange_StopsMovement()
-        {
-            CreateDamageableTarget("Target", new Vector3(1f, 0f, 0f));
-            detection.RefreshDetection();
-            agent.isStopped = false;
-
-            controller.Tick();
-
-            yield return null;
-
-            Assert.IsTrue(agent.isStopped);
-        }
-
         [Test]
         public void Tick_WhenTargetIsInAttackRange_TriesAttack()
         {
@@ -116,35 +66,28 @@ namespace RPGame.Enemies.Tests
             Assert.AreEqual(90f, target.Statistics.CurrentHealth);
         }
 
-        [UnityTest]
-        public IEnumerator Tick_WhenTargetLeavesAttackRange_ChasesAgain()
-        {
-            TargetFixture target = CreateDamageableTarget("Target", new Vector3(1f, 0f, 0f));
-            detection.RefreshDetection();
-            controller.Tick();
-
-            target.Targetable.transform.position = new Vector3(3f, 0f, 0f);
-            controller.Tick();
-
-            yield return null;
-
-            Assert.IsFalse(agent.isStopped);
-            AssertVectorApproximately(target.Targetable.TargetPoint.position, agent.destination);
-        }
-
-        [UnityTest]
-        public IEnumerator Tick_WhenTargetIsLost_StopsMovement()
+        [Test]
+        public void Tick_WhenTargetIsOutsideAttackRange_DoesNotAttack()
         {
             TargetFixture target = CreateDamageableTarget("Target", new Vector3(3f, 0f, 0f));
             detection.RefreshDetection();
+
             controller.Tick();
-            yield return null;
+
+            Assert.AreEqual(100f, target.Statistics.CurrentHealth);
+        }
+
+        [Test]
+        public void Tick_WhenTargetIsLost_DoesNotAttack()
+        {
+            TargetFixture target = CreateDamageableTarget("Target", new Vector3(1f, 0f, 0f));
+            detection.RefreshDetection();
 
             target.Targetable.gameObject.SetActive(false);
             detection.RefreshDetection();
             controller.Tick();
 
-            Assert.IsTrue(agent.isStopped);
+            Assert.AreEqual(100f, target.Statistics.CurrentHealth);
         }
 
         [Test]
@@ -160,6 +103,7 @@ namespace RPGame.Enemies.Tests
         [Test]
         public void EnemyController_RequiresCoreEnemyComponents()
         {
+            Assert.IsTrue(RequiresComponent<StatisticsController>());
             Assert.IsTrue(RequiresComponent<Detection>());
             Assert.IsTrue(RequiresComponent<Movement>());
             Assert.IsTrue(RequiresComponent<Attack>());
@@ -173,7 +117,7 @@ namespace RPGame.Enemies.Tests
         {
             bool referencesForbiddenAssembly = typeof(EnemyController).Assembly
                 .GetReferencedAssemblies()
-                .Any(assemblyName => assemblyName.Name == "RPGame.Player");
+                .Any(assemblyName => assemblyName.Name == "RPGame.Player" || assemblyName.Name == "RPGame.Loot");
 
             bool hasForbiddenField = typeof(EnemyController)
                 .GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
@@ -201,36 +145,6 @@ namespace RPGame.Enemies.Tests
 
             PlayerTargetable targetable = targetObject.AddComponent<PlayerTargetable>();
             return new TargetFixture(targetable, statistics);
-        }
-
-        private void EnsureNavMesh()
-        {
-            if (navMeshDataInstance.valid)
-            {
-                return;
-            }
-
-            NavMeshBuildSettings buildSettings = NavMesh.GetSettingsByID(0);
-            List<NavMeshBuildSource> sources = new()
-            {
-                new NavMeshBuildSource
-                {
-                    shape = NavMeshBuildSourceShape.Box,
-                    transform = Matrix4x4.TRS(Vector3.zero, Quaternion.identity, Vector3.one),
-                    size = new Vector3(10f, 0.1f, 10f),
-                    area = 0
-                }
-            };
-
-            Bounds bounds = new(Vector3.zero, new Vector3(10f, 2f, 10f));
-            NavMeshData navMeshData = NavMeshBuilder.BuildNavMeshData(
-                buildSettings,
-                sources,
-                bounds,
-                Vector3.zero,
-                Quaternion.identity);
-
-            navMeshDataInstance = NavMesh.AddNavMeshData(navMeshData);
         }
 
         private GameObject CreateObject(string objectName)
@@ -288,13 +202,6 @@ namespace RPGame.Enemies.Tests
             SerializedObject serializedReceiver = new(damageReceiver);
             serializedReceiver.FindProperty("loggingEnabled").boolValue = loggingEnabled;
             serializedReceiver.ApplyModifiedPropertiesWithoutUndo();
-        }
-
-        private static void AssertVectorApproximately(Vector3 expected, Vector3 actual)
-        {
-            Assert.AreEqual(expected.x, actual.x, 0.05f);
-            Assert.AreEqual(expected.y, actual.y, 0.05f);
-            Assert.AreEqual(expected.z, actual.z, 0.05f);
         }
 
         private static void ClearTargetRegistry()

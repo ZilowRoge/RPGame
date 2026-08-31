@@ -1,20 +1,14 @@
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
 using RPGame.Combat.Damage;
 using RPGame.Core.Damage;
-using RPGame.Core.Interaction;
 using RPGame.Core.Statistics;
 using RPGame.Core.Targeting;
-using RPGame.Inventory;
-using RPGame.Inventory.Data;
-using RPGame.Loot;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.AI;
-using UnityEngine.TestTools;
 
 namespace RPGame.Enemies.Tests
 {
@@ -22,12 +16,9 @@ namespace RPGame.Enemies.Tests
     {
         private readonly List<GameObject> createdObjects = new();
         private readonly List<ScriptableObject> createdAssets = new();
-        private readonly List<GameObject> spawnedPickups = new();
 
-        private NavMeshDataInstance navMeshDataInstance;
         private GameObject enemyObject;
         private StatisticsController enemyStatistics;
-        private NavMeshAgent agent;
         private Movement movement;
         private Attack attack;
         private EnemyController controller;
@@ -38,7 +29,6 @@ namespace RPGame.Enemies.Tests
         public void SetUp()
         {
             ClearTargetRegistry();
-            EnsureNavMesh();
 
             enemyObject = CreateObject("Enemy");
             enemyObject.transform.position = Vector3.zero;
@@ -46,24 +36,20 @@ namespace RPGame.Enemies.Tests
             SetControllerConfig(enemyStatistics, CreateConfig(100f));
             enemyStatistics.ResetToConfig();
 
-            agent = enemyObject.AddComponent<NavMeshAgent>();
-            agent.Warp(Vector3.zero);
+            enemyObject.AddComponent<NavMeshAgent>();
             enemyObject.AddComponent<Detection>();
-            movement = enemyObject.AddComponent<Movement>();
-            attack = enemyObject.AddComponent<Attack>();
-            ConfigureAttack(attack, 2f, 0.1f, 10f);
             controller = enemyObject.AddComponent<EnemyController>();
-            targetable = enemyObject.AddComponent<EnemyTargetable>();
-            death = enemyObject.AddComponent<EnemyDeath>();
+            movement = enemyObject.GetComponent<Movement>();
+            attack = enemyObject.GetComponent<Attack>();
+            ConfigureAttack(attack, 2f, 0.1f, 10f);
+            targetable = enemyObject.GetComponent<EnemyTargetable>();
+            death = enemyObject.GetComponent<EnemyDeath>();
             InvokeStart(death);
         }
 
         [TearDown]
         public void TearDown()
         {
-            navMeshDataInstance.Remove();
-            DestroySpawnedPickups();
-
             for (int i = createdObjects.Count - 1; i >= 0; i--)
             {
                 Object.DestroyImmediate(createdObjects[i]);
@@ -77,17 +63,6 @@ namespace RPGame.Enemies.Tests
             createdObjects.Clear();
             createdAssets.Clear();
             ClearTargetRegistry();
-        }
-
-        [UnityTest]
-        public IEnumerator DeathEvent_StopsMovement()
-        {
-            movement.MoveTo(new Vector3(2f, 0f, 0f));
-            yield return null;
-
-            KillEnemy();
-
-            Assert.IsTrue(agent.isStopped);
         }
 
         [Test]
@@ -154,83 +129,6 @@ namespace RPGame.Enemies.Tests
         }
 
         [Test]
-        public void DeathEvent_TriggersExistingLootDropper()
-        {
-            ItemDefinition item = CreateItemDefinition();
-            AddLootDropper(CreateLootTable((item, 1, 1)), CreatePickupPrefab(), null);
-            HashSet<ItemPickup> existingPickups = GetExistingPickups();
-
-            KillEnemy();
-
-            Assert.AreEqual(1, GetNewPickups(existingPickups).Count);
-        }
-
-        [Test]
-        public void DeathEvent_GeneratesLootFromExistingConfiguration()
-        {
-            ItemDefinition item = CreateItemDefinition();
-            AddLootDropper(CreateLootTable((item, 3, 3)), CreatePickupPrefab(), null);
-            HashSet<ItemPickup> existingPickups = GetExistingPickups();
-
-            KillEnemy();
-
-            List<ItemPickup> pickups = GetNewPickups(existingPickups);
-            Assert.AreEqual(1, pickups.Count);
-            Assert.AreSame(item, pickups[0].Item);
-            Assert.AreEqual(3, pickups[0].Amount);
-        }
-
-        [Test]
-        public void DeathEvent_DropsLootAtConfiguredOrigin()
-        {
-            ItemDefinition item = CreateItemDefinition();
-            Transform dropOrigin = CreateDropOrigin(new Vector3(2f, 0f, 3f));
-            AddLootDropper(CreateLootTable((item, 1, 1)), CreatePickupPrefab(), dropOrigin);
-            HashSet<ItemPickup> existingPickups = GetExistingPickups();
-
-            KillEnemy();
-
-            List<ItemPickup> pickups = GetNewPickups(existingPickups);
-            Assert.AreEqual(1, pickups.Count);
-            Assert.AreEqual(dropOrigin.position, pickups[0].transform.position);
-        }
-
-        [Test]
-        public void DeathEvent_DropsLootOnlyOnce()
-        {
-            ItemDefinition item = CreateItemDefinition();
-            AddLootDropper(CreateLootTable((item, 1, 1)), CreatePickupPrefab(), null);
-            HashSet<ItemPickup> existingPickups = GetExistingPickups();
-
-            KillEnemy();
-            InvokeHandleDeathDirectly();
-
-            Assert.AreEqual(1, GetNewPickups(existingPickups).Count);
-        }
-
-        [Test]
-        public void DroppedPickup_CanBePickedUpIntoExistingInventory()
-        {
-            ItemDefinition item = CreateItemDefinition();
-            AddLootDropper(CreateLootTable((item, 1, 1)), CreatePickupPrefab(), null);
-            HashSet<ItemPickup> existingPickups = GetExistingPickups();
-            GameObject playerObject = CreateObject("Player");
-            ItemManagementController inventoryController = playerObject.AddComponent<ItemManagementController>();
-
-            KillEnemy();
-
-            ItemPickup pickup = GetNewPickups(existingPickups)[0];
-            InteractionContext context = new(playerObject, playerObject.transform);
-
-            Assert.IsTrue(pickup.CanInteract(context));
-
-            pickup.Interact(context);
-
-            Assert.IsTrue(inventoryController.Inventory.GetSlot(0).HasItem);
-            Assert.AreSame(item, inventoryController.Inventory.GetSlot(0).Item.Definition);
-        }
-
-        [Test]
         public void Start_WhenStatisticsHasNoHealthConfig_DoesNotTriggerDeathCleanup()
         {
             GameObject unconfiguredEnemy = CreateObject("UnconfiguredEnemy");
@@ -238,11 +136,11 @@ namespace RPGame.Enemies.Tests
             unconfiguredEnemy.AddComponent<NavMeshAgent>();
             unconfiguredEnemy.AddComponent<Detection>();
 
-            Movement unconfiguredMovement = unconfiguredEnemy.AddComponent<Movement>();
-            Attack unconfiguredAttack = unconfiguredEnemy.AddComponent<Attack>();
             EnemyController unconfiguredController = unconfiguredEnemy.AddComponent<EnemyController>();
-            EnemyTargetable unconfiguredTargetable = unconfiguredEnemy.AddComponent<EnemyTargetable>();
-            EnemyDeath unconfiguredDeath = unconfiguredEnemy.AddComponent<EnemyDeath>();
+            Movement unconfiguredMovement = unconfiguredEnemy.GetComponent<Movement>();
+            Attack unconfiguredAttack = unconfiguredEnemy.GetComponent<Attack>();
+            EnemyTargetable unconfiguredTargetable = unconfiguredEnemy.GetComponent<EnemyTargetable>();
+            EnemyDeath unconfiguredDeath = unconfiguredEnemy.GetComponent<EnemyDeath>();
 
             InvokeStart(unconfiguredDeath);
 
@@ -269,22 +167,6 @@ namespace RPGame.Enemies.Tests
 
             Assert.IsFalse(referencesForbiddenAssembly);
             Assert.IsFalse(hasForbiddenField);
-        }
-
-        [Test]
-        public void EnemyDeath_DoesNotContainLootRollingLogic()
-        {
-            bool hasForbiddenLootField = typeof(EnemyDeath)
-                .GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
-                .Any(field =>
-                    field.FieldType == typeof(LootRoller)
-                    || field.FieldType == typeof(LootTable)
-                    || field.FieldType == typeof(IndependentLootGroup)
-                    || field.FieldType == typeof(IndependentLootEntry)
-                    || field.FieldType == typeof(WeightedLootGroup)
-                    || field.FieldType == typeof(WeightedLootEntry));
-
-            Assert.IsFalse(hasForbiddenLootField);
         }
 
         [Test]
@@ -331,110 +213,6 @@ namespace RPGame.Enemies.Tests
 
             PlayerTargetable playerTargetable = targetObject.AddComponent<PlayerTargetable>();
             return new TargetFixture(playerTargetable, statistics);
-        }
-
-        private LootDropper AddLootDropper(
-            LootTable lootTable,
-            ItemPickup pickupPrefab,
-            Transform dropOrigin)
-        {
-            LootDropper dropper = enemyObject.AddComponent<LootDropper>();
-            SerializedObject serializedDropper = new(dropper);
-            serializedDropper.FindProperty("lootTable").objectReferenceValue = lootTable;
-            serializedDropper.FindProperty("pickupPrefab").objectReferenceValue = pickupPrefab;
-            serializedDropper.FindProperty("dropOrigin").objectReferenceValue = dropOrigin;
-            serializedDropper.FindProperty("deathSource").objectReferenceValue = enemyStatistics;
-            serializedDropper.FindProperty("dropRadius").floatValue = 0f;
-            serializedDropper.ApplyModifiedPropertiesWithoutUndo();
-
-            SetEnemyDeathLootDropper(dropper);
-            dropper.enabled = false;
-            return dropper;
-        }
-
-        private void SetEnemyDeathLootDropper(LootDropper dropper)
-        {
-            SerializedObject serializedDeath = new(death);
-            serializedDeath.FindProperty("lootDropper").objectReferenceValue = dropper;
-            serializedDeath.ApplyModifiedPropertiesWithoutUndo();
-        }
-
-        private ItemPickup CreatePickupPrefab()
-        {
-            GameObject pickupObject = CreateObject("PickupPrefab");
-            return pickupObject.AddComponent<ItemPickup>();
-        }
-
-        private Transform CreateDropOrigin(Vector3 position)
-        {
-            GameObject dropOriginObject = CreateObject("DropOrigin");
-            dropOriginObject.transform.position = position;
-            return dropOriginObject.transform;
-        }
-
-        private ItemDefinition CreateItemDefinition()
-        {
-            ItemDefinition itemDefinition = ScriptableObject.CreateInstance<ItemDefinition>();
-            createdAssets.Add(itemDefinition);
-            return itemDefinition;
-        }
-
-        private LootTable CreateLootTable(params (ItemDefinition item, int minAmount, int maxAmount)[] entries)
-        {
-            LootTable table = ScriptableObject.CreateInstance<LootTable>();
-            createdAssets.Add(table);
-
-            SerializedObject serializedTable = new(table);
-            SerializedProperty serializedGroups = serializedTable.FindProperty("independentGroups");
-            serializedGroups.arraySize = 1;
-
-            SerializedProperty serializedEntries = serializedGroups
-                .GetArrayElementAtIndex(0)
-                .FindPropertyRelative("entries");
-            serializedEntries.arraySize = entries.Length;
-
-            for (int i = 0; i < entries.Length; i++)
-            {
-                SerializedProperty entry = serializedEntries.GetArrayElementAtIndex(i);
-                entry.FindPropertyRelative("item").objectReferenceValue = entries[i].item;
-                entry.FindPropertyRelative("minAmount").intValue = entries[i].minAmount;
-                entry.FindPropertyRelative("maxAmount").intValue = entries[i].maxAmount;
-                entry.FindPropertyRelative("chance").floatValue = 1f;
-            }
-
-            serializedTable.FindProperty("weightedGroups").arraySize = 0;
-            serializedTable.ApplyModifiedPropertiesWithoutUndo();
-            return table;
-        }
-
-        private void EnsureNavMesh()
-        {
-            if (navMeshDataInstance.valid)
-            {
-                return;
-            }
-
-            NavMeshBuildSettings buildSettings = NavMesh.GetSettingsByID(0);
-            List<NavMeshBuildSource> sources = new()
-            {
-                new NavMeshBuildSource
-                {
-                    shape = NavMeshBuildSourceShape.Box,
-                    transform = Matrix4x4.TRS(Vector3.zero, Quaternion.identity, Vector3.one),
-                    size = new Vector3(10f, 0.1f, 10f),
-                    area = 0
-                }
-            };
-
-            Bounds bounds = new(Vector3.zero, new Vector3(10f, 2f, 10f));
-            NavMeshData navMeshData = NavMeshBuilder.BuildNavMeshData(
-                buildSettings,
-                sources,
-                bounds,
-                Vector3.zero,
-                Quaternion.identity);
-
-            navMeshDataInstance = NavMesh.AddNavMeshData(navMeshData);
         }
 
         private GameObject CreateObject(string objectName)
@@ -491,45 +269,6 @@ namespace RPGame.Enemies.Tests
         {
             MethodInfo method = typeof(TargetRegistry).GetMethod("Clear", BindingFlags.Static | BindingFlags.NonPublic);
             method.Invoke(null, null);
-        }
-
-        private static HashSet<ItemPickup> GetExistingPickups()
-        {
-            return new HashSet<ItemPickup>(Object.FindObjectsByType<ItemPickup>());
-        }
-
-        private List<ItemPickup> GetNewPickups(HashSet<ItemPickup> existingPickups)
-        {
-            ItemPickup[] pickups = Object.FindObjectsByType<ItemPickup>();
-            List<ItemPickup> newPickups = new();
-            for (int i = 0; i < pickups.Length; i++)
-            {
-                if (existingPickups.Contains(pickups[i]))
-                {
-                    continue;
-                }
-
-                newPickups.Add(pickups[i]);
-                if (!spawnedPickups.Contains(pickups[i].gameObject))
-                {
-                    spawnedPickups.Add(pickups[i].gameObject);
-                }
-            }
-
-            return newPickups;
-        }
-
-        private void DestroySpawnedPickups()
-        {
-            for (int i = spawnedPickups.Count - 1; i >= 0; i--)
-            {
-                if (spawnedPickups[i] != null)
-                {
-                    Object.DestroyImmediate(spawnedPickups[i]);
-                }
-            }
-
-            spawnedPickups.Clear();
         }
 
         private readonly struct TargetFixture

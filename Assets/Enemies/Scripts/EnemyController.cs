@@ -1,9 +1,11 @@
 using RPGame.Combat.Damage;
+using RPGame.Core.Statistics;
 using RPGame.Core.Targeting;
 using UnityEngine;
 
 namespace RPGame.Enemies
 {
+    [RequireComponent(typeof(StatisticsController))]
     [RequireComponent(typeof(Detection))]
     [RequireComponent(typeof(Movement))]
     [RequireComponent(typeof(Attack))]
