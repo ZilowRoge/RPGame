@@ -4,13 +4,49 @@ namespace RPGame.Core.Targeting
 {
     public static class TargetRegistry
     {
-        private static readonly List<ITargetable> targets = new();
-        private static readonly HashSet<ITargetable> registeredTargets = new();
+        private static readonly List<EnemyTargetable> enemyTargets = new();
+        private static readonly HashSet<EnemyTargetable> registeredEnemyTargets = new();
+        private static readonly List<PlayerTargetable> playerTargets = new();
+        private static readonly HashSet<PlayerTargetable> registeredPlayerTargets = new();
 
-        public static IReadOnlyList<ITargetable> Targets => targets;
-        public static int Count => targets.Count;
+        public static IReadOnlyList<EnemyTargetable> EnemyTargets => enemyTargets;
+        public static IReadOnlyList<PlayerTargetable> PlayerTargets => playerTargets;
+        public static int EnemyTargetCount => enemyTargets.Count;
+        public static int PlayerTargetCount => playerTargets.Count;
 
-        internal static void Register(ITargetable targetable)
+        public static void RegisterTarget(EnemyTargetable targetable)
+        {
+            Register(targetable, registeredEnemyTargets, enemyTargets);
+        }
+
+        public static void UnregisterTarget(EnemyTargetable targetable)
+        {
+            Unregister(targetable, registeredEnemyTargets, enemyTargets);
+        }
+
+        public static void RegisterTarget(PlayerTargetable targetable)
+        {
+            Register(targetable, registeredPlayerTargets, playerTargets);
+        }
+
+        public static void UnregisterTarget(PlayerTargetable targetable)
+        {
+            Unregister(targetable, registeredPlayerTargets, playerTargets);
+        }
+
+        internal static void Clear()
+        {
+            enemyTargets.Clear();
+            registeredEnemyTargets.Clear();
+            playerTargets.Clear();
+            registeredPlayerTargets.Clear();
+        }
+
+        private static void Register<TTarget>(
+            TTarget targetable,
+            HashSet<TTarget> registeredTargets,
+            List<TTarget> targets)
+            where TTarget : Targetable
         {
             if (targetable == null || !registeredTargets.Add(targetable))
             {
@@ -20,7 +56,11 @@ namespace RPGame.Core.Targeting
             targets.Add(targetable);
         }
 
-        internal static void Unregister(ITargetable targetable)
+        private static void Unregister<TTarget>(
+            TTarget targetable,
+            HashSet<TTarget> registeredTargets,
+            List<TTarget> targets)
+            where TTarget : Targetable
         {
             if (targetable == null || !registeredTargets.Remove(targetable))
             {
@@ -28,12 +68,6 @@ namespace RPGame.Core.Targeting
             }
 
             targets.Remove(targetable);
-        }
-
-        internal static void Clear()
-        {
-            targets.Clear();
-            registeredTargets.Clear();
         }
     }
 }

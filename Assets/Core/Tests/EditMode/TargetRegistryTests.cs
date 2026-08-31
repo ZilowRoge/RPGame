@@ -31,20 +31,20 @@ namespace RPGame.Core.Tests
         }
 
         [UnityTest]
-        public IEnumerator Targetable_RegistersWhenCreatedActive()
+        public IEnumerator EnemyTargetable_RegistersWhenCreatedActive()
         {
-            Targetable targetable = CreateTargetable("Target");
+            EnemyTargetable targetable = CreateEnemyTargetable("Target");
 
             yield return null;
 
-            Assert.AreEqual(1, TargetRegistry.Count);
-            Assert.AreSame(targetable, TargetRegistry.Targets[0]);
+            Assert.AreEqual(1, TargetRegistry.EnemyTargetCount);
+            Assert.AreSame(targetable, TargetRegistry.EnemyTargets[0]);
         }
 
         [UnityTest]
-        public IEnumerator Targetable_UnregistersWhenDisabled()
+        public IEnumerator EnemyTargetable_UnregistersWhenDisabled()
         {
-            GameObject targetObject = CreateTargetableObject("Target");
+            GameObject targetObject = CreateEnemyTargetableObject("Target");
 
             yield return null;
 
@@ -52,27 +52,27 @@ namespace RPGame.Core.Tests
 
             yield return null;
 
-            Assert.AreEqual(0, TargetRegistry.Count);
+            Assert.AreEqual(0, TargetRegistry.EnemyTargetCount);
         }
 
         [UnityTest]
-        public IEnumerator Targetable_UnregistersWhenDestroyed()
+        public IEnumerator EnemyTargetable_UnregistersWhenDestroyed()
         {
-            GameObject targetObject = CreateTargetableObject("Target");
+            GameObject targetObject = CreateEnemyTargetableObject("Target");
 
             yield return null;
 
             Object.DestroyImmediate(targetObject);
             createdObjects.Remove(targetObject);
 
-            Assert.AreEqual(0, TargetRegistry.Count);
+            Assert.AreEqual(0, TargetRegistry.EnemyTargetCount);
         }
 
         [UnityTest]
-        public IEnumerator Targetable_RegistersAgainWhenReenabled()
+        public IEnumerator EnemyTargetable_RegistersAgainWhenReenabled()
         {
-            GameObject targetObject = CreateTargetableObject("Target");
-            Targetable targetable = targetObject.GetComponent<Targetable>();
+            GameObject targetObject = CreateEnemyTargetableObject("Target");
+            EnemyTargetable targetable = targetObject.GetComponent<EnemyTargetable>();
 
             yield return null;
 
@@ -84,27 +84,27 @@ namespace RPGame.Core.Tests
 
             yield return null;
 
-            Assert.AreEqual(1, TargetRegistry.Count);
-            Assert.AreSame(targetable, TargetRegistry.Targets[0]);
+            Assert.AreEqual(1, TargetRegistry.EnemyTargetCount);
+            Assert.AreSame(targetable, TargetRegistry.EnemyTargets[0]);
         }
 
         [UnityTest]
         public IEnumerator TargetRegistry_DoesNotRegisterDuplicates()
         {
-            Targetable targetable = CreateTargetable("Target");
+            EnemyTargetable targetable = CreateEnemyTargetable("Target");
 
             yield return null;
 
-            TargetRegistry.Register(targetable);
+            TargetRegistry.RegisterTarget(targetable);
 
-            Assert.AreEqual(1, TargetRegistry.Count);
-            Assert.AreSame(targetable, TargetRegistry.Targets[0]);
+            Assert.AreEqual(1, TargetRegistry.EnemyTargetCount);
+            Assert.AreSame(targetable, TargetRegistry.EnemyTargets[0]);
         }
 
         [Test]
         public void TargetPoint_ReturnsAssignedTransform()
         {
-            Targetable targetable = CreateTargetable("Target");
+            EnemyTargetable targetable = CreateEnemyTargetable("Target");
             Transform targetPoint = CreateObject("TargetPoint").transform;
             SetTargetPoint(targetable, targetPoint);
 
@@ -114,7 +114,7 @@ namespace RPGame.Core.Tests
         [Test]
         public void TargetPoint_FallsBackToOwnTransform()
         {
-            Targetable targetable = CreateTargetable("Target");
+            EnemyTargetable targetable = CreateEnemyTargetable("Target");
 
             Assert.AreSame(targetable.transform, targetable.TargetPoint);
         }
@@ -122,8 +122,8 @@ namespace RPGame.Core.Tests
         [UnityTest]
         public IEnumerator TargetRegistry_DoesNotKeepInactiveTargets()
         {
-            GameObject targetObject = CreateTargetableObject("Target");
-            Targetable targetable = targetObject.GetComponent<Targetable>();
+            GameObject targetObject = CreateEnemyTargetableObject("Target");
+            EnemyTargetable targetable = targetObject.GetComponent<EnemyTargetable>();
 
             yield return null;
 
@@ -131,28 +131,43 @@ namespace RPGame.Core.Tests
 
             yield return null;
 
-            Assert.AreEqual(0, TargetRegistry.Count);
-            CollectionAssert.DoesNotContain(TargetRegistry.Targets, targetable);
+            Assert.AreEqual(0, TargetRegistry.EnemyTargetCount);
+            CollectionAssert.DoesNotContain(TargetRegistry.EnemyTargets, targetable);
         }
 
         [Test]
         public void TargetRegistry_ReturnsSameTargetsCollection()
         {
-            IReadOnlyList<ITargetable> firstRead = TargetRegistry.Targets;
-            IReadOnlyList<ITargetable> secondRead = TargetRegistry.Targets;
+            IReadOnlyList<EnemyTargetable> firstRead = TargetRegistry.EnemyTargets;
+            IReadOnlyList<EnemyTargetable> secondRead = TargetRegistry.EnemyTargets;
 
             Assert.AreSame(firstRead, secondRead);
         }
 
-        private Targetable CreateTargetable(string objectName)
+        [Test]
+        public void TargetRegistry_KeepsEnemyAndPlayerTargetsSeparate()
         {
-            return CreateTargetableObject(objectName).GetComponent<Targetable>();
+            EnemyTargetable enemyTarget = CreateObject("EnemyTarget").AddComponent<EnemyTargetable>();
+            PlayerTargetable playerTarget = CreateObject("PlayerTarget").AddComponent<PlayerTargetable>();
+
+            TargetRegistry.RegisterTarget(enemyTarget);
+            TargetRegistry.RegisterTarget(playerTarget);
+
+            CollectionAssert.Contains(TargetRegistry.EnemyTargets, enemyTarget);
+            CollectionAssert.DoesNotContain(TargetRegistry.EnemyTargets, playerTarget);
+            CollectionAssert.Contains(TargetRegistry.PlayerTargets, playerTarget);
+            CollectionAssert.DoesNotContain(TargetRegistry.PlayerTargets, enemyTarget);
         }
 
-        private GameObject CreateTargetableObject(string objectName)
+        private EnemyTargetable CreateEnemyTargetable(string objectName)
+        {
+            return CreateEnemyTargetableObject(objectName).GetComponent<EnemyTargetable>();
+        }
+
+        private GameObject CreateEnemyTargetableObject(string objectName)
         {
             GameObject gameObject = CreateObject(objectName);
-            gameObject.AddComponent<Targetable>();
+            gameObject.AddComponent<EnemyTargetable>();
             return gameObject;
         }
 
