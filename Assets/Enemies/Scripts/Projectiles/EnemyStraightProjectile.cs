@@ -29,6 +29,7 @@ namespace RPGame.Enemies
             currentSpeed = projectileSpeed;
             InitializeProjectile(damageParts, source, projectileLifetime);
 
+            mover ??= GetComponent<StraightProjectileMover>();
             mover.Initialize(this);
         }
 
