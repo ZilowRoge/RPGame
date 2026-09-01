@@ -9,13 +9,18 @@ namespace RPGame.Enemies
     [RequireComponent(typeof(ParabolicProjectileMover))]
     public sealed class EnemyParabolicProjectile : EnemyProjectile, IEnemyProjectile
     {
+        private const float TelegraphGroundOffset = 0.02f;
+
         [SerializeField] private float projectileLifetime = 5f;
         [SerializeField] private float arcHeight = 3f;
         [SerializeField] private float ascentDuration = 0.75f;
         [SerializeField] private float descentDuration = 0.5f;
+        [SerializeField] private GameObject telegraphPrefab;
+        [SerializeField] private float aoeRadius = 2f;
 
         private ParabolicProjectileMover mover;
         private bool trajectoryCompleted;
+        private GameObject activeTelegraph;
 
         public event Action<EnemyParabolicProjectile> ApexReached;
 
@@ -27,6 +32,7 @@ namespace RPGame.Enemies
         internal int ApexReachedCount { get; private set; }
         internal EnemyProjectileHit LastImpact { get; private set; }
         internal bool HasImpact { get; private set; }
+        internal GameObject ActiveTelegraph => activeTelegraph;
 
         private void Start()
         {
@@ -44,6 +50,7 @@ namespace RPGame.Enemies
             HasImpact = false;
             LastImpact = default;
             ApexReachedCount = 0;
+            DestroyTelegraph();
             CacheMover();
             mover.ApexReached -= OnMoverApexReached;
             mover.ApexReached += OnMoverApexReached;
@@ -75,6 +82,16 @@ namespace RPGame.Enemies
             LastImpact = hit;
         }
 
+        protected override void Cleanup()
+        {
+            DestroyTelegraph();
+        }
+
+        private void OnDestroy()
+        {
+            DestroyTelegraph();
+        }
+
         private void CacheMover()
         {
             if (mover != null)
@@ -88,7 +105,43 @@ namespace RPGame.Enemies
         private void OnMoverApexReached()
         {
             ApexReachedCount++;
+            SpawnTelegraph();
             ApexReached?.Invoke(this);
+        }
+
+        private void SpawnTelegraph()
+        {
+            if (activeTelegraph != null || telegraphPrefab == null)
+            {
+                return;
+            }
+
+            activeTelegraph = Instantiate(
+                telegraphPrefab,
+                mover.ImpactPoint + Vector3.up * TelegraphGroundOffset,
+                Quaternion.identity);
+
+            float diameter = aoeRadius * 2f;
+            activeTelegraph.transform.localScale = new Vector3(diameter, activeTelegraph.transform.localScale.y, diameter);
+        }
+
+        private void DestroyTelegraph()
+        {
+            if (activeTelegraph == null)
+            {
+                return;
+            }
+
+            GameObject telegraph = activeTelegraph;
+            activeTelegraph = null;
+            if (Application.isPlaying)
+            {
+                Destroy(telegraph);
+            }
+            else
+            {
+                DestroyImmediate(telegraph);
+            }
         }
 
         private void OnValidate()
@@ -97,6 +150,7 @@ namespace RPGame.Enemies
             arcHeight = Mathf.Max(0f, arcHeight);
             ascentDuration = Mathf.Max(0.001f, ascentDuration);
             descentDuration = Mathf.Max(0.001f, descentDuration);
+            aoeRadius = Mathf.Max(0f, aoeRadius);
         }
     }
 }

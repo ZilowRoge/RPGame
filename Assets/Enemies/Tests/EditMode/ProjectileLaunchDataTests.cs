@@ -31,7 +31,9 @@ namespace RPGame.Enemies.Tests
                 "ArcHeight",
                 "AscentDuration",
                 "DescentDuration",
-                "ParabolicProjectilePrefab"
+                "ParabolicProjectilePrefab",
+                "TelegraphPrefab",
+                "AoERadius"
             };
 
             PropertyInfo[] properties = typeof(ProjectileLaunchData)

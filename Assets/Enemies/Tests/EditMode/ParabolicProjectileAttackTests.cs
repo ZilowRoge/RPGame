@@ -203,7 +203,9 @@ namespace RPGame.Enemies.Tests
                 () => null);
         }
 
-        private ParabolicProjectileAttackConfig CreateParabolicConfig(float attackInterval, EnemyParabolicProjectile projectilePrefab)
+        private ParabolicProjectileAttackConfig CreateParabolicConfig(
+            float attackInterval,
+            EnemyParabolicProjectile projectilePrefab)
         {
             ParabolicProjectileAttackConfig config = ScriptableObject.CreateInstance<ParabolicProjectileAttackConfig>();
             createdAssets.Add(config);

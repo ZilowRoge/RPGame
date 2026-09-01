@@ -67,6 +67,10 @@ namespace RPGame.Enemies
         {
         }
 
+        protected virtual void Cleanup()
+        {
+        }
+
         private void CheckForHits(Vector3 previousPosition, Vector3 currentPosition)
         {
             Vector3 displacement = currentPosition - previousPosition;
@@ -172,6 +176,7 @@ namespace RPGame.Enemies
 
             IsFinished = true;
             FinishCount++;
+            Cleanup();
             if (Application.isPlaying)
             {
                 Destroy(gameObject);

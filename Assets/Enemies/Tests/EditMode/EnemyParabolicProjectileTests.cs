@@ -92,6 +92,54 @@ namespace RPGame.Enemies.Tests
         }
 
         [Test]
+        public void Tick_DoesNotCreateTelegraphBeforeApex()
+        {
+            EnemyParabolicProjectile projectile = CreateProjectile(Vector3.zero);
+            GameObject telegraphPrefab = CreateObject("TelegraphPrefab");
+            ConfigureProjectile(projectile, 10f, 4f, 1f, 1f, telegraphPrefab, 2f);
+            projectile.Initialize(new Vector3(10f, 0f, 0f), null, CreateDamageParts(), null);
+
+            projectile.Tick(0.5f);
+
+            Assert.IsNull(projectile.ActiveTelegraph);
+        }
+
+        [Test]
+        public void Tick_WhenApexIsReached_CreatesTelegraphOnceAtPlannedImpactPoint()
+        {
+            Vector3 impact = new(10f, 0f, 0f);
+            EnemyParabolicProjectile projectile = CreateProjectile(Vector3.zero);
+            GameObject telegraphPrefab = CreateObject("TelegraphPrefab");
+            ConfigureProjectile(projectile, 10f, 4f, 1f, 1f, telegraphPrefab, 2f);
+            projectile.Initialize(impact, null, CreateDamageParts(), null);
+
+            projectile.Tick(1f);
+            GameObject firstTelegraph = projectile.ActiveTelegraph;
+            projectile.Tick(0.25f);
+
+            Assert.IsNotNull(firstTelegraph);
+            Assert.AreSame(firstTelegraph, projectile.ActiveTelegraph);
+            AssertVector(impact + Vector3.up * 0.02f, firstTelegraph.transform.position);
+            AssertVector(new Vector3(4f, 1f, 4f), firstTelegraph.transform.localScale);
+            Assert.AreEqual(1, projectile.ApexReachedCount);
+        }
+
+        [Test]
+        public void Tick_TelegraphKeepsPlannedImpactPoint()
+        {
+            Vector3 plannedImpact = new(10f, 0f, 0f);
+            EnemyParabolicProjectile projectile = CreateProjectile(Vector3.zero);
+            GameObject telegraphPrefab = CreateObject("TelegraphPrefab");
+            ConfigureProjectile(projectile, 10f, 4f, 1f, 1f, telegraphPrefab, 2f);
+            projectile.Initialize(plannedImpact, null, CreateDamageParts(), null);
+
+            projectile.Tick(1f);
+            projectile.Tick(0.25f);
+
+            AssertVector(plannedImpact + Vector3.up * 0.02f, projectile.ActiveTelegraph.transform.position);
+        }
+
+        [Test]
         public void Tick_AscentSpeedIncreasesThenFallsToZeroAtApex()
         {
             EnemyParabolicProjectile projectile = CreateProjectile(Vector3.zero);
@@ -145,6 +193,23 @@ namespace RPGame.Enemies.Tests
             AssertVector(impact, projectile.LastImpact.Point);
             AssertVector(Vector3.up, projectile.LastImpact.Normal);
             Assert.IsNull(projectile.LastImpact.Collider);
+        }
+
+        [Test]
+        public void Tick_NormalImpactRemovesTelegraph()
+        {
+            EnemyParabolicProjectile projectile = CreateProjectile(Vector3.zero);
+            GameObject telegraphPrefab = CreateObject("TelegraphPrefab");
+            ConfigureProjectile(projectile, 10f, 4f, 1f, 1f, telegraphPrefab, 2f);
+            projectile.Initialize(new Vector3(10f, 0f, 0f), null, CreateDamageParts(), null);
+
+            projectile.Tick(1f);
+            Assert.IsNotNull(projectile.ActiveTelegraph);
+
+            projectile.Tick(1f);
+
+            Assert.IsTrue(projectile.IsFinished);
+            Assert.IsNull(projectile.ActiveTelegraph);
         }
 
         [Test]
@@ -226,6 +291,26 @@ namespace RPGame.Enemies.Tests
         }
 
         [Test]
+        public void Tick_EarlyCollisionAfterApexRemovesTelegraph()
+        {
+            EnemyParabolicProjectile projectile = CreateProjectile(Vector3.zero);
+            GameObject telegraphPrefab = CreateObject("TelegraphPrefab");
+            GameObject wall = CreateEnvironment("Wall", new Vector3(7.5f, 3f, 0f), new Vector3(1f, 4f, 1f));
+            ConfigureProjectile(projectile, 10f, 4f, 1f, 1f, telegraphPrefab, 2f);
+            projectile.Initialize(new Vector3(10f, 0f, 0f), null, CreateDamageParts(), null);
+            Physics.SyncTransforms();
+
+            projectile.Tick(1f);
+            Assert.IsNotNull(projectile.ActiveTelegraph);
+
+            projectile.Tick(0.5f);
+
+            Assert.IsTrue(projectile.IsFinished);
+            Assert.AreSame(wall.GetComponent<Collider>(), projectile.LastImpact.Collider);
+            Assert.IsNull(projectile.ActiveTelegraph);
+        }
+
+        [Test]
         public void Tick_LifetimeStillFinishesProjectile()
         {
             EnemyParabolicProjectile projectile = CreateProjectile(Vector3.zero);
@@ -236,6 +321,54 @@ namespace RPGame.Enemies.Tests
 
             Assert.IsTrue(projectile.IsFinished);
             Assert.IsFalse(projectile.HasImpact);
+        }
+
+        [Test]
+        public void Tick_LifetimeAfterApexRemovesTelegraph()
+        {
+            EnemyParabolicProjectile projectile = CreateProjectile(Vector3.zero);
+            GameObject telegraphPrefab = CreateObject("TelegraphPrefab");
+            ConfigureProjectile(projectile, 1.25f, 4f, 1f, 1f, telegraphPrefab, 2f);
+            projectile.Initialize(new Vector3(10f, 0f, 0f), null, CreateDamageParts(), null);
+
+            projectile.Tick(1f);
+            Assert.IsNotNull(projectile.ActiveTelegraph);
+
+            projectile.Tick(0.25f);
+
+            Assert.IsTrue(projectile.IsFinished);
+            Assert.IsNull(projectile.ActiveTelegraph);
+        }
+
+        [Test]
+        public void Tick_LifetimeBeforeApexDoesNotCreateTelegraph()
+        {
+            EnemyParabolicProjectile projectile = CreateProjectile(Vector3.zero);
+            GameObject telegraphPrefab = CreateObject("TelegraphPrefab");
+            ConfigureProjectile(projectile, 0.5f, 4f, 1f, 1f, telegraphPrefab, 2f);
+            projectile.Initialize(new Vector3(10f, 0f, 0f), null, CreateDamageParts(), null);
+
+            projectile.Tick(0.5f);
+
+            Assert.IsTrue(projectile.IsFinished);
+            Assert.IsNull(projectile.ActiveTelegraph);
+            Assert.AreEqual(0, projectile.ApexReachedCount);
+        }
+
+        [Test]
+        public void SourceDestroy_DoesNotRemoveProjectileOrTelegraph()
+        {
+            GameObject source = CreateObject("Source");
+            EnemyParabolicProjectile projectile = CreateProjectile(Vector3.zero);
+            GameObject telegraphPrefab = CreateObject("TelegraphPrefab");
+            ConfigureProjectile(projectile, 10f, 4f, 1f, 1f, telegraphPrefab, 2f);
+            projectile.Initialize(new Vector3(10f, 0f, 0f), null, CreateDamageParts(), source);
+            projectile.Tick(1f);
+
+            UnityEngine.Object.DestroyImmediate(source);
+
+            Assert.IsFalse(projectile.IsFinished);
+            Assert.IsNotNull(projectile.ActiveTelegraph);
         }
 
         [Test]
@@ -266,11 +399,25 @@ namespace RPGame.Enemies.Tests
             float ascentDuration,
             float descentDuration)
         {
+            ConfigureProjectile(projectile, projectileLifetime, arcHeight, ascentDuration, descentDuration, null, 2f);
+        }
+
+        private static void ConfigureProjectile(
+            EnemyParabolicProjectile projectile,
+            float projectileLifetime,
+            float arcHeight,
+            float ascentDuration,
+            float descentDuration,
+            GameObject telegraphPrefab,
+            float aoeRadius)
+        {
             SerializedObject serializedProjectile = new(projectile);
             serializedProjectile.FindProperty("projectileLifetime").floatValue = projectileLifetime;
             serializedProjectile.FindProperty("arcHeight").floatValue = arcHeight;
             serializedProjectile.FindProperty("ascentDuration").floatValue = ascentDuration;
             serializedProjectile.FindProperty("descentDuration").floatValue = descentDuration;
+            serializedProjectile.FindProperty("telegraphPrefab").objectReferenceValue = telegraphPrefab;
+            serializedProjectile.FindProperty("aoeRadius").floatValue = aoeRadius;
             serializedProjectile.ApplyModifiedPropertiesWithoutUndo();
         }
 

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   attackInterval: 1
   damage:
-  - minDamage: 1
+  - minDamage: 2
     maxDamage: 4
     damageType: 0
     damageElement: 0
