@@ -55,9 +55,17 @@ namespace RPGame.Enemies
             Vector3 previousPosition = transform.position;
             Move(deltaTime);
             CheckForHits(previousPosition, transform.position);
+            if (!IsFinished)
+            {
+                AfterMove();
+            }
         }
 
         protected abstract void Move(float deltaTime);
+
+        protected virtual void AfterMove()
+        {
+        }
 
         private void CheckForHits(Vector3 previousPosition, Vector3 currentPosition)
         {
@@ -126,6 +134,17 @@ namespace RPGame.Enemies
         }
 
         protected abstract void OnImpact(EnemyProjectileHit hit, IDamageable damageable);
+
+        protected void FinishAt(Vector3 point, Vector3 normal)
+        {
+            if (IsFinished)
+            {
+                return;
+            }
+
+            OnImpact(new EnemyProjectileHit(null, point, normal), null);
+            Finish();
+        }
 
         private bool TryGetDamageable(Collider hitCollider, out IDamageable damageable)
         {
