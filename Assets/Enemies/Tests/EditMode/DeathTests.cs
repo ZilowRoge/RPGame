@@ -20,7 +20,7 @@ namespace RPGame.Enemies.Tests
         private GameObject enemyObject;
         private StatisticsController enemyStatistics;
         private Movement movement;
-        private Attack attack;
+        private Detection detection;
         private RPGame.Enemies.Controller controller;
         private EnemyTargetable targetable;
         private Death death;
@@ -37,11 +37,9 @@ namespace RPGame.Enemies.Tests
             enemyStatistics.ResetToConfig();
 
             enemyObject.AddComponent<NavMeshAgent>();
-            enemyObject.AddComponent<Detection>();
+            detection = enemyObject.AddComponent<Detection>();
             controller = enemyObject.AddComponent<RPGame.Enemies.Controller>();
             movement = enemyObject.GetComponent<Movement>();
-            attack = enemyObject.GetComponent<Attack>();
-            ConfigureAttack(attack, 2f, 0.1f, 10f);
             targetable = enemyObject.GetComponent<EnemyTargetable>();
             death = enemyObject.GetComponent<Death>();
             InvokeStart(death);
@@ -85,16 +83,11 @@ namespace RPGame.Enemies.Tests
         }
 
         [Test]
-        public void DeathEvent_PreventsFurtherAttacks()
+        public void DeathEvent_DisablesDetection()
         {
-            TargetFixture target = CreateDamageablePlayerTarget("PlayerTarget", new Vector3(1f, 0f, 0f));
-
             KillEnemy();
-            bool attacked = ((IEnemyAttack)attack).TryAttack(CreateSelectedTarget(target.Targetable));
 
-            Assert.IsFalse(attack.enabled);
-            Assert.IsFalse(attacked);
-            Assert.AreEqual(100f, target.Statistics.CurrentHealth);
+            Assert.IsFalse(detection.enabled);
         }
 
         [Test]
@@ -124,8 +117,23 @@ namespace RPGame.Enemies.Tests
 
             Assert.IsTrue(death.IsDead);
             Assert.IsFalse(controller.enabled);
-            Assert.IsFalse(attack.enabled);
+            Assert.IsFalse(detection.enabled);
             Assert.IsFalse(targetable.enabled);
+        }
+
+        [Test]
+        public void DeathEvent_DisablesDetectionAndClearsCurrentTarget()
+        {
+            CreateDamageablePlayerTarget("PlayerTarget", new Vector3(1f, 0f, 0f));
+            detection.RefreshDetection();
+
+            Assert.IsTrue(detection.HasTarget);
+
+            KillEnemy();
+
+            Assert.IsFalse(detection.enabled);
+            Assert.IsNull(detection.CurrentTarget);
+            Assert.IsNull(detection.CurrentTargetPoint);
         }
 
         [Test]
@@ -139,6 +147,7 @@ namespace RPGame.Enemies.Tests
             RPGame.Enemies.Controller unconfiguredController = unconfiguredEnemy.AddComponent<RPGame.Enemies.Controller>();
             Movement unconfiguredMovement = unconfiguredEnemy.GetComponent<Movement>();
             Attack unconfiguredAttack = unconfiguredEnemy.GetComponent<Attack>();
+            Detection unconfiguredDetection = unconfiguredEnemy.GetComponent<Detection>();
             EnemyTargetable unconfiguredTargetable = unconfiguredEnemy.GetComponent<EnemyTargetable>();
             Death unconfiguredDeath = unconfiguredEnemy.GetComponent<Death>();
 
@@ -147,6 +156,7 @@ namespace RPGame.Enemies.Tests
             Assert.IsFalse(unconfiguredDeath.IsDead);
             Assert.IsTrue(unconfiguredController.enabled);
             Assert.IsTrue(unconfiguredAttack.enabled);
+            Assert.IsTrue(unconfiguredDetection.enabled);
             Assert.IsTrue(unconfiguredTargetable.enabled);
             Assert.IsTrue(unconfiguredMovement.enabled);
         }
@@ -162,11 +172,24 @@ namespace RPGame.Enemies.Tests
                 .GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
                 .Any(field =>
                     field.FieldType == typeof(DamageData)
+                    || field.FieldType == typeof(Attack)
                     || field.FieldType == typeof(NavMeshAgent)
                     || field.FieldType.Namespace == "UnityEngine.AI");
 
             Assert.IsFalse(referencesForbiddenAssembly);
             Assert.IsFalse(hasForbiddenField);
+        }
+
+        [Test]
+        public void Death_StopsMovementOnDeath()
+        {
+            string source = System.IO.File.ReadAllText(System.IO.Path.Combine(
+                Application.dataPath,
+                "Enemies",
+                "Scripts",
+                "Death.cs"));
+
+            Assert.IsTrue(source.Contains("movement.Stop();", System.StringComparison.Ordinal));
         }
 
         [Test]
@@ -248,32 +271,10 @@ namespace RPGame.Enemies.Tests
             serializedController.ApplyModifiedPropertiesWithoutUndo();
         }
 
-        private static void ConfigureAttack(Attack attack, float attackRange, float attackInterval, float damageAmount)
-        {
-            SerializedObject serializedAttack = new(attack);
-            serializedAttack.FindProperty("attackRange").floatValue = attackRange;
-            serializedAttack.FindProperty("attackInterval").floatValue = attackInterval;
-
-            SerializedProperty damageProperty = serializedAttack.FindProperty("damage");
-            damageProperty.arraySize = 1;
-            SerializedProperty damageEntry = damageProperty.GetArrayElementAtIndex(0);
-            damageEntry.FindPropertyRelative("minDamage").floatValue = damageAmount;
-            damageEntry.FindPropertyRelative("maxDamage").floatValue = damageAmount;
-            damageEntry.FindPropertyRelative("damageType").enumValueIndex = (int)DamageType.Physical;
-            damageEntry.FindPropertyRelative("damageElement").enumValueIndex = (int)DamageElement.None;
-
-            serializedAttack.ApplyModifiedPropertiesWithoutUndo();
-        }
-
         private static void ClearTargetRegistry()
         {
             MethodInfo method = typeof(TargetRegistry).GetMethod("Clear", BindingFlags.Static | BindingFlags.NonPublic);
             method.Invoke(null, null);
-        }
-
-        private static SelectedTarget CreateSelectedTarget(PlayerTargetable targetable)
-        {
-            return new SelectedTarget(targetable, targetable.TargetPoint.position);
         }
 
         private readonly struct TargetFixture

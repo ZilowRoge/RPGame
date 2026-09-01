@@ -147,7 +147,8 @@ namespace RPGame.Enemies.Tests
         [Test]
         public void Tick_WhenRetreating_ChoosesDirectionAwayFromTarget()
         {
-            FakeDetection detection = CreateDetectionWithTarget(new Vector3(1f, 0f, 0f));
+            Vector3 targetPosition = new(1f, 0f, 0f);
+            FakeDetection detection = CreateDetectionWithTarget(targetPosition);
             FakeMovement movement = new();
             movement.Position = Vector3.zero;
             RangedEnemyBehaviour behaviour = CreateBehaviour(detection, movement);
@@ -155,7 +156,35 @@ namespace RPGame.Enemies.Tests
             behaviour.Tick(0.1f);
 
             Assert.Less(movement.LastDesiredPosition.x, movement.Position.x);
-            Assert.AreEqual(Vector3.left, movement.LastDesiredPosition.normalized);
+            Assert.AreEqual(Vector3.left, (movement.LastDesiredPosition - targetPosition).normalized);
+        }
+
+        [Test]
+        public void Tick_WhenRetreating_CalculatesRetreatPointRelativeToTarget()
+        {
+            Vector3 targetPosition = new(1f, 0f, 0f);
+            FakeDetection detection = CreateDetectionWithTarget(targetPosition);
+            FakeMovement movement = new();
+            movement.Position = Vector3.zero;
+            RangedEnemyBehaviour behaviour = CreateBehaviour(detection, movement);
+
+            behaviour.Tick(0.1f);
+
+            Assert.AreEqual(new Vector3(-1.5f, 0f, 0f), movement.LastDesiredPosition);
+        }
+
+        [Test]
+        public void Tick_WhenRetreating_DesiredPointUsesMinRangePlusHysteresisDistance()
+        {
+            Vector3 targetPosition = new(1f, 0f, 0f);
+            FakeDetection detection = CreateDetectionWithTarget(targetPosition);
+            FakeMovement movement = new();
+            movement.Position = Vector3.zero;
+            RangedEnemyBehaviour behaviour = CreateBehaviour(detection, movement);
+
+            behaviour.Tick(0.1f);
+
+            Assert.AreEqual(2.5f, Vector3.Distance(targetPosition, movement.LastDesiredPosition), 0.0001f);
         }
 
         [Test]

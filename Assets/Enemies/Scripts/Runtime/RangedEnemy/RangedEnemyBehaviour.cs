@@ -93,7 +93,8 @@ namespace RPGame.Enemies
                 return;
             }
 
-            Vector3 desiredPosition = movement.Position + retreatDirection.normalized * config.MinRange;
+            float desiredDistance = config.MinRange + config.RangeHysteresis;
+            Vector3 desiredPosition = targetPosition + retreatDirection.normalized * desiredDistance;
             if (!movement.TryResolvePosition(desiredPosition, out Vector3 validPosition))
             {
                 movement.Stop();

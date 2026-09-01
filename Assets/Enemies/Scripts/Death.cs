@@ -9,7 +9,7 @@ namespace RPGame.Enemies
         [SerializeField] private StatisticsController deathSource;
         [SerializeField] private Movement movement;
         [SerializeField] private Controller controller;
-        [SerializeField] private Attack attack;
+        [SerializeField] private Detection detection;
         [SerializeField] private EnemyTargetable targetable;
 
         private StatisticsController subscribedDeathSource;
@@ -43,7 +43,7 @@ namespace RPGame.Enemies
             IsDead = true;
             movement.Stop();
             controller.enabled = false;
-            attack.enabled = false;
+            detection.enabled = false;
             targetable.enabled = false;
         }
 
@@ -85,9 +85,9 @@ namespace RPGame.Enemies
                 controller = GetComponent<Controller>();
             }
 
-            if (attack == null)
+            if (detection == null)
             {
-                attack = GetComponent<Attack>();
+                detection = GetComponent<Detection>();
             }
 
             if (targetable == null)
@@ -116,9 +116,9 @@ namespace RPGame.Enemies
                 return false;
             }
 
-            if (attack == null)
+            if (detection == null)
             {
-                Debug.LogError("Missing field attack.", this);
+                Debug.LogError("Missing field detection.", this);
                 return false;
             }
 
