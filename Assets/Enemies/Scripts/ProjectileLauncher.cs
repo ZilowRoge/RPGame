@@ -8,7 +8,7 @@ namespace RPGame.Enemies
 
         public bool Launch(ProjectileLaunchData data)
         {
-            if (data.ProjectilePrefab == null || data.TargetDamageable == null)
+            if (data.ProjectilePrefab == null)
             {
                 return false;
             }
@@ -19,15 +19,48 @@ namespace RPGame.Enemies
                 ? Quaternion.LookRotation(direction.normalized)
                 : spawnPoint.rotation;
 
-            EnemyStraightProjectile projectile = Instantiate(data.ProjectilePrefab, spawnPoint.position, rotation);
+            GameObject projectileObject = Instantiate(data.ProjectilePrefab, spawnPoint.position, rotation);
+            IEnemyProjectile projectile = GetEnemyProjectile(projectileObject);
+            if (projectile == null)
+            {
+                Debug.LogError("Projectile prefab is missing an IEnemyProjectile component.", projectileObject);
+                DestroyProjectile(projectileObject);
+                return false;
+            }
+
             projectile.Initialize(
+                data.TargetPosition,
                 data.TargetDamageable,
                 data.DamageParts,
-                data.Source,
-                data.ProjectileSpeed,
-                data.ProjectileLifetime);
+                data.Source);
 
             return true;
+        }
+
+        private static void DestroyProjectile(GameObject projectileObject)
+        {
+            if (Application.isPlaying)
+            {
+                Destroy(projectileObject);
+            }
+            else
+            {
+                DestroyImmediate(projectileObject);
+            }
+        }
+
+        private static IEnemyProjectile GetEnemyProjectile(GameObject projectileObject)
+        {
+            MonoBehaviour[] behaviours = projectileObject.GetComponents<MonoBehaviour>();
+            for (int i = 0; i < behaviours.Length; i++)
+            {
+                if (behaviours[i] is IEnemyProjectile projectile)
+                {
+                    return projectile;
+                }
+            }
+
+            return null;
         }
     }
 }

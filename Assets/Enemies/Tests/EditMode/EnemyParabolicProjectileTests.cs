@@ -4,6 +4,7 @@ using System.Reflection;
 using NUnit.Framework;
 using RPGame.Combat.Projectiles;
 using RPGame.Core.Damage;
+using UnityEditor;
 using UnityEngine;
 
 namespace RPGame.Enemies.Tests
@@ -49,13 +50,20 @@ namespace RPGame.Enemies.Tests
         }
 
         [Test]
+        public void EnemyParabolicProjectile_ImplementsSharedProjectileInterface()
+        {
+            Assert.IsInstanceOf<IEnemyProjectile>(CreateProjectile(Vector3.zero));
+        }
+
+        [Test]
         public void Initialize_StartsAtStartPointAndCalculatesApex()
         {
             Vector3 start = new(2f, 1f, -1f);
             Vector3 impact = new(10f, 1f, -1f);
             EnemyParabolicProjectile projectile = CreateProjectile(start);
+            ConfigureProjectile(projectile, 10f, 4f, 1f, 1f);
 
-            projectile.Initialize(impact, CreateDamageParts(), null, 10f, 4f, 1f, 1f);
+            projectile.Initialize(impact, null, CreateDamageParts(), null);
 
             AssertVector(start, projectile.transform.position);
             AssertVector(new Vector3(6f, 5f, -1f), projectile.ApexPoint);
@@ -69,7 +77,8 @@ namespace RPGame.Enemies.Tests
             EnemyParabolicProjectile projectile = CreateProjectile(Vector3.zero);
             int eventCount = 0;
             projectile.ApexReached += _ => eventCount++;
-            projectile.Initialize(new Vector3(10f, 0f, 0f), CreateDamageParts(), null, 10f, 4f, 1f, 1f);
+            ConfigureProjectile(projectile, 10f, 4f, 1f, 1f);
+            projectile.Initialize(new Vector3(10f, 0f, 0f), null, CreateDamageParts(), null);
 
             projectile.Tick(1f);
             projectile.Tick(0f);
@@ -86,7 +95,8 @@ namespace RPGame.Enemies.Tests
         public void Tick_AscentSpeedIncreasesThenFallsToZeroAtApex()
         {
             EnemyParabolicProjectile projectile = CreateProjectile(Vector3.zero);
-            projectile.Initialize(new Vector3(10f, 0f, 0f), CreateDamageParts(), null, 10f, 4f, 1f, 1f);
+            ConfigureProjectile(projectile, 10f, 4f, 1f, 1f);
+            projectile.Initialize(new Vector3(10f, 0f, 0f), null, CreateDamageParts(), null);
 
             projectile.Tick(0.25f);
             float earlySpeed = projectile.CurrentSpeed;
@@ -105,7 +115,8 @@ namespace RPGame.Enemies.Tests
         public void Tick_DescentStartsAfterApexAndAccelerates()
         {
             EnemyParabolicProjectile projectile = CreateProjectile(Vector3.zero);
-            projectile.Initialize(new Vector3(10f, 0f, 0f), CreateDamageParts(), null, 10f, 4f, 1f, 1f);
+            ConfigureProjectile(projectile, 10f, 4f, 1f, 1f);
+            projectile.Initialize(new Vector3(10f, 0f, 0f), null, CreateDamageParts(), null);
 
             projectile.Tick(1f);
             projectile.Tick(0.25f);
@@ -122,7 +133,8 @@ namespace RPGame.Enemies.Tests
         {
             Vector3 impact = new(10f, 0f, 0f);
             EnemyParabolicProjectile projectile = CreateProjectile(Vector3.zero);
-            projectile.Initialize(impact, CreateDamageParts(), null, 10f, 4f, 1f, 1f);
+            ConfigureProjectile(projectile, 10f, 4f, 1f, 1f);
+            projectile.Initialize(impact, null, CreateDamageParts(), null);
 
             projectile.Tick(1f);
             projectile.Tick(1f);
@@ -141,8 +153,10 @@ namespace RPGame.Enemies.Tests
             Vector3 impact = new(10f, 0f, 0f);
             EnemyParabolicProjectile singleStep = CreateProjectile(Vector3.zero);
             EnemyParabolicProjectile multipleSteps = CreateProjectile(Vector3.zero);
-            singleStep.Initialize(impact, CreateDamageParts(), null, 10f, 4f, 1f, 1f);
-            multipleSteps.Initialize(impact, CreateDamageParts(), null, 10f, 4f, 1f, 1f);
+            ConfigureProjectile(singleStep, 10f, 4f, 1f, 1f);
+            ConfigureProjectile(multipleSteps, 10f, 4f, 1f, 1f);
+            singleStep.Initialize(impact, null, CreateDamageParts(), null);
+            multipleSteps.Initialize(impact, null, CreateDamageParts(), null);
 
             singleStep.Tick(0.75f);
             multipleSteps.Tick(0.25f);
@@ -171,8 +185,10 @@ namespace RPGame.Enemies.Tests
             };
 
             splitStep.ApexReached += _ => splitStepApexCount++;
-            singleStep.Initialize(impact, CreateDamageParts(), null, 10f, 4f, 1f, 1f);
-            splitStep.Initialize(impact, CreateDamageParts(), null, 10f, 4f, 1f, 1f);
+            ConfigureProjectile(singleStep, 10f, 4f, 1f, 1f);
+            ConfigureProjectile(splitStep, 10f, 4f, 1f, 1f);
+            singleStep.Initialize(impact, null, CreateDamageParts(), null);
+            splitStep.Initialize(impact, null, CreateDamageParts(), null);
 
             singleStep.Tick(1.25f);
             splitStep.Tick(0.5f);
@@ -196,7 +212,8 @@ namespace RPGame.Enemies.Tests
         {
             EnemyParabolicProjectile projectile = CreateProjectile(Vector3.zero);
             GameObject wall = CreateEnvironment("Wall", new Vector3(5f, 3.9f, 0f), new Vector3(1f, 1f, 1f));
-            projectile.Initialize(new Vector3(10f, 0f, 0f), CreateDamageParts(), null, 10f, 4f, 1f, 1f);
+            ConfigureProjectile(projectile, 10f, 4f, 1f, 1f);
+            projectile.Initialize(new Vector3(10f, 0f, 0f), null, CreateDamageParts(), null);
             Physics.SyncTransforms();
 
             projectile.Tick(1f);
@@ -212,7 +229,8 @@ namespace RPGame.Enemies.Tests
         public void Tick_LifetimeStillFinishesProjectile()
         {
             EnemyParabolicProjectile projectile = CreateProjectile(Vector3.zero);
-            projectile.Initialize(new Vector3(10f, 0f, 0f), CreateDamageParts(), null, 0.5f, 4f, 1f, 1f);
+            ConfigureProjectile(projectile, 0.5f, 4f, 1f, 1f);
+            projectile.Initialize(new Vector3(10f, 0f, 0f), null, CreateDamageParts(), null);
 
             projectile.Tick(0.5f);
 
@@ -239,6 +257,21 @@ namespace RPGame.Enemies.Tests
             projectileObject.transform.position = position;
             projectileObject.AddComponent<ParabolicProjectileMover>();
             return projectileObject.AddComponent<EnemyParabolicProjectile>();
+        }
+
+        private static void ConfigureProjectile(
+            EnemyParabolicProjectile projectile,
+            float projectileLifetime,
+            float arcHeight,
+            float ascentDuration,
+            float descentDuration)
+        {
+            SerializedObject serializedProjectile = new(projectile);
+            serializedProjectile.FindProperty("projectileLifetime").floatValue = projectileLifetime;
+            serializedProjectile.FindProperty("arcHeight").floatValue = arcHeight;
+            serializedProjectile.FindProperty("ascentDuration").floatValue = ascentDuration;
+            serializedProjectile.FindProperty("descentDuration").floatValue = descentDuration;
+            serializedProjectile.ApplyModifiedPropertiesWithoutUndo();
         }
 
         private GameObject CreateEnvironment(string objectName, Vector3 position, Vector3 scale)

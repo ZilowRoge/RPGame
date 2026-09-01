@@ -88,6 +88,35 @@ namespace RPGame.Enemies.Tests
             }
         }
 
+        [Test]
+        public void ProjectileAttackConfigs_DoNotContainProjectileMovementData()
+        {
+            Type[] configTypes =
+            {
+                typeof(RangedAttackConfig),
+                typeof(StraightProjectileAttackConfig),
+                typeof(ParabolicProjectileAttackConfig)
+            };
+
+            string[] forbiddenFieldNames =
+            {
+                "projectileSpeed",
+                "projectileLifetime",
+                "arcHeight",
+                "ascentDuration",
+                "descentDuration"
+            };
+
+            foreach (Type configType in configTypes)
+            {
+                FieldInfo[] fields = configType.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+                foreach (string forbiddenFieldName in forbiddenFieldNames)
+                {
+                    Assert.IsFalse(fields.Any(field => field.Name == forbiddenFieldName), configType.Name);
+                }
+            }
+        }
+
         private T CreateAsset<T>() where T : ScriptableObject
         {
             T asset = ScriptableObject.CreateInstance<T>();

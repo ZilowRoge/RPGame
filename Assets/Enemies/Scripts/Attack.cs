@@ -8,6 +8,7 @@ namespace RPGame.Enemies
         [SerializeField] private Config config;
         [SerializeField] private AttackType attackType = AttackType.Melee;
         [SerializeField] private LineOfSight lineOfSight;
+        [SerializeField] private GroundProjection groundProjection;
         [SerializeField] private ProjectileLauncher projectileLauncher;
 
         private IEnemyAttack runtimeAttack;
@@ -82,6 +83,13 @@ namespace RPGame.Enemies
                     GetDamageable,
                     () => gameObject),
 
+                AttackType.ParabolicProjectile => new ParabolicProjectileAttack(
+                    config.GetAttack<ParabolicProjectileAttackConfig>(AttackType.ParabolicProjectile),
+                    GetLineOfSight(),
+                    GetGroundProjection(),
+                    GetProjectileLauncher(),
+                    () => gameObject),
+
                 _ => throw new System.InvalidOperationException($"Unsupported attack type '{attackType}'.")
             };
         }
@@ -121,6 +129,21 @@ namespace RPGame.Enemies
             }
 
             return lineOfSight;
+        }
+
+        private IEnemyGroundProjection GetGroundProjection()
+        {
+            if (groundProjection == null)
+            {
+                groundProjection = GetComponent<GroundProjection>();
+            }
+
+            if (groundProjection == null)
+            {
+                throw new System.InvalidOperationException("Missing field groundProjection.");
+            }
+
+            return groundProjection;
         }
 
         private IProjectileLauncher GetProjectileLauncher()

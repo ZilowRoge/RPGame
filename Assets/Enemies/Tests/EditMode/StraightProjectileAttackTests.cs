@@ -46,8 +46,6 @@ namespace RPGame.Enemies.Tests
 
             Assert.IsTrue(attacked);
             Assert.AreEqual(1, launcher.LaunchCount);
-            Assert.AreEqual(8f, launcher.LastLaunchData.ProjectileSpeed);
-            Assert.AreEqual(5f, launcher.LastLaunchData.ProjectileLifetime);
         }
 
         [Test]
@@ -119,7 +117,7 @@ namespace RPGame.Enemies.Tests
 
             attack.TryAttack(CreateSelectedTarget(Vector3.one));
 
-            Assert.AreSame(prefab, launcher.LastLaunchData.ProjectilePrefab);
+            Assert.AreSame(prefab.gameObject, launcher.LastLaunchData.ProjectilePrefab);
         }
 
         private StraightProjectileAttack CreateAttack(
@@ -133,7 +131,7 @@ namespace RPGame.Enemies.Tests
             prefab = CreateProjectilePrefab();
 
             return new StraightProjectileAttack(
-                CreateStraightConfig(attackInterval, 10f, 8f, 5f, prefab),
+                CreateStraightConfig(attackInterval, 10f, prefab),
                 new FakeLineOfSight(hasLineOfSight),
                 launcher,
                 _ => damageable,
@@ -143,18 +141,14 @@ namespace RPGame.Enemies.Tests
         private StraightProjectileAttackConfig CreateStraightConfig(
             float attackInterval,
             float damageAmount,
-            float projectileSpeed,
-            float projectileLifetime,
             EnemyStraightProjectile projectilePrefab)
         {
             StraightProjectileAttackConfig config = ScriptableObject.CreateInstance<StraightProjectileAttackConfig>();
             createdAssets.Add(config);
 
             SerializedObject serializedConfig = new(config);
-            serializedConfig.FindProperty("projectilePrefab").objectReferenceValue = projectilePrefab;
+            serializedConfig.FindProperty("projectilePrefab").objectReferenceValue = projectilePrefab.gameObject;
             serializedConfig.FindProperty("attackInterval").floatValue = attackInterval;
-            serializedConfig.FindProperty("projectileSpeed").floatValue = projectileSpeed;
-            serializedConfig.FindProperty("projectileLifetime").floatValue = projectileLifetime;
             SetDamage(serializedConfig, damageAmount);
             serializedConfig.ApplyModifiedPropertiesWithoutUndo();
             return config;

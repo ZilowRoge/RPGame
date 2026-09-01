@@ -7,8 +7,13 @@ using UnityEngine;
 namespace RPGame.Enemies
 {
     [RequireComponent(typeof(ParabolicProjectileMover))]
-    public sealed class EnemyParabolicProjectile : EnemyProjectile
+    public sealed class EnemyParabolicProjectile : EnemyProjectile, IEnemyProjectile
     {
+        [SerializeField] private float projectileLifetime = 5f;
+        [SerializeField] private float arcHeight = 3f;
+        [SerializeField] private float ascentDuration = 0.75f;
+        [SerializeField] private float descentDuration = 0.5f;
+
         private ParabolicProjectileMover mover;
         private bool trajectoryCompleted;
 
@@ -29,13 +34,10 @@ namespace RPGame.Enemies
         }
 
         public void Initialize(
-            Vector3 impactPoint,
+            Vector3 targetPosition,
+            IDamageable targetDamageable,
             IReadOnlyList<PartialDamage> damageParts,
-            GameObject source,
-            float projectileLifetime,
-            float arcHeight,
-            float ascentDuration,
-            float descentDuration)
+            GameObject source)
         {
             InitializeProjectile(damageParts, source, projectileLifetime);
             trajectoryCompleted = false;
@@ -47,7 +49,7 @@ namespace RPGame.Enemies
             mover.ApexReached += OnMoverApexReached;
             mover.InitializeTrajectory(
                 transform.position,
-                impactPoint,
+                targetPosition,
                 arcHeight,
                 ascentDuration,
                 descentDuration);
@@ -87,6 +89,14 @@ namespace RPGame.Enemies
         {
             ApexReachedCount++;
             ApexReached?.Invoke(this);
+        }
+
+        private void OnValidate()
+        {
+            projectileLifetime = Mathf.Max(0f, projectileLifetime);
+            arcHeight = Mathf.Max(0f, arcHeight);
+            ascentDuration = Mathf.Max(0.001f, ascentDuration);
+            descentDuration = Mathf.Max(0.001f, descentDuration);
         }
     }
 }

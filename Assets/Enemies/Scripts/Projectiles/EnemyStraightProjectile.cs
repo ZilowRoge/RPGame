@@ -5,37 +5,36 @@ using UnityEngine;
 namespace RPGame.Enemies
 {
     [RequireComponent(typeof(StraightProjectileMover))]
-    public sealed class EnemyStraightProjectile : EnemyProjectile, IProjectileMovementSource
+    public sealed class EnemyStraightProjectile : EnemyProjectile, IEnemyProjectile, IProjectileMovementSource
     {
+        [SerializeField] private float projectileSpeed = 8f;
+        [SerializeField] private float projectileLifetime = 5f;
+
         private StraightProjectileMover mover;
         private IDamageable targetDamageable;
-        private float currentSpeed;
 
-        public float CurrentSpeed => currentSpeed;
+        public float CurrentSpeed => projectileSpeed;
 
-        private void Awake()
+        private void Start()
         {
-            mover = EnsureMover();
+            CacheMover();
         }
 
         public void Initialize(
+            Vector3 targetPosition,
             IDamageable targetDamageable,
             System.Collections.Generic.IReadOnlyList<PartialDamage> damageParts,
-            GameObject source,
-            float projectileSpeed,
-            float projectileLifetime)
+            GameObject source)
         {
             this.targetDamageable = targetDamageable;
-            currentSpeed = projectileSpeed;
             InitializeProjectile(damageParts, source, projectileLifetime);
 
-            mover = EnsureMover();
+            CacheMover();
             mover.Initialize(this);
         }
 
         protected override void Move(float deltaTime)
         {
-            mover = EnsureMover();
             mover.Tick(deltaTime);
         }
 
@@ -47,11 +46,20 @@ namespace RPGame.Enemies
             }
         }
 
-        private StraightProjectileMover EnsureMover()
+        private void CacheMover()
         {
-            return mover != null
-                ? mover
-                : GetComponent<StraightProjectileMover>() ?? gameObject.AddComponent<StraightProjectileMover>();
+            if (mover != null)
+            {
+                return;
+            }
+
+            mover = GetComponent<StraightProjectileMover>();
+        }
+
+        private void OnValidate()
+        {
+            projectileSpeed = Mathf.Max(0f, projectileSpeed);
+            projectileLifetime = Mathf.Max(0f, projectileLifetime);
         }
     }
 }

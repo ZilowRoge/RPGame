@@ -52,9 +52,7 @@ namespace RPGame.Enemies
                 target.Position,
                 targetDamageable,
                 DamageRangeRoller.Roll(config.Damage),
-                sourceProvider?.Invoke(),
-                config.ProjectileSpeed,
-                config.ProjectileLifetime);
+                sourceProvider?.Invoke());
 
             if (!projectileLauncher.Launch(launchData))
             {
@@ -70,6 +68,7 @@ namespace RPGame.Enemies
             return remainingCooldown <= 0f
                 && target.IsValid
                 && targetDamageable != null
+                && config != null
                 && config.ProjectilePrefab != null
                 && lineOfSight != null
                 && lineOfSight.HasLineOfSight(target.Position)

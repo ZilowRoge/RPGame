@@ -4,6 +4,7 @@ using System.Reflection;
 using NUnit.Framework;
 using RPGame.Combat.Projectiles;
 using RPGame.Core.Damage;
+using UnityEditor;
 using UnityEngine;
 
 namespace RPGame.Enemies.Tests
@@ -37,11 +38,18 @@ namespace RPGame.Enemies.Tests
         }
 
         [Test]
+        public void EnemyStraightProjectile_ImplementsSharedProjectileInterface()
+        {
+            Assert.IsInstanceOf<IEnemyProjectile>(CreateProjectile(Vector3.zero, Quaternion.identity));
+        }
+
+        [Test]
         public void Tick_MovesWithConfiguredSpeed()
         {
             EnemyStraightProjectile projectile = CreateProjectile(Vector3.zero, Quaternion.identity);
+            ConfigureProjectile(projectile, 4f, 5f);
             TestDamageable target = CreateDamageableTarget("Target", new Vector3(10f, 0f, 0f));
-            projectile.Initialize(target, CreateDamageParts(10f), null, 4f, 5f);
+            projectile.Initialize(target.transform.position, target, CreateDamageParts(10f), null);
 
             projectile.Tick(0.5f);
 
@@ -52,8 +60,9 @@ namespace RPGame.Enemies.Tests
         public void Tick_WhenLifetimeExpires_FinishesProjectile()
         {
             EnemyStraightProjectile projectile = CreateProjectile(Vector3.zero, Quaternion.identity);
+            ConfigureProjectile(projectile, 4f, 0.5f);
             TestDamageable target = CreateDamageableTarget("Target", Vector3.one);
-            projectile.Initialize(target, CreateDamageParts(10f), null, 4f, 0.5f);
+            projectile.Initialize(target.transform.position, target, CreateDamageParts(10f), null);
 
             projectile.Tick(0.5f);
 
@@ -64,9 +73,10 @@ namespace RPGame.Enemies.Tests
         public void Tick_UsesSweepCollisionBetweenFrames()
         {
             EnemyStraightProjectile projectile = CreateProjectile(Vector3.zero, Quaternion.identity);
+            ConfigureProjectile(projectile, 10f, 5f);
             TestDamageable target = CreateDamageableTarget("Target", new Vector3(0f, 0f, 10f));
             CreateEnvironment("Wall", new Vector3(0f, 0f, 2.5f));
-            projectile.Initialize(target, CreateDamageParts(10f), null, 10f, 5f);
+            projectile.Initialize(target.transform.position, target, CreateDamageParts(10f), null);
             Physics.SyncTransforms();
 
             projectile.Tick(0.5f);
@@ -80,7 +90,7 @@ namespace RPGame.Enemies.Tests
         {
             EnemyStraightProjectile projectile = CreateProjectile(Vector3.zero, Quaternion.identity);
             TestDamageable target = CreateDamageableTarget("Target", Vector3.one);
-            projectile.Initialize(target, CreateDamageParts(10f), null, 4f, 5f);
+            projectile.Initialize(target.transform.position, target, CreateDamageParts(10f), null);
 
             projectile.HandleHit(target.GetComponent<Collider>());
 
@@ -95,7 +105,7 @@ namespace RPGame.Enemies.Tests
             EnemyStraightProjectile projectile = CreateProjectile(Vector3.zero, Quaternion.identity);
             TestDamageable target = CreateDamageableTarget("Target", Vector3.one);
             Collider environmentCollider = CreateEnvironment("Wall", Vector3.one).GetComponent<Collider>();
-            projectile.Initialize(target, CreateDamageParts(10f), null, 4f, 5f);
+            projectile.Initialize(target.transform.position, target, CreateDamageParts(10f), null);
 
             projectile.HandleHit(environmentCollider);
 
@@ -109,7 +119,7 @@ namespace RPGame.Enemies.Tests
             EnemyStraightProjectile projectile = CreateProjectile(Vector3.zero, Quaternion.identity);
             TestDamageable target = CreateDamageableTarget("Target", Vector3.one);
             TestDamageable other = CreateDamageableTarget("Other", Vector3.one);
-            projectile.Initialize(target, CreateDamageParts(10f), null, 4f, 5f);
+            projectile.Initialize(target.transform.position, target, CreateDamageParts(10f), null);
 
             projectile.HandleHit(other.GetComponent<Collider>());
 
@@ -124,7 +134,7 @@ namespace RPGame.Enemies.Tests
             EnemyStraightProjectile projectile = CreateProjectile(Vector3.zero, Quaternion.identity);
             TestDamageable target = CreateDamageableTarget("Target", Vector3.one);
             GameObject source = CreateObject("Source");
-            projectile.Initialize(target, CreateDamageParts(10f), source, 4f, 5f);
+            projectile.Initialize(target.transform.position, target, CreateDamageParts(10f), source);
 
             projectile.HandleHit(target.GetComponent<Collider>());
 
@@ -139,7 +149,7 @@ namespace RPGame.Enemies.Tests
             EnemyStraightProjectile projectile = CreateProjectile(Vector3.zero, Quaternion.identity);
             TestDamageable target = CreateDamageableTarget("Target", Vector3.one);
             GameObject source = CreateEnvironment("Source", Vector3.one);
-            projectile.Initialize(target, CreateDamageParts(10f), source, 4f, 5f);
+            projectile.Initialize(target.transform.position, target, CreateDamageParts(10f), source);
 
             projectile.HandleHit(source.GetComponent<Collider>());
 
@@ -153,7 +163,7 @@ namespace RPGame.Enemies.Tests
             EnemyStraightProjectile projectile = CreateProjectile(Vector3.zero, Quaternion.identity);
             TestDamageable target = CreateDamageableTarget("Target", Vector3.one);
             Collider targetCollider = target.GetComponent<Collider>();
-            projectile.Initialize(target, CreateDamageParts(10f), null, 4f, 5f);
+            projectile.Initialize(target.transform.position, target, CreateDamageParts(10f), null);
 
             projectile.HandleHit(targetCollider);
             projectile.HandleHit(targetCollider);
@@ -202,6 +212,17 @@ namespace RPGame.Enemies.Tests
             projectileObject.transform.SetPositionAndRotation(position, rotation);
             projectileObject.AddComponent<StraightProjectileMover>();
             return projectileObject.AddComponent<EnemyStraightProjectile>();
+        }
+
+        private static void ConfigureProjectile(
+            EnemyStraightProjectile projectile,
+            float projectileSpeed,
+            float projectileLifetime)
+        {
+            SerializedObject serializedProjectile = new(projectile);
+            serializedProjectile.FindProperty("projectileSpeed").floatValue = projectileSpeed;
+            serializedProjectile.FindProperty("projectileLifetime").floatValue = projectileLifetime;
+            serializedProjectile.ApplyModifiedPropertiesWithoutUndo();
         }
 
         private TestDamageable CreateDamageableTarget(string objectName, Vector3 position)
