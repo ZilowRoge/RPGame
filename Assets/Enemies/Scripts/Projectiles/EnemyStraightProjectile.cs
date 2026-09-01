@@ -15,7 +15,7 @@ namespace RPGame.Enemies
 
         private void Awake()
         {
-            mover = GetComponent<StraightProjectileMover>();
+            mover = EnsureMover();
         }
 
         public void Initialize(
@@ -29,12 +29,13 @@ namespace RPGame.Enemies
             currentSpeed = projectileSpeed;
             InitializeProjectile(damageParts, source, projectileLifetime);
 
-            mover ??= GetComponent<StraightProjectileMover>();
+            mover = EnsureMover();
             mover.Initialize(this);
         }
 
         protected override void Move(float deltaTime)
         {
+            mover = EnsureMover();
             mover.Tick(deltaTime);
         }
 
@@ -44,6 +45,13 @@ namespace RPGame.Enemies
             {
                 damageable.ApplyDamage(new DamageData(DamageParts, Source));
             }
+        }
+
+        private StraightProjectileMover EnsureMover()
+        {
+            return mover != null
+                ? mover
+                : GetComponent<StraightProjectileMover>() ?? gameObject.AddComponent<StraightProjectileMover>();
         }
     }
 }
