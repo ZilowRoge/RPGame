@@ -295,7 +295,7 @@ namespace RPGame.Enemies.Tests
         {
             EnemyParabolicProjectile projectile = CreateProjectile(Vector3.zero);
             GameObject telegraphPrefab = CreateObject("TelegraphPrefab");
-            GameObject wall = CreateEnvironment("Wall", new Vector3(7.5f, 3f, 0f), new Vector3(1f, 4f, 1f));
+            GameObject wall = CreateEnvironment("Wall", new Vector3(5.75f, 3.9f, 0f), new Vector3(0.5f, 2f, 1f));
             ConfigureProjectile(projectile, 10f, 4f, 1f, 1f, telegraphPrefab, 2f);
             projectile.Initialize(new Vector3(10f, 0f, 0f), null, CreateDamageParts(), null);
             Physics.SyncTransforms();
@@ -372,6 +372,166 @@ namespace RPGame.Enemies.Tests
         }
 
         [Test]
+        public void Tick_NormalImpactAppliesAoEAtPlannedImpactPoint()
+        {
+            Vector3 impact = new(10f, 0f, 0f);
+            EnemyParabolicProjectile projectile = CreateProjectile(Vector3.zero);
+            TestDamageable target = CreateDamageable("Target", impact + new Vector3(0.5f, 0f, 0f));
+            ConfigureProjectile(projectile, 10f, 4f, 1f, 1f, null, 2f);
+            projectile.Initialize(impact, null, CreateDamageParts(7f), null);
+            Physics.SyncTransforms();
+
+            projectile.Tick(1f);
+            projectile.Tick(1f);
+
+            Assert.IsTrue(projectile.IsFinished);
+            Assert.AreEqual(1, target.ApplyDamageCount);
+            Assert.AreEqual(7f, target.LastDamageData.Amount);
+            AssertVector(impact, projectile.LastImpact.Point);
+        }
+
+        [Test]
+        public void HandleHit_EarlyCollisionAppliesAoEAtRealHitPoint()
+        {
+            EnemyParabolicProjectile projectile = CreateProjectile(Vector3.zero);
+            GameObject wall = CreateEnvironment("Wall", new Vector3(2f, 0f, 0f), Vector3.one);
+            TestDamageable nearRealHit = CreateDamageable("NearRealHit", new Vector3(2.4f, 0f, 0f));
+            TestDamageable nearPlannedImpact = CreateDamageable("NearPlannedImpact", new Vector3(10f, 0f, 0f));
+            ConfigureProjectile(projectile, 10f, 4f, 1f, 1f, null, 1f);
+            projectile.Initialize(new Vector3(10f, 0f, 0f), null, CreateDamageParts(), null);
+            projectile.transform.position = wall.transform.position;
+            Physics.SyncTransforms();
+
+            projectile.HandleHit(wall.GetComponent<Collider>());
+
+            Assert.IsTrue(projectile.IsFinished);
+            Assert.AreEqual(1, nearRealHit.ApplyDamageCount);
+            Assert.AreEqual(0, nearPlannedImpact.ApplyDamageCount);
+            AssertVector(wall.transform.position, projectile.LastImpact.Point);
+        }
+
+        [Test]
+        public void Tick_TargetOutsideAoERadiusDoesNotReceiveDamage()
+        {
+            EnemyParabolicProjectile projectile = CreateProjectile(Vector3.zero);
+            TestDamageable target = CreateDamageable("Target", new Vector3(12.5f, 0f, 0f));
+            ConfigureProjectile(projectile, 10f, 4f, 1f, 1f, null, 1f);
+            projectile.Initialize(new Vector3(10f, 0f, 0f), null, CreateDamageParts(), null);
+            Physics.SyncTransforms();
+
+            projectile.Tick(1f);
+            projectile.Tick(1f);
+
+            Assert.AreEqual(0, target.ApplyDamageCount);
+        }
+
+        [Test]
+        public void Tick_AoEDamagesMultipleDamageablesWithoutFactionFiltering()
+        {
+            EnemyParabolicProjectile projectile = CreateProjectile(Vector3.zero);
+            TestDamageable player = CreateDamageable("Player", new Vector3(9.5f, 0f, 0f));
+            TestDamageable enemy = CreateDamageable("Enemy", new Vector3(10.5f, 0f, 0f));
+            ConfigureProjectile(projectile, 10f, 4f, 1f, 1f, null, 2f);
+            projectile.Initialize(new Vector3(10f, 0f, 0f), null, CreateDamageParts(), null);
+            Physics.SyncTransforms();
+
+            projectile.Tick(1f);
+            projectile.Tick(1f);
+
+            Assert.AreEqual(1, player.ApplyDamageCount);
+            Assert.AreEqual(1, enemy.ApplyDamageCount);
+        }
+
+        [Test]
+        public void Tick_AoEDoesNotDamageSource()
+        {
+            GameObject source = CreateDamageable("Source", new Vector3(10f, 0f, 0f)).gameObject;
+            EnemyParabolicProjectile projectile = CreateProjectile(Vector3.zero);
+            TestDamageable other = CreateDamageable("Other", new Vector3(10.5f, 0f, 0f));
+            ConfigureProjectile(projectile, 10f, 4f, 1f, 1f, null, 2f);
+            projectile.Initialize(new Vector3(10f, 0f, 0f), null, CreateDamageParts(), source);
+            Physics.SyncTransforms();
+
+            projectile.Tick(1f);
+            projectile.Tick(1f);
+
+            Assert.AreEqual(0, source.GetComponent<TestDamageable>().ApplyDamageCount);
+            Assert.AreEqual(1, other.ApplyDamageCount);
+        }
+
+        [Test]
+        public void Tick_TargetWithMultipleCollidersReceivesAoEDamageOnce()
+        {
+            EnemyParabolicProjectile projectile = CreateProjectile(Vector3.zero);
+            TestDamageable target = CreateDamageableWithChildCollider("Target", new Vector3(10f, 0f, 0f));
+            ConfigureProjectile(projectile, 10f, 4f, 1f, 1f, null, 2f);
+            projectile.Initialize(new Vector3(10f, 0f, 0f), null, CreateDamageParts(), null);
+            Physics.SyncTransforms();
+
+            projectile.Tick(1f);
+            projectile.Tick(1f);
+
+            Assert.AreEqual(1, target.ApplyDamageCount);
+        }
+
+        [Test]
+        public void Tick_ObstacleBetweenImpactAndTargetBlocksAoEDamage()
+        {
+            EnemyParabolicProjectile projectile = CreateProjectile(Vector3.zero);
+            TestDamageable blocked = CreateDamageable("Blocked", new Vector3(13f, 0f, 0f));
+            TestDamageable visible = CreateDamageable("Visible", new Vector3(10f, 0f, 1f));
+            CreateEnvironment("Wall", new Vector3(11.5f, 0f, 0f), new Vector3(0.2f, 3f, 3f));
+            ConfigureProjectile(projectile, 10f, 4f, 1f, 1f, null, 4f, LayerMask.GetMask("Default"));
+            projectile.Initialize(new Vector3(10f, 0f, 0f), null, CreateDamageParts(), null);
+            Physics.SyncTransforms();
+
+            projectile.Tick(1f);
+            projectile.Tick(1f);
+
+            Assert.AreEqual(0, blocked.ApplyDamageCount);
+            Assert.AreEqual(1, visible.ApplyDamageCount);
+        }
+
+        [Test]
+        public void Tick_AoEDamageUsesPreparedDamageParts()
+        {
+            EnemyParabolicProjectile projectile = CreateProjectile(Vector3.zero);
+            TestDamageable target = CreateDamageable("Target", new Vector3(10f, 0f, 0f));
+            IReadOnlyList<PartialDamage> damageParts = new[]
+            {
+                new PartialDamage(3f, DamageType.Physical, DamageElement.None),
+                new PartialDamage(4f, DamageType.Magical, DamageElement.Fire)
+            };
+            ConfigureProjectile(projectile, 10f, 4f, 1f, 1f, null, 2f);
+            projectile.Initialize(new Vector3(10f, 0f, 0f), null, damageParts, null);
+            Physics.SyncTransforms();
+
+            projectile.Tick(1f);
+            projectile.Tick(1f);
+
+            Assert.AreEqual(1, target.ApplyDamageCount);
+            Assert.AreEqual(7f, target.LastDamageData.Amount);
+            Assert.AreEqual(2, target.LastDamageData.Parts.Count);
+            Assert.AreEqual(DamageElement.Fire, target.LastDamageData.Parts[1].DamageElement);
+        }
+
+        [Test]
+        public void Tick_LifetimeExpiryDoesNotApplyAoEDamage()
+        {
+            EnemyParabolicProjectile projectile = CreateProjectile(Vector3.zero);
+            TestDamageable target = CreateDamageable("Target", new Vector3(0.5f, 0f, 0f));
+            ConfigureProjectile(projectile, 0.5f, 4f, 1f, 1f, null, 2f);
+            projectile.Initialize(new Vector3(10f, 0f, 0f), null, CreateDamageParts(), null);
+            Physics.SyncTransforms();
+
+            projectile.Tick(0.5f);
+
+            Assert.IsTrue(projectile.IsFinished);
+            Assert.AreEqual(0, target.ApplyDamageCount);
+            Assert.IsFalse(projectile.HasImpact);
+        }
+
+        [Test]
         public void StraightProjectileMover_StillUsesConfiguredSpeed()
         {
             GameObject projectileObject = CreateObject("StraightProjectile");
@@ -411,13 +571,36 @@ namespace RPGame.Enemies.Tests
             GameObject telegraphPrefab,
             float aoeRadius)
         {
+            ConfigureProjectile(
+                projectile,
+                projectileLifetime,
+                arcHeight,
+                ascentDuration,
+                descentDuration,
+                telegraphPrefab,
+                aoeRadius,
+                0);
+        }
+
+        private static void ConfigureProjectile(
+            EnemyParabolicProjectile projectile,
+            float projectileLifetime,
+            float arcHeight,
+            float ascentDuration,
+            float descentDuration,
+            GameObject telegraphPrefab,
+            float aoeRadius,
+            LayerMask aoeObstacleMask)
+        {
             SerializedObject serializedProjectile = new(projectile);
+            serializedProjectile.FindProperty("hitLayers").intValue = LayerMask.GetMask("Default");
             serializedProjectile.FindProperty("projectileLifetime").floatValue = projectileLifetime;
             serializedProjectile.FindProperty("arcHeight").floatValue = arcHeight;
             serializedProjectile.FindProperty("ascentDuration").floatValue = ascentDuration;
             serializedProjectile.FindProperty("descentDuration").floatValue = descentDuration;
             serializedProjectile.FindProperty("telegraphPrefab").objectReferenceValue = telegraphPrefab;
             serializedProjectile.FindProperty("aoeRadius").floatValue = aoeRadius;
+            serializedProjectile.FindProperty("aoeObstacleMask").intValue = aoeObstacleMask.value;
             serializedProjectile.ApplyModifiedPropertiesWithoutUndo();
         }
 
@@ -431,6 +614,37 @@ namespace RPGame.Enemies.Tests
             return gameObject;
         }
 
+        private TestDamageable CreateDamageable(string objectName, Vector3 position)
+        {
+            GameObject gameObject = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            gameObject.name = objectName;
+            gameObject.layer = LayerMask.NameToLayer("Ignore Raycast");
+            gameObject.transform.SetPositionAndRotation(position, Quaternion.identity);
+            createdObjects.Add(gameObject);
+            return gameObject.AddComponent<TestDamageable>();
+        }
+
+        private TestDamageable CreateDamageableWithChildCollider(string objectName, Vector3 position)
+        {
+            GameObject parent = CreateObject(objectName);
+            parent.layer = LayerMask.NameToLayer("Ignore Raycast");
+            parent.transform.position = position;
+            TestDamageable damageable = parent.AddComponent<TestDamageable>();
+
+            GameObject child = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            child.name = objectName + "ChildCollider";
+            child.layer = LayerMask.NameToLayer("Ignore Raycast");
+            child.transform.SetParent(parent.transform);
+            child.transform.localPosition = new Vector3(0.25f, 0f, 0f);
+
+            GameObject secondChild = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            secondChild.name = objectName + "SecondChildCollider";
+            secondChild.layer = LayerMask.NameToLayer("Ignore Raycast");
+            secondChild.transform.SetParent(parent.transform);
+            secondChild.transform.localPosition = new Vector3(-0.25f, 0f, 0f);
+            return damageable;
+        }
+
         private GameObject CreateObject(string objectName)
         {
             GameObject gameObject = new(objectName);
@@ -440,9 +654,14 @@ namespace RPGame.Enemies.Tests
 
         private static IReadOnlyList<PartialDamage> CreateDamageParts()
         {
+            return CreateDamageParts(1f);
+        }
+
+        private static IReadOnlyList<PartialDamage> CreateDamageParts(float amount)
+        {
             return new[]
             {
-                new PartialDamage(1f, DamageType.Physical, DamageElement.None)
+                new PartialDamage(amount, DamageType.Physical, DamageElement.None)
             };
         }
 
@@ -461,6 +680,20 @@ namespace RPGame.Enemies.Tests
             }
 
             public float CurrentSpeed { get; }
+        }
+
+        public sealed class TestDamageable : MonoBehaviour, IDamageable
+        {
+            public int ApplyDamageCount { get; private set; }
+            public DamageData LastDamageData { get; private set; }
+            public bool CanReceiveDamage => true;
+
+            public DamageResult ApplyDamage(DamageData data)
+            {
+                ApplyDamageCount++;
+                LastDamageData = data;
+                return DamageResult.Applied(data, data.Amount, 100f, 100f - data.Amount, false);
+            }
         }
     }
 }

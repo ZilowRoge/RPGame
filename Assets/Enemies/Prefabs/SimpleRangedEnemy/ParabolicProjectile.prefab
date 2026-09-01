@@ -149,3 +149,7 @@ MonoBehaviour:
   descentDuration: 0.5
   telegraphPrefab: {fileID: 5987008688265492214, guid: 7a1dd7b3d32518a4c910d89277a4c954, type: 3}
   aoeRadius: 2
+  aoeObstacleMask:
+    serializedVersion: 2
+    m_Bits: 1
+  aoeTriggerInteraction: 2
