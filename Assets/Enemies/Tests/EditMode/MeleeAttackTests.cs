@@ -36,6 +36,14 @@ namespace RPGame.Enemies.Tests
         }
 
         [Test]
+        public void MeleeAttack_ImplementsSharedAttackInterface()
+        {
+            MeleeAttack attack = CreateAttack(2f, 1f, 10f, out _);
+
+            Assert.IsInstanceOf<IEnemyAttack>(attack);
+        }
+
+        [Test]
         public void TryAttack_BeforeAttackIntervalExpires_IsBlocked()
         {
             MeleeAttack attack = CreateAttack(2f, 1f, 10f, out FakeAttackTarget target);

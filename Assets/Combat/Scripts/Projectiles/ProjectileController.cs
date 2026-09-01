@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace RPGame.Combat.Projectiles
 {
-    public sealed class ProjectileController : MonoBehaviour
+    public sealed class ProjectileController : MonoBehaviour, IProjectileMovementSource
     {
         [SerializeField] private float speed = 10f;
         [SerializeField] private float acceleration;

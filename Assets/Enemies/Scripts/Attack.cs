@@ -1,5 +1,4 @@
 using RPGame.Core.Damage;
-using RPGame.Core.Targeting;
 using UnityEngine;
 
 namespace RPGame.Enemies
@@ -8,8 +7,10 @@ namespace RPGame.Enemies
     {
         [SerializeField] private Config config;
         [SerializeField] private AttackType attackType = AttackType.Melee;
+        [SerializeField] private LineOfSight lineOfSight;
+        [SerializeField] private ProjectileLauncher projectileLauncher;
 
-        private MeleeAttack runtimeAttack;
+        private IEnemyAttack runtimeAttack;
 
         float IEnemyAttack.Range
         {
@@ -37,12 +38,7 @@ namespace RPGame.Enemies
 
         bool IEnemyAttack.TryAttack(SelectedTarget target)
         {
-            if (runtimeAttack == null || !TryGetDamageable(target, out IDamageable damageable))
-            {
-                return false;
-            }
-
-            return runtimeAttack.TryAttack(target, damageable, gameObject);
+            return runtimeAttack != null && runtimeAttack.TryAttack(target);
         }
 
         private void EnsureRuntimeAttack()
@@ -58,24 +54,36 @@ namespace RPGame.Enemies
                 return;
             }
 
-            if (attackType != AttackType.Melee)
-            {
-                Debug.LogError($"Unsupported attack type '{attackType}' for melee Attack adapter.", this);
-                return;
-            }
-
-            MeleeAttackConfig attackConfig;
             try
             {
-                attackConfig = config.GetAttack<MeleeAttackConfig>(attackType);
+                runtimeAttack = CreateRuntimeAttack();
             }
             catch (System.InvalidOperationException exception)
             {
                 Debug.LogError(exception.Message, this);
                 return;
             }
+        }
 
-            runtimeAttack = new MeleeAttack(attackConfig, () => transform.position);
+        private IEnemyAttack CreateRuntimeAttack()
+        {
+            return attackType switch
+            {
+                AttackType.Melee => new MeleeAttack(
+                    config.GetAttack<MeleeAttackConfig>(AttackType.Melee),
+                    () => transform.position,
+                    GetDamageable,
+                    () => gameObject),
+
+                AttackType.StraightProjectile => new StraightProjectileAttack(
+                    config.GetAttack<StraightProjectileAttackConfig>(AttackType.StraightProjectile),
+                    GetLineOfSight(),
+                    GetProjectileLauncher(),
+                    GetDamageable,
+                    () => gameObject),
+
+                _ => throw new System.InvalidOperationException($"Unsupported attack type '{attackType}'.")
+            };
         }
 
         private static bool TryGetDamageable(SelectedTarget target, out IDamageable damageable)
@@ -93,6 +101,41 @@ namespace RPGame.Enemies
             }
 
             return true;
+        }
+
+        private static IDamageable GetDamageable(SelectedTarget target)
+        {
+            return TryGetDamageable(target, out IDamageable damageable) ? damageable : null;
+        }
+
+        private IEnemyLineOfSight GetLineOfSight()
+        {
+            if (lineOfSight == null)
+            {
+                lineOfSight = GetComponent<LineOfSight>();
+            }
+
+            if (lineOfSight == null)
+            {
+                throw new System.InvalidOperationException("Missing field lineOfSight.");
+            }
+
+            return lineOfSight;
+        }
+
+        private IProjectileLauncher GetProjectileLauncher()
+        {
+            if (projectileLauncher == null)
+            {
+                projectileLauncher = GetComponent<ProjectileLauncher>();
+            }
+
+            if (projectileLauncher == null)
+            {
+                throw new System.InvalidOperationException("Missing field projectileLauncher.");
+            }
+
+            return projectileLauncher;
         }
     }
 }

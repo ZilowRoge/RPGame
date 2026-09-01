@@ -4,16 +4,24 @@ using UnityEngine;
 
 namespace RPGame.Enemies
 {
-    public sealed class MeleeAttack
+    public sealed class MeleeAttack : IEnemyAttack
     {
         private readonly MeleeAttackConfig config;
         private readonly Func<Vector3> attackerPositionProvider;
+        private readonly Func<SelectedTarget, IDamageable> damageableProvider;
+        private readonly Func<GameObject> sourceProvider;
         private float remainingCooldown;
 
-        public MeleeAttack(MeleeAttackConfig config, Func<Vector3> attackerPositionProvider)
+        public MeleeAttack(
+            MeleeAttackConfig config,
+            Func<Vector3> attackerPositionProvider,
+            Func<SelectedTarget, IDamageable> damageableProvider = null,
+            Func<GameObject> sourceProvider = null)
         {
             this.config = config;
             this.attackerPositionProvider = attackerPositionProvider;
+            this.damageableProvider = damageableProvider;
+            this.sourceProvider = sourceProvider;
         }
 
         public float Range => config.AttackRange;
@@ -34,7 +42,12 @@ namespace RPGame.Enemies
             return (target.Position - attackerPositionProvider()).sqrMagnitude <= attackRangeSqr;
         }
 
-        public bool TryAttack(SelectedTarget target, IDamageable damageable, GameObject source)
+        public bool TryAttack(SelectedTarget target)
+        {
+            return TryAttack(target, damageableProvider?.Invoke(target), sourceProvider?.Invoke());
+        }
+
+        internal bool TryAttack(SelectedTarget target, IDamageable damageable, GameObject source)
         {
             if (!CanAttack(target, damageable))
             {

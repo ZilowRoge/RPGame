@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
+using RPGame.Combat.Projectiles;
 using RPGame.Combat.Damage;
 using RPGame.Core.Damage;
 using RPGame.Core.Statistics;
@@ -125,6 +126,30 @@ namespace RPGame.Enemies.Tests
         }
 
         [Test]
+        public void TryAttack_WhenConfiguredAsStraightProjectile_DelegatesToProjectileRuntime()
+        {
+            GameObject rangedEnemy = CreateObject("RangedEnemy");
+            Attack rangedAttack = rangedEnemy.AddComponent<Attack>();
+            LineOfSight lineOfSight = rangedEnemy.AddComponent<LineOfSight>();
+            ProjectileLauncher projectileLauncher = rangedEnemy.AddComponent<ProjectileLauncher>();
+            EnemyStraightProjectile projectilePrefab = CreateProjectilePrefab("StraightProjectilePrefab");
+            ConfigureStraightProjectileAttack(rangedAttack, lineOfSight, projectileLauncher, projectilePrefab);
+            InvokeStart(rangedAttack);
+            TargetFixture target = CreateDamageableTarget("Target", new Vector3(0f, 0f, 10f));
+
+            bool attacked = ((IEnemyAttack)rangedAttack).TryAttack(CreateSelectedTarget(target.Targetable));
+
+            EnemyStraightProjectile spawnedProjectile = UnityEngine.Object
+                .FindObjectsByType<EnemyStraightProjectile>()
+                .First(projectile => projectile != projectilePrefab);
+            createdObjects.Add(spawnedProjectile.gameObject);
+
+            Assert.IsTrue(attacked);
+            Assert.IsTrue(spawnedProjectile.IsInitialized);
+            Assert.AreEqual(6f, spawnedProjectile.CurrentSpeed);
+        }
+
+        [Test]
         public void Attack_DoesNotReferencePlayerDetectionOrMovement()
         {
             bool referencesPlayer = typeof(Attack).Assembly
@@ -212,6 +237,54 @@ namespace RPGame.Enemies.Tests
             serializedAttack.FindProperty("config").objectReferenceValue = config;
             serializedAttack.FindProperty("attackType").enumValueIndex = (int)AttackType.Melee;
             serializedAttack.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private void ConfigureStraightProjectileAttack(
+            Attack attack,
+            LineOfSight lineOfSight,
+            ProjectileLauncher projectileLauncher,
+            EnemyStraightProjectile projectilePrefab)
+        {
+            StraightProjectileAttackConfig straightConfig = ScriptableObject.CreateInstance<StraightProjectileAttackConfig>();
+            createdAssets.Add(straightConfig);
+            SerializedObject serializedStraightConfig = new(straightConfig);
+            serializedStraightConfig.FindProperty("projectilePrefab").objectReferenceValue = projectilePrefab;
+            serializedStraightConfig.FindProperty("attackInterval").floatValue = 0.1f;
+            serializedStraightConfig.FindProperty("projectileSpeed").floatValue = 6f;
+            serializedStraightConfig.FindProperty("projectileLifetime").floatValue = 5f;
+
+            SerializedProperty damageProperty = serializedStraightConfig.FindProperty("damage");
+            damageProperty.arraySize = 1;
+            SerializedProperty damageEntry = damageProperty.GetArrayElementAtIndex(0);
+            damageEntry.FindPropertyRelative("minDamage").floatValue = 10f;
+            damageEntry.FindPropertyRelative("maxDamage").floatValue = 10f;
+            damageEntry.FindPropertyRelative("damageType").enumValueIndex = (int)DamageType.Physical;
+            damageEntry.FindPropertyRelative("damageElement").enumValueIndex = (int)DamageElement.None;
+            serializedStraightConfig.ApplyModifiedPropertiesWithoutUndo();
+
+            Config config = ScriptableObject.CreateInstance<Config>();
+            createdAssets.Add(config);
+            SerializedObject serializedConfig = new(config);
+            SerializedProperty attacksProperty = serializedConfig.FindProperty("attacks");
+            attacksProperty.arraySize = 1;
+            SerializedProperty attackEntry = attacksProperty.GetArrayElementAtIndex(0);
+            attackEntry.FindPropertyRelative("type").enumValueIndex = (int)AttackType.StraightProjectile;
+            attackEntry.FindPropertyRelative("config").objectReferenceValue = straightConfig;
+            serializedConfig.ApplyModifiedPropertiesWithoutUndo();
+
+            SerializedObject serializedAttack = new(attack);
+            serializedAttack.FindProperty("config").objectReferenceValue = config;
+            serializedAttack.FindProperty("attackType").enumValueIndex = (int)AttackType.StraightProjectile;
+            serializedAttack.FindProperty("lineOfSight").objectReferenceValue = lineOfSight;
+            serializedAttack.FindProperty("projectileLauncher").objectReferenceValue = projectileLauncher;
+            serializedAttack.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private EnemyStraightProjectile CreateProjectilePrefab(string objectName)
+        {
+            GameObject projectileObject = CreateObject(objectName);
+            projectileObject.AddComponent<StraightProjectileMover>();
+            return projectileObject.AddComponent<EnemyStraightProjectile>();
         }
 
         private static void SetControllerConfig(StatisticsController controller, StatisticsConfig statisticsConfig)
