@@ -10,6 +10,8 @@ namespace RPGame.Enemies
         private readonly IEnemyMovement movement;
         private readonly IEnemyLineOfSight lineOfSight;
         private readonly IRangedEnemyBehaviourConfig config;
+        private readonly IEnemyAttack straightAttack;
+        private readonly IEnemyAttack parabolicAttack;
 
         internal RangedBehaviourState State { get; private set; } = RangedBehaviourState.Idle;
 
@@ -18,11 +20,24 @@ namespace RPGame.Enemies
             IEnemyMovement movement,
             IEnemyLineOfSight lineOfSight,
             IRangedEnemyBehaviourConfig config)
+            : this(detection, movement, lineOfSight, config, null, null)
+        {
+        }
+
+        public RangedEnemyBehaviour(
+            IEnemyDetection detection,
+            IEnemyMovement movement,
+            IEnemyLineOfSight lineOfSight,
+            IRangedEnemyBehaviourConfig config,
+            IEnemyAttack straightAttack,
+            IEnemyAttack parabolicAttack)
         {
             this.detection = detection;
             this.movement = movement;
             this.lineOfSight = lineOfSight;
             this.config = config;
+            this.straightAttack = straightAttack;
+            this.parabolicAttack = parabolicAttack;
         }
 
         public bool CanStartAttack()
@@ -33,7 +48,10 @@ namespace RPGame.Enemies
 
         public void Tick(float deltaTime)
         {
-            if (!detection.TryGetTarget(out SelectedTarget target))
+            straightAttack?.Tick(deltaTime);
+            parabolicAttack?.Tick(deltaTime);
+
+            if (!detection.TryGetTarget(out SelectedTarget target) || !target.IsValid)
             {
                 State = RangedBehaviourState.Idle;
                 movement.Stop();
@@ -53,10 +71,12 @@ namespace RPGame.Enemies
             if (nextState == RangedBehaviourState.Retreat)
             {
                 RetreatFrom(target.Position);
+                straightAttack?.TryAttack(target);
                 return;
             }
 
             movement.Stop();
+            parabolicAttack?.TryAttack(target);
         }
 
         private RangedBehaviourState SelectState(float distance)

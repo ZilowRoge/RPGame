@@ -17,7 +17,9 @@ namespace RPGame.Enemies.Tests
             FakeDetection detection = new();
             FakeMovement movement = new();
             FakeLineOfSight lineOfSight = new();
-            RangedEnemyBehaviour behaviour = CreateBehaviour(detection, movement, lineOfSight);
+            FakeAttack straightAttack = new();
+            FakeAttack parabolicAttack = new();
+            RangedEnemyBehaviour behaviour = CreateBehaviour(detection, movement, lineOfSight, straightAttack, parabolicAttack);
 
             behaviour.Tick(0.1f);
 
@@ -25,6 +27,8 @@ namespace RPGame.Enemies.Tests
             Assert.AreEqual(1, movement.StopCount);
             Assert.AreEqual(0, movement.MoveToCount);
             Assert.AreEqual(0, lineOfSight.CheckCount);
+            Assert.AreEqual(0, straightAttack.TryAttackCount);
+            Assert.AreEqual(0, parabolicAttack.TryAttackCount);
         }
 
         [Test]
@@ -32,13 +36,17 @@ namespace RPGame.Enemies.Tests
         {
             FakeDetection detection = CreateDetectionWithTarget(new Vector3(8f, 0f, 0f));
             FakeMovement movement = new();
-            RangedEnemyBehaviour behaviour = CreateBehaviour(detection, movement);
+            FakeAttack straightAttack = new();
+            FakeAttack parabolicAttack = new();
+            RangedEnemyBehaviour behaviour = CreateBehaviour(detection, movement, new FakeLineOfSight(), straightAttack, parabolicAttack);
 
             behaviour.Tick(0.1f);
 
             Assert.AreEqual(RangedBehaviourState.Approach, behaviour.State);
             Assert.AreEqual(1, movement.MoveToCount);
             Assert.AreEqual(0, movement.StopCount);
+            Assert.AreEqual(0, straightAttack.TryAttackCount);
+            Assert.AreEqual(0, parabolicAttack.TryAttackCount);
         }
 
         [Test]
@@ -46,13 +54,17 @@ namespace RPGame.Enemies.Tests
         {
             FakeDetection detection = CreateDetectionWithTarget(new Vector3(4f, 0f, 0f));
             FakeMovement movement = new();
-            RangedEnemyBehaviour behaviour = CreateBehaviour(detection, movement);
+            FakeAttack straightAttack = new();
+            FakeAttack parabolicAttack = new();
+            RangedEnemyBehaviour behaviour = CreateBehaviour(detection, movement, new FakeLineOfSight(), straightAttack, parabolicAttack);
 
             behaviour.Tick(0.1f);
 
             Assert.AreEqual(RangedBehaviourState.Hold, behaviour.State);
             Assert.AreEqual(1, movement.StopCount);
             Assert.AreEqual(0, movement.MoveToCount);
+            Assert.AreEqual(0, straightAttack.TryAttackCount);
+            Assert.AreEqual(1, parabolicAttack.TryAttackCount);
         }
 
         [Test]
@@ -60,14 +72,142 @@ namespace RPGame.Enemies.Tests
         {
             FakeDetection detection = CreateDetectionWithTarget(new Vector3(1f, 0f, 0f));
             FakeMovement movement = new();
+            FakeAttack straightAttack = new();
+            FakeAttack parabolicAttack = new();
             movement.Position = Vector3.zero;
-            RangedEnemyBehaviour behaviour = CreateBehaviour(detection, movement);
+            RangedEnemyBehaviour behaviour = CreateBehaviour(detection, movement, new FakeLineOfSight(), straightAttack, parabolicAttack);
 
             behaviour.Tick(0.1f);
 
             Assert.AreEqual(RangedBehaviourState.Retreat, behaviour.State);
             Assert.AreEqual(1, movement.MoveToCount);
             Assert.AreEqual(0, movement.StopCount);
+            Assert.AreEqual(1, straightAttack.TryAttackCount);
+            Assert.AreEqual(0, parabolicAttack.TryAttackCount);
+        }
+
+        [Test]
+        public void Tick_RetreatMovementAndStraightAttackHappenInSameTick()
+        {
+            FakeDetection detection = CreateDetectionWithTarget(new Vector3(1f, 0f, 0f));
+            FakeMovement movement = new();
+            FakeAttack straightAttack = new();
+            FakeAttack parabolicAttack = new();
+            RangedEnemyBehaviour behaviour = CreateBehaviour(detection, movement, new FakeLineOfSight(), straightAttack, parabolicAttack);
+
+            behaviour.Tick(0.1f);
+
+            Assert.AreEqual(RangedBehaviourState.Retreat, behaviour.State);
+            Assert.AreEqual(1, movement.MoveToCount);
+            Assert.AreEqual(1, straightAttack.TryAttackCount);
+            Assert.AreEqual(0, parabolicAttack.TryAttackCount);
+        }
+
+        [Test]
+        public void Tick_TicksBothAttacksRegardlessOfPositioningState()
+        {
+            FakeDetection detection = CreateDetectionWithTarget(new Vector3(8f, 0f, 0f));
+            FakeMovement movement = new();
+            FakeAttack straightAttack = new();
+            FakeAttack parabolicAttack = new();
+            RangedEnemyBehaviour behaviour = CreateBehaviour(detection, movement, new FakeLineOfSight(), straightAttack, parabolicAttack);
+
+            behaviour.Tick(0.25f);
+
+            Assert.AreEqual(RangedBehaviourState.Approach, behaviour.State);
+            Assert.AreEqual(1, straightAttack.TickCount);
+            Assert.AreEqual(1, parabolicAttack.TickCount);
+            Assert.AreEqual(0.25f, straightAttack.LastDeltaTime, 0.0001f);
+            Assert.AreEqual(0.25f, parabolicAttack.LastDeltaTime, 0.0001f);
+        }
+
+        [Test]
+        public void Tick_StraightCooldownCanAdvanceDuringHold()
+        {
+            FakeDetection detection = CreateDetectionWithTarget(new Vector3(4f, 0f, 0f));
+            FakeMovement movement = new();
+            FakeAttack straightAttack = new();
+            FakeAttack parabolicAttack = new();
+            RangedEnemyBehaviour behaviour = CreateBehaviour(detection, movement, new FakeLineOfSight(), straightAttack, parabolicAttack);
+
+            behaviour.Tick(0.4f);
+
+            Assert.AreEqual(RangedBehaviourState.Hold, behaviour.State);
+            Assert.AreEqual(1, straightAttack.TickCount);
+            Assert.AreEqual(0.4f, straightAttack.LastDeltaTime, 0.0001f);
+            Assert.AreEqual(0, straightAttack.TryAttackCount);
+            Assert.AreEqual(1, parabolicAttack.TryAttackCount);
+        }
+
+        [Test]
+        public void Tick_ParabolicCooldownCanAdvanceDuringRetreat()
+        {
+            FakeDetection detection = CreateDetectionWithTarget(new Vector3(1f, 0f, 0f));
+            FakeMovement movement = new();
+            FakeAttack straightAttack = new();
+            FakeAttack parabolicAttack = new();
+            RangedEnemyBehaviour behaviour = CreateBehaviour(detection, movement, new FakeLineOfSight(), straightAttack, parabolicAttack);
+
+            behaviour.Tick(0.4f);
+
+            Assert.AreEqual(RangedBehaviourState.Retreat, behaviour.State);
+            Assert.AreEqual(1, parabolicAttack.TickCount);
+            Assert.AreEqual(0.4f, parabolicAttack.LastDeltaTime, 0.0001f);
+            Assert.AreEqual(1, straightAttack.TryAttackCount);
+            Assert.AreEqual(0, parabolicAttack.TryAttackCount);
+        }
+
+        [Test]
+        public void Tick_FailedAttackDoesNotChangePositioningState()
+        {
+            FakeDetection detection = CreateDetectionWithTarget(new Vector3(4f, 0f, 0f));
+            FakeMovement movement = new();
+            FakeAttack parabolicAttack = new();
+            parabolicAttack.TryAttackResult = false;
+            RangedEnemyBehaviour behaviour = CreateBehaviour(detection, movement, new FakeLineOfSight(), new FakeAttack(), parabolicAttack);
+
+            behaviour.Tick(0.1f);
+
+            Assert.AreEqual(RangedBehaviourState.Hold, behaviour.State);
+            Assert.AreEqual(1, parabolicAttack.TryAttackCount);
+            Assert.AreEqual(1, movement.StopCount);
+        }
+
+        [Test]
+        public void Tick_WhenTargetIsLost_EntersIdleStopsAndDoesNotTryAttack()
+        {
+            FakeDetection detection = CreateDetectionWithTarget(new Vector3(4f, 0f, 0f));
+            FakeMovement movement = new();
+            FakeAttack straightAttack = new();
+            FakeAttack parabolicAttack = new();
+            RangedEnemyBehaviour behaviour = CreateBehaviour(detection, movement, new FakeLineOfSight(), straightAttack, parabolicAttack);
+
+            behaviour.Tick(0.1f);
+            detection.ClearTarget();
+            behaviour.Tick(0.1f);
+
+            Assert.AreEqual(RangedBehaviourState.Idle, behaviour.State);
+            Assert.AreEqual(2, movement.StopCount);
+            Assert.AreEqual(0, straightAttack.TryAttackCount);
+            Assert.AreEqual(1, parabolicAttack.TryAttackCount);
+        }
+
+        [Test]
+        public void Tick_WhenDetectionReturnsInvalidTarget_EntersIdleStopsAndDoesNotTryAttack()
+        {
+            FakeDetection detection = new();
+            detection.SetTarget(default);
+            FakeMovement movement = new();
+            FakeAttack straightAttack = new();
+            FakeAttack parabolicAttack = new();
+            RangedEnemyBehaviour behaviour = CreateBehaviour(detection, movement, new FakeLineOfSight(), straightAttack, parabolicAttack);
+
+            behaviour.Tick(0.1f);
+
+            Assert.AreEqual(RangedBehaviourState.Idle, behaviour.State);
+            Assert.AreEqual(1, movement.StopCount);
+            Assert.AreEqual(0, straightAttack.TryAttackCount);
+            Assert.AreEqual(0, parabolicAttack.TryAttackCount);
         }
 
         [Test]
@@ -350,11 +490,23 @@ namespace RPGame.Enemies.Tests
             FakeMovement movement,
             FakeLineOfSight lineOfSight)
         {
+            return CreateBehaviour(detection, movement, lineOfSight, null, null);
+        }
+
+        private RangedEnemyBehaviour CreateBehaviour(
+            FakeDetection detection,
+            FakeMovement movement,
+            FakeLineOfSight lineOfSight,
+            IEnemyAttack straightAttack,
+            IEnemyAttack parabolicAttack)
+        {
             return new RangedEnemyBehaviour(
                 detection,
                 movement,
                 lineOfSight,
-                CreateConfig(2f, 5f, 0.5f));
+                CreateConfig(2f, 5f, 0.5f),
+                straightAttack,
+                parabolicAttack);
         }
 
         private static TestRangedEnemyBehaviourConfig CreateConfig(float minRange, float maxRange, float rangeHysteresis)
@@ -388,6 +540,12 @@ namespace RPGame.Enemies.Tests
             {
                 Target = target;
                 hasTarget = true;
+            }
+
+            public void ClearTarget()
+            {
+                Target = default;
+                hasTarget = false;
             }
         }
 
@@ -430,6 +588,34 @@ namespace RPGame.Enemies.Tests
                 CheckCount++;
                 LastTargetPosition = targetPosition;
                 return HasLineOfSightResult;
+            }
+        }
+
+        private sealed class FakeAttack : IEnemyAttack
+        {
+            public float Range => 0f;
+            public bool TryAttackResult { get; set; } = true;
+            public int TickCount { get; private set; }
+            public int TryAttackCount { get; private set; }
+            public float LastDeltaTime { get; private set; }
+            public SelectedTarget LastTarget { get; private set; }
+
+            public void Tick(float deltaTime)
+            {
+                TickCount++;
+                LastDeltaTime = deltaTime;
+            }
+
+            public bool IsInRange(SelectedTarget target)
+            {
+                return true;
+            }
+
+            public bool TryAttack(SelectedTarget target)
+            {
+                TryAttackCount++;
+                LastTarget = target;
+                return TryAttackResult;
             }
         }
 
