@@ -33,6 +33,11 @@ namespace RPGame.Enemies
                 detectionCoroutine = null;
             }
 
+            ClearCurrentTarget();
+        }
+
+        internal void ClearCurrentTarget()
+        {
             CurrentTarget = null;
         }
 

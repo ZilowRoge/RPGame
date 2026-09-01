@@ -24,7 +24,8 @@ namespace RPGame.Enemies.Tests
         {
             attackerObject = CreateObject("Enemy");
             attack = attackerObject.AddComponent<Attack>();
-            ConfigureAttack(attack, 2f, 0.1f, 10f);
+            ConfigureAttack(attack, 2f, 0.05f, 10f);
+            InvokeStart(attack);
         }
 
         [TearDown]
@@ -102,15 +103,25 @@ namespace RPGame.Enemies.Tests
         [Test]
         public void TryAttack_WhenAttackIntervalExpired_IsAllowedAgain()
         {
-            ConfigureAttack(attack, 2f, 0.05f, 10f);
             TargetFixture target = CreateDamageableTarget("Target", new Vector3(1f, 0f, 0f));
 
             Assert.IsTrue(AttackInterface.TryAttack(CreateSelectedTarget(target.Targetable)));
 
-            SetNextAttackTime(attack, Time.time);
+            AttackInterface.Tick(0.05f);
 
             Assert.IsTrue(AttackInterface.TryAttack(CreateSelectedTarget(target.Targetable)));
             Assert.AreEqual(80f, target.Statistics.CurrentHealth);
+        }
+
+        [Test]
+        public void AttackAdapter_DoesNotOwnCooldownRangeOrDamageData()
+        {
+            FieldInfo[] fields = typeof(Attack).GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+
+            Assert.IsFalse(fields.Any(field => field.Name.Contains("nextAttackTime")));
+            Assert.IsFalse(fields.Any(field => field.Name.Contains("attackRange")));
+            Assert.IsFalse(fields.Any(field => field.Name.Contains("attackInterval")));
+            Assert.IsFalse(fields.Any(field => field.FieldType == typeof(List<PartialDamageRange>)));
         }
 
         [Test]
@@ -170,20 +181,36 @@ namespace RPGame.Enemies.Tests
             return statisticsConfig;
         }
 
-        private static void ConfigureAttack(Attack attack, float attackRange, float attackInterval, float damageAmount)
+        private void ConfigureAttack(Attack attack, float attackRange, float attackInterval, float damageAmount)
         {
-            SerializedObject serializedAttack = new(attack);
-            serializedAttack.FindProperty("attackRange").floatValue = attackRange;
-            serializedAttack.FindProperty("attackInterval").floatValue = attackInterval;
+            MeleeAttackConfig meleeAttackConfig = ScriptableObject.CreateInstance<MeleeAttackConfig>();
+            createdAssets.Add(meleeAttackConfig);
+            SerializedObject serializedMeleeConfig = new(meleeAttackConfig);
+            serializedMeleeConfig.FindProperty("attackInterval").floatValue = attackInterval;
+            serializedMeleeConfig.FindProperty("attackRange").floatValue = attackRange;
 
-            SerializedProperty damageProperty = serializedAttack.FindProperty("damage");
+            SerializedProperty damageProperty = serializedMeleeConfig.FindProperty("damage");
             damageProperty.arraySize = 1;
             SerializedProperty damageEntry = damageProperty.GetArrayElementAtIndex(0);
             damageEntry.FindPropertyRelative("minDamage").floatValue = damageAmount;
             damageEntry.FindPropertyRelative("maxDamage").floatValue = damageAmount;
             damageEntry.FindPropertyRelative("damageType").enumValueIndex = (int)DamageType.Physical;
             damageEntry.FindPropertyRelative("damageElement").enumValueIndex = (int)DamageElement.None;
+            serializedMeleeConfig.ApplyModifiedPropertiesWithoutUndo();
 
+            Config config = ScriptableObject.CreateInstance<Config>();
+            createdAssets.Add(config);
+            SerializedObject serializedConfig = new(config);
+            SerializedProperty attacksProperty = serializedConfig.FindProperty("attacks");
+            attacksProperty.arraySize = 1;
+            SerializedProperty attackEntry = attacksProperty.GetArrayElementAtIndex(0);
+            attackEntry.FindPropertyRelative("type").enumValueIndex = (int)AttackType.Melee;
+            attackEntry.FindPropertyRelative("config").objectReferenceValue = meleeAttackConfig;
+            serializedConfig.ApplyModifiedPropertiesWithoutUndo();
+
+            SerializedObject serializedAttack = new(attack);
+            serializedAttack.FindProperty("config").objectReferenceValue = config;
+            serializedAttack.FindProperty("attackType").enumValueIndex = (int)AttackType.Melee;
             serializedAttack.ApplyModifiedPropertiesWithoutUndo();
         }
 
@@ -202,10 +229,10 @@ namespace RPGame.Enemies.Tests
             serializedReceiver.ApplyModifiedPropertiesWithoutUndo();
         }
 
-        private static void SetNextAttackTime(Attack attack, float nextAttackTime)
+        private static void InvokeStart(Attack attack)
         {
-            FieldInfo field = typeof(Attack).GetField("nextAttackTime", BindingFlags.Instance | BindingFlags.NonPublic);
-            field.SetValue(attack, nextAttackTime);
+            MethodInfo method = typeof(Attack).GetMethod("Start", BindingFlags.Instance | BindingFlags.NonPublic);
+            method.Invoke(attack, null);
         }
 
         private static SelectedTarget CreateSelectedTarget(PlayerTargetable targetable)

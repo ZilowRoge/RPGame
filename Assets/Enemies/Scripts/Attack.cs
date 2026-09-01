@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using RPGame.Core.Damage;
 using RPGame.Core.Targeting;
 using UnityEngine;
@@ -7,93 +6,93 @@ namespace RPGame.Enemies
 {
     public sealed class Attack : MonoBehaviour, IEnemyAttack
     {
-        [SerializeField] private float attackRange = 1.5f;
-        [SerializeField] private float attackInterval = 1f;
-        [SerializeField] private List<PartialDamageRange> damage = new()
+        [SerializeField] private Config config;
+        [SerializeField] private AttackType attackType = AttackType.Melee;
+
+        private MeleeAttack runtimeAttack;
+
+        float IEnemyAttack.Range
         {
-            new PartialDamageRange(5f, 5f, DamageType.Physical, DamageElement.None)
-        };
+            get => runtimeAttack != null ? runtimeAttack.Range : 0f;
+        }
 
-        private float nextAttackTime;
-
-        private bool CanAttack => Time.time >= nextAttackTime;
-
-        private bool IsInRange(ITargetable target)
+        private void Start()
         {
-            if (target == null || target.TargetPoint == null)
+            EnsureRuntimeAttack();
+            if (runtimeAttack == null)
             {
-                return false;
+                enabled = false;
             }
+        }
 
-            float attackRangeSqr = attackRange * attackRange;
-            return (target.TargetPoint.position - transform.position).sqrMagnitude <= attackRangeSqr;
+        void IEnemyAttack.Tick(float deltaTime)
+        {
+            runtimeAttack?.Tick(deltaTime);
         }
 
         bool IEnemyAttack.IsInRange(SelectedTarget target)
         {
-            return target.IsValid && IsInRange(target.Targetable);
-        }
-
-        private bool TryAttack(ITargetable target)
-        {
-            if (!isActiveAndEnabled || !CanAttack || !IsInRange(target) || !TryGetDamageable(target, out IDamageable damageable))
-            {
-                return false;
-            }
-
-            DamageResult result = damageable.ApplyDamage(BuildDamageData());
-            if (!result.WasApplied)
-            {
-                return false;
-            }
-
-            nextAttackTime = Time.time + attackInterval;
-            return true;
+            return runtimeAttack != null && runtimeAttack.IsInRange(target);
         }
 
         bool IEnemyAttack.TryAttack(SelectedTarget target)
         {
-            return target.IsValid && TryAttack(target.Targetable);
-        }
-
-        private DamageData BuildDamageData()
-        {
-            List<PartialDamage> damageParts = new();
-            if (damage != null)
-            {
-                for (int i = 0; i < damage.Count; i++)
-                {
-                    PartialDamageRange damageRange = damage[i];
-                    int minDamage = Mathf.CeilToInt(damageRange.MinDamage);
-                    int maxDamage = Mathf.Max(minDamage, Mathf.FloorToInt(damageRange.MaxDamage));
-                    float amount = Random.Range(minDamage, maxDamage + 1);
-
-                    damageParts.Add(new PartialDamage(
-                        amount,
-                        damageRange.DamageType,
-                        damageRange.DamageElement));
-                }
-            }
-
-            return new DamageData(damageParts, gameObject);
-        }
-
-        private static bool TryGetDamageable(ITargetable target, out IDamageable damageable)
-        {
-            damageable = null;
-            if (target?.TargetPoint == null)
+            if (runtimeAttack == null || !TryGetDamageable(target, out IDamageable damageable))
             {
                 return false;
             }
 
-            damageable = target.TargetPoint.GetComponentInParent<IDamageable>();
-            return damageable != null && damageable.CanReceiveDamage;
+            return runtimeAttack.TryAttack(target, damageable, gameObject);
         }
 
-        private void OnValidate()
+        private void EnsureRuntimeAttack()
         {
-            attackRange = Mathf.Max(0f, attackRange);
-            attackInterval = Mathf.Max(0f, attackInterval);
+            if (runtimeAttack != null)
+            {
+                return;
+            }
+
+            if (config == null)
+            {
+                Debug.LogError("Missing field config.", this);
+                return;
+            }
+
+            if (attackType != AttackType.Melee)
+            {
+                Debug.LogError($"Unsupported attack type '{attackType}' for melee Attack adapter.", this);
+                return;
+            }
+
+            MeleeAttackConfig attackConfig;
+            try
+            {
+                attackConfig = config.GetAttack<MeleeAttackConfig>(attackType);
+            }
+            catch (System.InvalidOperationException exception)
+            {
+                Debug.LogError(exception.Message, this);
+                return;
+            }
+
+            runtimeAttack = new MeleeAttack(attackConfig, () => transform.position);
+        }
+
+        private static bool TryGetDamageable(SelectedTarget target, out IDamageable damageable)
+        {
+            damageable = null;
+            if (!target.IsValid || target.Targetable.TargetPoint == null)
+            {
+                return false;
+            }
+
+            damageable = target.Targetable.TargetPoint.GetComponentInParent<IDamageable>();
+            if (damageable == null)
+            {
+                return false;
+            }
+
+            return true;
         }
     }
 }

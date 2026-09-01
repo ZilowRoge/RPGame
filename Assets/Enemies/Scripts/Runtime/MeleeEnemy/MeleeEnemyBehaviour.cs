@@ -18,6 +18,8 @@ namespace RPGame.Enemies
 
         public void Tick(float deltaTime)
         {
+            attack.Tick(deltaTime);
+
             if (!detection.TryGetTarget(out SelectedTarget target))
             {
                 movement.Stop();

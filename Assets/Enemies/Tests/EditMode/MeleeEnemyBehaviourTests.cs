@@ -218,7 +218,14 @@ namespace RPGame.Enemies.Tests
         {
             public bool IsTargetInRange { get; set; }
             public int TryAttackCount { get; private set; }
+            public int TickCount { get; private set; }
             public SelectedTarget LastAttackTarget { get; private set; }
+            public float Range => 1f;
+
+            public void Tick(float deltaTime)
+            {
+                TickCount++;
+            }
 
             public bool IsInRange(SelectedTarget target)
             {

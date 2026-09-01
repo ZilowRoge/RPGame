@@ -219,13 +219,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5c0421790a2f4964903cff3f255e32de, type: 3}
   m_Name: 
   m_EditorClassIdentifier: RPGame.Enemies::RPGame.Enemies.Attack
-  attackRange: 1.5
-  attackInterval: 1
-  damage:
-  - minDamage: 1
-    maxDamage: 4
-    damageType: 0
-    damageElement: 0
+  config: {fileID: 11400000, guid: ed08f6085c824b2a8b77efbd58d79cee, type: 2}
+  attackType: 0
 --- !u!114 &2422390360541412733
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -254,7 +249,7 @@ MonoBehaviour:
   deathSource: {fileID: 1754915428058411402}
   movement: {fileID: 8546718972918938816}
   controller: {fileID: 818951505973610660}
-  attack: {fileID: 1434449273843886759}
+  detection: {fileID: 896530926046458949}
   targetable: {fileID: 2738486469158683143}
 --- !u!114 &2738486469158683143
 MonoBehaviour:

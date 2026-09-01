@@ -44,6 +44,7 @@ namespace RPGame.Enemies
             movement.Stop();
             controller.enabled = false;
             detection.enabled = false;
+            detection.ClearCurrentTarget();
             targetable.enabled = false;
         }
 

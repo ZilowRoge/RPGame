@@ -34,6 +34,7 @@ namespace RPGame.Enemies.Tests
             controller = enemyObject.AddComponent<RPGame.Enemies.Controller>();
             attack = enemyObject.GetComponent<Attack>();
             ConfigureAttack(attack, 1.5f, 0.1f, 10f);
+            InvokeStart(attack);
             InvokeStart(controller);
         }
 
@@ -172,20 +173,36 @@ namespace RPGame.Enemies.Tests
             return statisticsConfig;
         }
 
-        private static void ConfigureAttack(Attack attack, float attackRange, float attackInterval, float damageAmount)
+        private void ConfigureAttack(Attack attack, float attackRange, float attackInterval, float damageAmount)
         {
-            SerializedObject serializedAttack = new(attack);
-            serializedAttack.FindProperty("attackRange").floatValue = attackRange;
-            serializedAttack.FindProperty("attackInterval").floatValue = attackInterval;
+            MeleeAttackConfig meleeAttackConfig = ScriptableObject.CreateInstance<MeleeAttackConfig>();
+            createdAssets.Add(meleeAttackConfig);
+            SerializedObject serializedMeleeConfig = new(meleeAttackConfig);
+            serializedMeleeConfig.FindProperty("attackInterval").floatValue = attackInterval;
+            serializedMeleeConfig.FindProperty("attackRange").floatValue = attackRange;
 
-            SerializedProperty damageProperty = serializedAttack.FindProperty("damage");
+            SerializedProperty damageProperty = serializedMeleeConfig.FindProperty("damage");
             damageProperty.arraySize = 1;
             SerializedProperty damageEntry = damageProperty.GetArrayElementAtIndex(0);
             damageEntry.FindPropertyRelative("minDamage").floatValue = damageAmount;
             damageEntry.FindPropertyRelative("maxDamage").floatValue = damageAmount;
             damageEntry.FindPropertyRelative("damageType").enumValueIndex = (int)DamageType.Physical;
             damageEntry.FindPropertyRelative("damageElement").enumValueIndex = (int)DamageElement.None;
+            serializedMeleeConfig.ApplyModifiedPropertiesWithoutUndo();
 
+            Config config = ScriptableObject.CreateInstance<Config>();
+            createdAssets.Add(config);
+            SerializedObject serializedConfig = new(config);
+            SerializedProperty attacksProperty = serializedConfig.FindProperty("attacks");
+            attacksProperty.arraySize = 1;
+            SerializedProperty attackEntry = attacksProperty.GetArrayElementAtIndex(0);
+            attackEntry.FindPropertyRelative("type").enumValueIndex = (int)AttackType.Melee;
+            attackEntry.FindPropertyRelative("config").objectReferenceValue = meleeAttackConfig;
+            serializedConfig.ApplyModifiedPropertiesWithoutUndo();
+
+            SerializedObject serializedAttack = new(attack);
+            serializedAttack.FindProperty("config").objectReferenceValue = config;
+            serializedAttack.FindProperty("attackType").enumValueIndex = (int)AttackType.Melee;
             serializedAttack.ApplyModifiedPropertiesWithoutUndo();
         }
 
@@ -224,6 +241,12 @@ namespace RPGame.Enemies.Tests
         {
             MethodInfo method = typeof(RPGame.Enemies.Controller).GetMethod("Start", BindingFlags.Instance | BindingFlags.NonPublic);
             method.Invoke(enemyController, null);
+        }
+
+        private static void InvokeStart(Attack attack)
+        {
+            MethodInfo method = typeof(Attack).GetMethod("Start", BindingFlags.Instance | BindingFlags.NonPublic);
+            method.Invoke(attack, null);
         }
 
         private readonly struct TargetFixture
