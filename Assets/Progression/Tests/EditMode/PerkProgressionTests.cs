@@ -145,7 +145,7 @@ namespace RPGame.Progression.Tests
             JobInstance job = CreateJob(jobPoints: 1);
             service.TryUnlockPerk(job, startingPerk);
 
-            EffectContainer container = service.CreateEffectContainer(job);
+            PermanentEffectContainer container = service.CreateEffectContainer(job);
 
             float value = container.GetEffectValue(EffectStat.ManaRegeneration, EffectModifierType.Percent);
             Assert.AreEqual(0.05f, value, 0.0001f);
@@ -156,7 +156,7 @@ namespace RPGame.Progression.Tests
         {
             JobInstance job = CreateJob(jobPoints: 1);
 
-            EffectContainer container = service.CreateEffectContainer(job);
+            PermanentEffectContainer container = service.CreateEffectContainer(job);
 
             float value = container.GetEffectValue(EffectStat.ManaRegeneration, EffectModifierType.Percent);
             Assert.AreEqual(0f, value, 0.0001f);
@@ -228,7 +228,7 @@ namespace RPGame.Progression.Tests
             return definition;
         }
 
-        private static void SetPerkEffects(PerkDefinition perk, params EffectDefinition[] effects)
+        private static void SetPerkEffects(PerkDefinition perk, params PassiveEffectDefinition[] effects)
         {
             SerializedObject serializedPerk = new SerializedObject(perk);
             SerializedProperty perkEffects = serializedPerk.FindProperty("effects");
