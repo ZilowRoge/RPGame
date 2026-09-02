@@ -6,7 +6,7 @@ namespace RPGame.Combat.Projectiles
     {
         public override void Tick(float deltaTime)
         {
-            transform.position += transform.forward * Projectile.CurrentSpeed * deltaTime;
+            transform.position += transform.forward * MovementSource.CurrentSpeed * deltaTime;
         }
     }
 }

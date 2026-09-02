@@ -16,12 +16,17 @@ namespace RPGame.Enemies
     {
         [SerializeField] private Detection detection;
         [SerializeField] private Movement movement;
+        [SerializeField] private Config config;
         [SerializeField] private Attack attack;
+
+        private IEnemyBehaviour behaviour;
+
+        internal IEnemyBehaviour Behaviour => behaviour;
 
         private void Start()
         {
             CacheRequiredComponents();
-            if (!HasRequiredComponents())
+            if (!TryCreateBehaviour(out behaviour))
             {
                 enabled = false;
             }
@@ -29,37 +34,17 @@ namespace RPGame.Enemies
 
         private void Update()
         {
-            Tick();
+            behaviour?.Tick(Time.deltaTime);
         }
 
-        public void Tick()
+        internal void Tick()
         {
             if (!isActiveAndEnabled)
             {
                 return;
             }
 
-            if (!detection.HasTarget)
-            {
-                movement.Stop();
-                return;
-            }
-
-            ITargetable target = detection.CurrentTarget;
-            if (target == null || target.TargetPoint == null)
-            {
-                movement.Stop();
-                return;
-            }
-
-            if (attack.IsInRange(target))
-            {
-                movement.Stop();
-                attack.TryAttack(target);
-                return;
-            }
-
-            movement.MoveTo(target.TargetPoint.position);
+            behaviour?.Tick(Time.deltaTime);
         }
 
         private void CacheRequiredComponents()
@@ -80,6 +65,58 @@ namespace RPGame.Enemies
             }
         }
 
+        private bool TryCreateBehaviour(out IEnemyBehaviour createdBehaviour)
+        {
+            createdBehaviour = null;
+
+            if (!HasRequiredComponents())
+            {
+                return false;
+            }
+
+            attack.SetConfig(config);
+
+            if (config.BehaviourConfig == null)
+            {
+                Debug.LogError("Missing field behaviourConfig.", this);
+                return false;
+            }
+
+            switch (config.BehaviourConfig)
+            {
+                case MeleeEnemyBehaviourConfig:
+                    if (!TryGetAttack(AttackType.Melee, out IEnemyAttack meleeAttack))
+                    {
+                        return false;
+                    }
+
+                    createdBehaviour = new MeleeEnemyBehaviour(detection, movement, meleeAttack);
+                    return true;
+
+                case RangedEnemyBehaviourConfig rangedConfig:
+                    if (!TryGetAttack(AttackType.StraightProjectile, out IEnemyAttack straightAttack)
+                        || !TryGetAttack(AttackType.ParabolicProjectile, out IEnemyAttack parabolicAttack))
+                    {
+                        return false;
+                    }
+
+                    createdBehaviour = new RangedEnemyBehaviour(
+                        detection,
+                        movement,
+                        rangedConfig,
+                        GetComponent<LineOfSight>(),
+                        straightAttack,
+                        parabolicAttack);
+                    return true;
+
+                default:
+                    Debug.LogError(
+                        $"Unsupported behaviour config '{config.BehaviourConfig.GetType().Name}'.",
+                        this);
+                    return false;
+            }
+        }
+
         private bool HasRequiredComponents()
         {
             if (detection == null)
@@ -94,6 +131,12 @@ namespace RPGame.Enemies
                 return false;
             }
 
+            if (config == null)
+            {
+                Debug.LogError("Missing field config.", this);
+                return false;
+            }
+
             if (attack == null)
             {
                 Debug.LogError("Missing field attack.", this);
@@ -101,6 +144,17 @@ namespace RPGame.Enemies
             }
 
             return true;
+        }
+
+        private bool TryGetAttack(AttackType type, out IEnemyAttack runtimeAttack)
+        {
+            if (attack.TryGetRuntimeAttack(type, out runtimeAttack))
+            {
+                return true;
+            }
+
+            Debug.LogError($"Attack '{type}' failed to initialize.", this);
+            return false;
         }
     }
 }

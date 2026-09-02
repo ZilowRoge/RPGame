@@ -4,17 +4,16 @@ using UnityEngine;
 
 namespace RPGame.Enemies
 {
-    public sealed class Detection : MonoBehaviour
+    public sealed class Detection : MonoBehaviour, IEnemyDetection
     {
         [SerializeField] private float detectionRange = 6f;
         [SerializeField] private float detectionInterval = 0.2f;
 
         private Coroutine detectionCoroutine;
 
-        public float DetectionRange => detectionRange;
-        public ITargetable CurrentTarget { get; private set; }
-        public Transform CurrentTargetPoint => CurrentTarget?.TargetPoint;
-        public bool HasTarget => CurrentTargetPoint != null;
+        internal ITargetable CurrentTarget { get; private set; }
+        internal Transform CurrentTargetPoint => CurrentTarget?.TargetPoint;
+        internal bool HasTarget => CurrentTargetPoint != null;
 
         private void OnEnable()
         {
@@ -34,15 +33,32 @@ namespace RPGame.Enemies
                 detectionCoroutine = null;
             }
 
+            ClearCurrentTarget();
+        }
+
+        internal void ClearCurrentTarget()
+        {
             CurrentTarget = null;
         }
 
-        public void RefreshDetection()
+        internal void RefreshDetection()
         {
             CurrentTarget = TargetSelector.SelectNearest(
                 TargetRegistry.PlayerTargets,
                 transform,
                 detectionRange);
+        }
+
+        bool IEnemyDetection.TryGetTarget(out SelectedTarget target)
+        {
+            target = default;
+            if (!HasTarget)
+            {
+                return false;
+            }
+
+            target = new SelectedTarget(CurrentTarget, CurrentTargetPoint.position);
+            return true;
         }
 
         private IEnumerator DetectionRoutine()

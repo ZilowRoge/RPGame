@@ -1,11 +1,10 @@
-using System.Collections.Generic;
 using RPGame.Core.Damage;
 using RPGame.Core.Spells;
 using UnityEngine;
 
 namespace RPGame.Combat.Projectiles
 {
-    public sealed class ProjectileController : MonoBehaviour
+    public sealed class ProjectileController : MonoBehaviour, IProjectileMovementSource
     {
         [SerializeField] private float speed = 10f;
         [SerializeField] private float acceleration;
@@ -142,25 +141,9 @@ namespace RPGame.Combat.Projectiles
 
             if (TryGetDamageable(hitCollider, out IDamageable damageable))
             {
-                List<PartialDamage> damageParts = new();
-                IReadOnlyList<PartialDamageRange> casterDamageRanges = CasterData.DamageRanges;
-                if (casterDamageRanges != null)
-                {
-                    for (int i = 0; i < casterDamageRanges.Count; i++)
-                    {
-                        PartialDamageRange damageRange = casterDamageRanges[i];
-                        int minDamage = Mathf.CeilToInt(damageRange.MinDamage);
-                        int maxDamage = Mathf.Max(minDamage, Mathf.FloorToInt(damageRange.MaxDamage));
-                        float amount = Random.Range(minDamage, maxDamage + 1);
-
-                        damageParts.Add(new PartialDamage(
-                            amount,
-                            damageRange.DamageType,
-                            damageRange.DamageElement));
-                    }
-                }
-
-                damageable.ApplyDamage(new DamageData(damageParts, CasterData.CasterObject));
+                damageable.ApplyDamage(new DamageData(
+                    DamageRangeRoller.Roll(CasterData.DamageRanges),
+                    CasterData.CasterObject));
             }
 
             if (destroyOnHit)

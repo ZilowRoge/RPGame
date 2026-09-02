@@ -1,91 +1,173 @@
 using System.Collections.Generic;
 using RPGame.Core.Damage;
-using RPGame.Core.Targeting;
 using UnityEngine;
 
 namespace RPGame.Enemies
 {
-    public sealed class Attack : MonoBehaviour
+    public sealed class Attack : MonoBehaviour, IEnemyAttack
     {
-        [SerializeField] private float attackRange = 1.5f;
-        [SerializeField] private float attackInterval = 1f;
-        [SerializeField] private List<PartialDamageRange> damage = new()
+        [SerializeField] private AttackType attackType = AttackType.Melee;
+        [SerializeField] private LineOfSight lineOfSight;
+        [SerializeField] private GroundProjection groundProjection;
+        [SerializeField] private ProjectileLauncher projectileLauncher;
+
+        private Config config;
+        private readonly Dictionary<AttackType, IEnemyAttack> runtimeAttacks = new();
+
+        float IEnemyAttack.Range
         {
-            new PartialDamageRange(5f, 5f, DamageType.Physical, DamageElement.None)
-        };
-
-        private float nextAttackTime;
-
-        public float AttackRange => attackRange;
-        public float AttackInterval => attackInterval;
-        public bool CanAttack => Time.time >= nextAttackTime;
-
-        public bool IsInRange(ITargetable target)
-        {
-            if (target == null || target.TargetPoint == null)
-            {
-                return false;
-            }
-
-            float attackRangeSqr = attackRange * attackRange;
-            return (target.TargetPoint.position - transform.position).sqrMagnitude <= attackRangeSqr;
+            get => TryGetRuntimeAttack(attackType, out IEnemyAttack attack) ? attack.Range : 0f;
         }
 
-        public bool TryAttack(ITargetable target)
+        internal void SetConfig(Config config)
         {
-            if (!isActiveAndEnabled || !CanAttack || !IsInRange(target) || !TryGetDamageable(target, out IDamageable damageable))
+            if (this.config == config)
+            {
+                return;
+            }
+
+            this.config = config;
+            runtimeAttacks.Clear();
+        }
+
+        void IEnemyAttack.Tick(float deltaTime)
+        {
+            if (TryGetRuntimeAttack(attackType, out IEnemyAttack attack))
+            {
+                attack.Tick(deltaTime);
+            }
+        }
+
+        bool IEnemyAttack.IsInRange(SelectedTarget target)
+        {
+            return TryGetRuntimeAttack(attackType, out IEnemyAttack attack) && attack.IsInRange(target);
+        }
+
+        bool IEnemyAttack.TryAttack(SelectedTarget target)
+        {
+            return TryGetRuntimeAttack(attackType, out IEnemyAttack attack) && attack.TryAttack(target);
+        }
+
+        internal bool TryGetRuntimeAttack(AttackType type, out IEnemyAttack attack)
+        {
+            if (runtimeAttacks.TryGetValue(type, out attack))
+            {
+                return true;
+            }
+
+            if (config == null)
+            {
+                Debug.LogError("Missing field config.", this);
+                return false;
+            }
+
+            try
+            {
+                attack = CreateRuntimeAttack(type);
+                runtimeAttacks.Add(type, attack);
+                return true;
+            }
+            catch (System.InvalidOperationException exception)
+            {
+                Debug.LogError(exception.Message, this);
+                attack = null;
+                return false;
+            }
+        }
+
+        private IEnemyAttack CreateRuntimeAttack(AttackType type)
+        {
+            return type switch
+            {
+                AttackType.Melee => new MeleeAttack(
+                    config.GetAttack<MeleeAttackConfig>(AttackType.Melee),
+                    () => transform.position,
+                    GetDamageable,
+                    () => gameObject),
+
+                AttackType.StraightProjectile => new StraightProjectileAttack(
+                    config.GetAttack<StraightProjectileAttackConfig>(AttackType.StraightProjectile),
+                    GetLineOfSight(),
+                    GetProjectileLauncher(),
+                    GetDamageable,
+                    () => gameObject),
+
+                AttackType.ParabolicProjectile => new ParabolicProjectileAttack(
+                    config.GetAttack<ParabolicProjectileAttackConfig>(AttackType.ParabolicProjectile),
+                    GetLineOfSight(),
+                    GetGroundProjection(),
+                    GetProjectileLauncher(),
+                    () => gameObject),
+
+                _ => throw new System.InvalidOperationException($"Unsupported attack type '{type}'.")
+            };
+        }
+
+        private static bool TryGetDamageable(SelectedTarget target, out IDamageable damageable)
+        {
+            damageable = null;
+            if (!target.IsValid || target.Targetable.TargetPoint == null)
             {
                 return false;
             }
 
-            DamageResult result = damageable.ApplyDamage(BuildDamageData());
-            if (!result.WasApplied)
+            damageable = target.Targetable.TargetPoint.GetComponentInParent<IDamageable>();
+            if (damageable == null)
             {
                 return false;
             }
 
-            nextAttackTime = Time.time + attackInterval;
             return true;
         }
 
-        private DamageData BuildDamageData()
+        private static IDamageable GetDamageable(SelectedTarget target)
         {
-            List<PartialDamage> damageParts = new();
-            if (damage != null)
-            {
-                for (int i = 0; i < damage.Count; i++)
-                {
-                    PartialDamageRange damageRange = damage[i];
-                    int minDamage = Mathf.CeilToInt(damageRange.MinDamage);
-                    int maxDamage = Mathf.Max(minDamage, Mathf.FloorToInt(damageRange.MaxDamage));
-                    float amount = Random.Range(minDamage, maxDamage + 1);
-
-                    damageParts.Add(new PartialDamage(
-                        amount,
-                        damageRange.DamageType,
-                        damageRange.DamageElement));
-                }
-            }
-
-            return new DamageData(damageParts, gameObject);
+            return TryGetDamageable(target, out IDamageable damageable) ? damageable : null;
         }
 
-        private static bool TryGetDamageable(ITargetable target, out IDamageable damageable)
+        private IEnemyLineOfSight GetLineOfSight()
         {
-            damageable = null;
-            if (target?.TargetPoint == null)
+            if (lineOfSight == null)
             {
-                return false;
+                lineOfSight = GetComponent<LineOfSight>();
             }
 
-            damageable = target.TargetPoint.GetComponentInParent<IDamageable>();
-            return damageable != null && damageable.CanReceiveDamage;
+            if (lineOfSight == null)
+            {
+                throw new System.InvalidOperationException("Missing field lineOfSight.");
+            }
+
+            return lineOfSight;
         }
 
-        private void OnValidate()
+        private IEnemyGroundProjection GetGroundProjection()
         {
-            attackRange = Mathf.Max(0f, attackRange);
-            attackInterval = Mathf.Max(0f, attackInterval);
+            if (groundProjection == null)
+            {
+                groundProjection = GetComponent<GroundProjection>();
+            }
+
+            if (groundProjection == null)
+            {
+                throw new System.InvalidOperationException("Missing field groundProjection.");
+            }
+
+            return groundProjection;
+        }
+
+        private IProjectileLauncher GetProjectileLauncher()
+        {
+            if (projectileLauncher == null)
+            {
+                projectileLauncher = GetComponent<ProjectileLauncher>();
+            }
+
+            if (projectileLauncher == null)
+            {
+                throw new System.InvalidOperationException("Missing field projectileLauncher.");
+            }
+
+            return projectileLauncher;
         }
     }
 }

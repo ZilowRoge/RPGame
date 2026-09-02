@@ -1,14 +1,18 @@
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
 using RPGame.Combat.Damage;
+using RPGame.Combat.Projectiles;
 using RPGame.Core.Damage;
 using RPGame.Core.Statistics;
 using RPGame.Core.Targeting;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.TestTools;
 
 namespace RPGame.Enemies.Tests
 {
@@ -19,7 +23,6 @@ namespace RPGame.Enemies.Tests
 
         private GameObject enemyObject;
         private Detection detection;
-        private Attack attack;
         private RPGame.Enemies.Controller controller;
 
         [SetUp]
@@ -27,13 +30,10 @@ namespace RPGame.Enemies.Tests
         {
             ClearTargetRegistry();
 
-            enemyObject = CreateObject("Enemy");
-            enemyObject.transform.position = Vector3.zero;
-            enemyObject.AddComponent<NavMeshAgent>();
-            detection = enemyObject.AddComponent<Detection>();
-            controller = enemyObject.AddComponent<RPGame.Enemies.Controller>();
-            attack = enemyObject.GetComponent<Attack>();
-            ConfigureAttack(attack, 1.5f, 0.1f, 10f);
+            enemyObject = CreateEnemy("Enemy");
+            detection = enemyObject.GetComponent<Detection>();
+            controller = enemyObject.GetComponent<RPGame.Enemies.Controller>();
+            ConfigureMeleeEnemy(controller, 1.5f, 0.1f, 10f);
             InvokeStart(controller);
         }
 
@@ -42,17 +42,23 @@ namespace RPGame.Enemies.Tests
         {
             for (int i = createdObjects.Count - 1; i >= 0; i--)
             {
-                Object.DestroyImmediate(createdObjects[i]);
+                UnityEngine.Object.DestroyImmediate(createdObjects[i]);
             }
 
             for (int i = createdAssets.Count - 1; i >= 0; i--)
             {
-                Object.DestroyImmediate(createdAssets[i]);
+                UnityEngine.Object.DestroyImmediate(createdAssets[i]);
             }
 
             createdObjects.Clear();
             createdAssets.Clear();
             ClearTargetRegistry();
+        }
+
+        [Test]
+        public void Start_WithMeleeBehaviourConfig_CreatesMeleeEnemyBehaviour()
+        {
+            Assert.IsInstanceOf<MeleeEnemyBehaviour>(controller.Behaviour);
         }
 
         [Test]
@@ -91,6 +97,168 @@ namespace RPGame.Enemies.Tests
         }
 
         [Test]
+        public void Start_WhenMeleeAttackIsMissing_DisablesController()
+        {
+            GameObject enemy = CreateEnemy("MissingMeleeAttackEnemy");
+            RPGame.Enemies.Controller enemyController = enemy.GetComponent<RPGame.Enemies.Controller>();
+            Config config = CreateEnemyConfig(CreateAsset<MeleeEnemyBehaviourConfig>());
+            ConfigureController(enemyController, config);
+
+            LogAssert.Expect(LogType.Error, "Missing attack config for 'Melee'.");
+            LogAssert.Expect(LogType.Error, "Attack 'Melee' failed to initialize.");
+
+            InvokeStart(enemyController);
+
+            Assert.IsFalse(enemyController.enabled);
+            Assert.IsNull(enemyController.Behaviour);
+        }
+
+        [Test]
+        public void Start_WithRangedBehaviourConfig_CreatesRangedEnemyBehaviour()
+        {
+            RPGame.Enemies.Controller rangedController = CreateConfiguredRangedController("RangedEnemy");
+
+            InvokeStart(rangedController);
+
+            Assert.IsInstanceOf<RangedEnemyBehaviour>(rangedController.Behaviour);
+        }
+
+        [Test]
+        public void Tick_WithRangedBehaviourInRetreat_UsesStraightAttack()
+        {
+            RPGame.Enemies.Controller rangedController = CreateConfiguredRangedController("RangedEnemyRetreat");
+
+            InvokeStart(rangedController);
+            RangedEnemyBehaviour rangedBehaviour = (RangedEnemyBehaviour)rangedController.Behaviour;
+            TargetFixture target = CreateDamageableTarget("RangedTarget", new Vector3(0f, 0f, 1f));
+            rangedController.GetComponent<Detection>().RefreshDetection();
+
+            rangedBehaviour.Tick(0.1f);
+
+            Assert.AreEqual(RangedBehaviourState.Retreat, rangedBehaviour.State);
+            EnemyStraightProjectile spawnedStraightProjectile = UnityEngine.Object
+                .FindObjectsByType<EnemyStraightProjectile>()
+                .FirstOrDefault(projectile => !createdObjects.Contains(projectile.gameObject));
+            if (spawnedStraightProjectile != null)
+            {
+                createdObjects.Add(spawnedStraightProjectile.gameObject);
+            }
+
+            Assert.IsNotNull(spawnedStraightProjectile);
+            Assert.IsFalse(UnityEngine.Object.FindObjectsByType<EnemyParabolicProjectile>()
+                .Any(projectile => !createdObjects.Contains(projectile.gameObject)));
+        }
+
+        [Test]
+        public void Tick_WithRangedBehaviourInHold_UsesParabolicAttack()
+        {
+            RPGame.Enemies.Controller rangedController = CreateConfiguredRangedController("RangedEnemyHold");
+            CreateGround();
+            InvokeStart(rangedController);
+            RangedEnemyBehaviour rangedBehaviour = (RangedEnemyBehaviour)rangedController.Behaviour;
+            TargetFixture target = CreateDamageableTarget("HoldTarget", new Vector3(0f, 0f, 3f));
+            rangedController.GetComponent<Detection>().RefreshDetection();
+
+            rangedBehaviour.Tick(0.1f);
+
+            EnemyParabolicProjectile spawnedParabolicProjectile = UnityEngine.Object
+                .FindObjectsByType<EnemyParabolicProjectile>()
+                .FirstOrDefault(projectile => !createdObjects.Contains(projectile.gameObject));
+            if (spawnedParabolicProjectile != null)
+            {
+                createdObjects.Add(spawnedParabolicProjectile.gameObject);
+            }
+
+            Assert.AreEqual(RangedBehaviourState.Hold, rangedBehaviour.State);
+            Assert.IsNotNull(spawnedParabolicProjectile);
+            Assert.IsFalse(UnityEngine.Object.FindObjectsByType<EnemyStraightProjectile>()
+                .Any(projectile => !createdObjects.Contains(projectile.gameObject)));
+        }
+
+        [Test]
+        public void Start_WhenRangedStraightAttackIsMissing_DisablesController()
+        {
+            RPGame.Enemies.Controller rangedController = CreateConfiguredRangedController(
+                "MissingStraightEnemy",
+                AttackType.ParabolicProjectile);
+
+            LogAssert.Expect(LogType.Error, "Missing attack config for 'StraightProjectile'.");
+            LogAssert.Expect(LogType.Error, "Attack 'StraightProjectile' failed to initialize.");
+
+            InvokeStart(rangedController);
+
+            Assert.IsFalse(rangedController.enabled);
+            Assert.IsNull(rangedController.Behaviour);
+        }
+
+        [Test]
+        public void Start_WhenRangedParabolicAttackIsMissing_DisablesController()
+        {
+            RPGame.Enemies.Controller rangedController = CreateConfiguredRangedController(
+                "MissingParabolicEnemy",
+                AttackType.StraightProjectile);
+
+            LogAssert.Expect(LogType.Error, "Missing attack config for 'ParabolicProjectile'.");
+            LogAssert.Expect(LogType.Error, "Attack 'ParabolicProjectile' failed to initialize.");
+
+            InvokeStart(rangedController);
+
+            Assert.IsFalse(rangedController.enabled);
+            Assert.IsNull(rangedController.Behaviour);
+        }
+
+        [Test]
+        public void Start_WhenRequiredRangedAttackDependencyIsMissing_DisablesController()
+        {
+            GameObject enemy = CreateEnemy("MissingLineOfSightEnemy");
+            enemy.AddComponent<GroundProjection>();
+            enemy.AddComponent<ProjectileLauncher>();
+            RPGame.Enemies.Controller rangedController = enemy.GetComponent<RPGame.Enemies.Controller>();
+            Config config = CreateRangedEnemyConfig();
+            ConfigureController(rangedController, config);
+
+            LogAssert.Expect(LogType.Error, "Missing field lineOfSight.");
+            LogAssert.Expect(LogType.Error, "Attack 'StraightProjectile' failed to initialize.");
+
+            InvokeStart(rangedController);
+
+            Assert.IsFalse(rangedController.enabled);
+            Assert.IsNull(rangedController.Behaviour);
+        }
+
+        [Test]
+        public void Start_WhenBehaviourConfigIsMissing_DisablesControllerWithoutMeleeFallback()
+        {
+            GameObject enemy = CreateEnemy("MissingBehaviourConfigEnemy");
+            RPGame.Enemies.Controller enemyController = enemy.GetComponent<RPGame.Enemies.Controller>();
+            Config config = CreateEnemyConfig(null);
+            ConfigureController(enemyController, config);
+
+            LogAssert.Expect(LogType.Error, "Missing field behaviourConfig.");
+
+            InvokeStart(enemyController);
+
+            Assert.IsFalse(enemyController.enabled);
+            Assert.IsNull(enemyController.Behaviour);
+        }
+
+        [Test]
+        public void Start_WhenBehaviourConfigIsUnsupported_DisablesController()
+        {
+            GameObject enemy = CreateEnemy("UnsupportedBehaviourEnemy");
+            RPGame.Enemies.Controller enemyController = enemy.GetComponent<RPGame.Enemies.Controller>();
+            Config config = CreateEnemyConfig(CreateAsset<UnsupportedEnemyBehaviourConfig>());
+            ConfigureController(enemyController, config);
+
+            LogAssert.Expect(LogType.Error, "Unsupported behaviour config 'UnsupportedEnemyBehaviourConfig'.");
+
+            InvokeStart(enemyController);
+
+            Assert.IsFalse(enemyController.enabled);
+            Assert.IsNull(enemyController.Behaviour);
+        }
+
+        [Test]
         public void Controller_DoesNotStoreAttackCooldown()
         {
             bool hasCooldownField = typeof(RPGame.Enemies.Controller)
@@ -124,10 +292,97 @@ namespace RPGame.Enemies.Tests
                 .Any(field =>
                     field.FieldType == typeof(DamageData)
                     || field.FieldType == typeof(NavMeshAgent)
-                    || field.FieldType.Namespace == "UnityEngine.AI");
+                    || field.FieldType.Namespace == "UnityEngine.AI"
+                    || field.FieldType == typeof(LineOfSight)
+                    || field.FieldType == typeof(GroundProjection)
+                    || field.FieldType == typeof(ProjectileLauncher));
 
             Assert.IsFalse(referencesForbiddenAssembly);
             Assert.IsFalse(hasForbiddenField);
+        }
+
+        [Test]
+        public void Controller_DoesNotContainAttackRules()
+        {
+            string source = File.ReadAllText(Path.Combine(Application.dataPath, "Enemies", "Scripts", "Controller.cs"));
+
+            Assert.IsFalse(source.Contains("HasLineOfSight", StringComparison.Ordinal));
+            Assert.IsFalse(source.Contains("DamageData", StringComparison.Ordinal));
+            Assert.IsFalse(source.Contains("ProjectileLaunchData", StringComparison.Ordinal));
+            Assert.IsFalse(source.Contains("IsInRange(", StringComparison.Ordinal));
+            Assert.IsFalse(source.Contains("TryAttack(", StringComparison.Ordinal));
+        }
+
+        [Test]
+        public void EnemyBehaviour_IsSelectedWithoutGlobalBehaviourEnum()
+        {
+            bool hasGlobalBehaviourEnum = typeof(RPGame.Enemies.Controller).Assembly
+                .GetTypes()
+                .Any(type => type.IsEnum
+                    && (type.Name == "EnemyType" || type.Name == "EnemyBehaviourType"));
+
+            Assert.IsFalse(hasGlobalBehaviourEnum);
+        }
+
+        [Test]
+        public void MeleeEnemyBehaviourConfig_IsExplicitBehaviourConfigMarker()
+        {
+            Assert.IsTrue(typeof(EnemyBehaviourConfigBase).IsAssignableFrom(typeof(MeleeEnemyBehaviourConfig)));
+            Assert.AreEqual(0, typeof(MeleeEnemyBehaviourConfig)
+                .GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly)
+                .Length);
+        }
+
+        [Test]
+        public void Config_IsSerializedOnlyOnController()
+        {
+            FieldInfo controllerConfig = typeof(RPGame.Enemies.Controller)
+                .GetField("config", BindingFlags.Instance | BindingFlags.NonPublic);
+            FieldInfo attackConfig = typeof(Attack)
+                .GetField("config", BindingFlags.Instance | BindingFlags.NonPublic);
+
+            Assert.IsNotNull(controllerConfig);
+            Assert.IsTrue(controllerConfig.IsDefined(typeof(SerializeField), false));
+            Assert.IsNotNull(attackConfig);
+            Assert.IsFalse(attackConfig.IsDefined(typeof(SerializeField), false));
+        }
+
+        private RPGame.Enemies.Controller CreateConfiguredRangedController(string objectName)
+        {
+            GameObject enemy = CreateEnemy(objectName);
+            enemy.AddComponent<LineOfSight>();
+            enemy.AddComponent<GroundProjection>();
+            enemy.AddComponent<ProjectileLauncher>();
+
+            RPGame.Enemies.Controller enemyController = enemy.GetComponent<RPGame.Enemies.Controller>();
+            Config config = CreateRangedEnemyConfig();
+            ConfigureController(enemyController, config);
+            return enemyController;
+        }
+
+        private RPGame.Enemies.Controller CreateConfiguredRangedController(
+            string objectName,
+            AttackType attackType)
+        {
+            GameObject enemy = CreateEnemy(objectName);
+            enemy.AddComponent<LineOfSight>();
+            enemy.AddComponent<GroundProjection>();
+            enemy.AddComponent<ProjectileLauncher>();
+
+            RPGame.Enemies.Controller enemyController = enemy.GetComponent<RPGame.Enemies.Controller>();
+            Config config = CreateRangedEnemyConfig(attackType);
+            ConfigureController(enemyController, config);
+            return enemyController;
+        }
+
+        private GameObject CreateEnemy(string objectName)
+        {
+            GameObject enemy = CreateObject(objectName);
+            enemy.transform.position = Vector3.zero;
+            enemy.AddComponent<NavMeshAgent>();
+            enemy.AddComponent<Detection>();
+            enemy.AddComponent<RPGame.Enemies.Controller>();
+            return enemy;
         }
 
         private TargetFixture CreateDamageableTarget(string objectName, Vector3 position)
@@ -135,7 +390,7 @@ namespace RPGame.Enemies.Tests
             GameObject targetObject = CreateObject(objectName);
             targetObject.transform.position = position;
 
-            StatisticsConfig config = CreateConfig(100f);
+            StatisticsConfig config = CreateStatisticsConfig(100f);
             StatisticsController statistics = targetObject.AddComponent<StatisticsController>();
             SetControllerConfig(statistics, config);
             statistics.ResetToConfig();
@@ -154,10 +409,9 @@ namespace RPGame.Enemies.Tests
             return gameObject;
         }
 
-        private StatisticsConfig CreateConfig(float maxHealth)
+        private StatisticsConfig CreateStatisticsConfig(float maxHealth)
         {
-            StatisticsConfig statisticsConfig = ScriptableObject.CreateInstance<StatisticsConfig>();
-            createdAssets.Add(statisticsConfig);
+            StatisticsConfig statisticsConfig = CreateAsset<StatisticsConfig>();
 
             SerializedObject serializedConfig = new(statisticsConfig);
             serializedConfig.FindProperty("maxHealth").floatValue = maxHealth;
@@ -172,21 +426,170 @@ namespace RPGame.Enemies.Tests
             return statisticsConfig;
         }
 
-        private static void ConfigureAttack(Attack attack, float attackRange, float attackInterval, float damageAmount)
+        private void ConfigureMeleeEnemy(
+            RPGame.Enemies.Controller enemyController,
+            float attackRange,
+            float attackInterval,
+            float damageAmount)
         {
-            SerializedObject serializedAttack = new(attack);
-            serializedAttack.FindProperty("attackRange").floatValue = attackRange;
-            serializedAttack.FindProperty("attackInterval").floatValue = attackInterval;
+            MeleeAttackConfig meleeAttackConfig = CreateMeleeAttackConfig(attackRange, attackInterval, damageAmount);
+            Config config = CreateEnemyConfig(
+                CreateAsset<MeleeEnemyBehaviourConfig>(),
+                (AttackType.Melee, meleeAttackConfig));
 
-            SerializedProperty damageProperty = serializedAttack.FindProperty("damage");
+            ConfigureController(enemyController, config);
+        }
+
+        private Config CreateRangedEnemyConfig(params AttackType[] attackTypes)
+        {
+            EnemyStraightProjectile straightProjectilePrefab = CreateStraightProjectilePrefab("StraightProjectilePrefab");
+            EnemyParabolicProjectile parabolicProjectilePrefab = CreateParabolicProjectilePrefab("ParabolicProjectilePrefab");
+            AttackType[] configuredTypes = attackTypes.Length > 0
+                ? attackTypes
+                : new[] { AttackType.StraightProjectile, AttackType.ParabolicProjectile };
+            List<(AttackType Type, AttackConfig Config)> attacks = new();
+
+            for (int i = 0; i < configuredTypes.Length; i++)
+            {
+                AttackType type = configuredTypes[i];
+                attacks.Add(type switch
+                {
+                    AttackType.StraightProjectile => (
+                        AttackType.StraightProjectile,
+                        CreateStraightProjectileAttackConfig(straightProjectilePrefab)),
+                    AttackType.ParabolicProjectile => (
+                        AttackType.ParabolicProjectile,
+                        CreateParabolicProjectileAttackConfig(parabolicProjectilePrefab)),
+                    _ => throw new InvalidOperationException($"Unsupported ranged test attack type '{type}'.")
+                });
+            }
+
+            return CreateEnemyConfig(CreateRangedBehaviourConfig(), attacks.ToArray());
+        }
+
+        private Config CreateEnemyConfig(
+            EnemyBehaviourConfigBase behaviourConfig,
+            params (AttackType Type, AttackConfig Config)[] attacks)
+        {
+            Config config = CreateAsset<Config>();
+            SerializedObject serializedConfig = new(config);
+            serializedConfig.FindProperty("behaviourConfig").objectReferenceValue = behaviourConfig;
+            SerializedProperty attacksProperty = serializedConfig.FindProperty("attacks");
+            attacksProperty.arraySize = attacks.Length;
+
+            for (int i = 0; i < attacks.Length; i++)
+            {
+                SerializedProperty attackEntry = attacksProperty.GetArrayElementAtIndex(i);
+                attackEntry.FindPropertyRelative("type").enumValueIndex = (int)attacks[i].Type;
+                attackEntry.FindPropertyRelative("config").objectReferenceValue = attacks[i].Config;
+            }
+
+            serializedConfig.ApplyModifiedPropertiesWithoutUndo();
+            return config;
+        }
+
+        private MeleeAttackConfig CreateMeleeAttackConfig(float attackRange, float attackInterval, float damageAmount)
+        {
+            MeleeAttackConfig meleeAttackConfig = CreateAsset<MeleeAttackConfig>();
+            SerializedObject serializedMeleeConfig = new(meleeAttackConfig);
+            serializedMeleeConfig.FindProperty("attackInterval").floatValue = attackInterval;
+            serializedMeleeConfig.FindProperty("attackRange").floatValue = attackRange;
+            ConfigureDamage(serializedMeleeConfig, damageAmount);
+            serializedMeleeConfig.ApplyModifiedPropertiesWithoutUndo();
+            return meleeAttackConfig;
+        }
+
+        private StraightProjectileAttackConfig CreateStraightProjectileAttackConfig(EnemyStraightProjectile projectilePrefab)
+        {
+            StraightProjectileAttackConfig config = CreateAsset<StraightProjectileAttackConfig>();
+            SerializedObject serializedConfig = new(config);
+            serializedConfig.FindProperty("attackInterval").floatValue = 0.1f;
+            serializedConfig.FindProperty("projectilePrefab").objectReferenceValue = projectilePrefab.gameObject;
+            ConfigureDamage(serializedConfig, 10f);
+            serializedConfig.ApplyModifiedPropertiesWithoutUndo();
+            return config;
+        }
+
+        private ParabolicProjectileAttackConfig CreateParabolicProjectileAttackConfig(EnemyParabolicProjectile projectilePrefab)
+        {
+            ParabolicProjectileAttackConfig config = CreateAsset<ParabolicProjectileAttackConfig>();
+            SerializedObject serializedConfig = new(config);
+            serializedConfig.FindProperty("attackInterval").floatValue = 0.1f;
+            serializedConfig.FindProperty("targetRandomRadius").floatValue = 0f;
+            serializedConfig.FindProperty("projectilePrefab").objectReferenceValue = projectilePrefab.gameObject;
+            ConfigureDamage(serializedConfig, 10f);
+            serializedConfig.ApplyModifiedPropertiesWithoutUndo();
+            return config;
+        }
+
+        private RangedEnemyBehaviourConfig CreateRangedBehaviourConfig()
+        {
+            RangedEnemyBehaviourConfig config = CreateAsset<RangedEnemyBehaviourConfig>();
+            SerializedObject serializedConfig = new(config);
+            serializedConfig.FindProperty("minRange").floatValue = 2f;
+            serializedConfig.FindProperty("maxRange").floatValue = 5f;
+            serializedConfig.FindProperty("rangeHysteresis").floatValue = 0.5f;
+            serializedConfig.ApplyModifiedPropertiesWithoutUndo();
+            return config;
+        }
+
+        private void ConfigureController(RPGame.Enemies.Controller enemyController, Config config)
+        {
+            SerializedObject serializedController = new(enemyController);
+            serializedController.FindProperty("config").objectReferenceValue = config;
+            serializedController.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private static void ConfigureDamage(SerializedObject serializedConfig, float damageAmount)
+        {
+            SerializedProperty damageProperty = serializedConfig.FindProperty("damage");
             damageProperty.arraySize = 1;
             SerializedProperty damageEntry = damageProperty.GetArrayElementAtIndex(0);
             damageEntry.FindPropertyRelative("minDamage").floatValue = damageAmount;
             damageEntry.FindPropertyRelative("maxDamage").floatValue = damageAmount;
             damageEntry.FindPropertyRelative("damageType").enumValueIndex = (int)DamageType.Physical;
             damageEntry.FindPropertyRelative("damageElement").enumValueIndex = (int)DamageElement.None;
+        }
 
-            serializedAttack.ApplyModifiedPropertiesWithoutUndo();
+        private EnemyStraightProjectile CreateStraightProjectilePrefab(string objectName)
+        {
+            GameObject projectileObject = CreateObject(objectName);
+            projectileObject.AddComponent<StraightProjectileMover>();
+            EnemyStraightProjectile projectile = projectileObject.AddComponent<EnemyStraightProjectile>();
+            SerializedObject serializedProjectile = new(projectile);
+            serializedProjectile.FindProperty("projectileSpeed").floatValue = 6f;
+            serializedProjectile.FindProperty("projectileLifetime").floatValue = 5f;
+            serializedProjectile.ApplyModifiedPropertiesWithoutUndo();
+            return projectile;
+        }
+
+        private EnemyParabolicProjectile CreateParabolicProjectilePrefab(string objectName)
+        {
+            GameObject projectileObject = CreateObject(objectName);
+            projectileObject.AddComponent<ParabolicProjectileMover>();
+            EnemyParabolicProjectile projectile = projectileObject.AddComponent<EnemyParabolicProjectile>();
+            SerializedObject serializedProjectile = new(projectile);
+            serializedProjectile.FindProperty("projectileLifetime").floatValue = 5f;
+            serializedProjectile.FindProperty("arcHeight").floatValue = 3f;
+            serializedProjectile.FindProperty("ascentDuration").floatValue = 0.75f;
+            serializedProjectile.FindProperty("descentDuration").floatValue = 0.5f;
+            serializedProjectile.ApplyModifiedPropertiesWithoutUndo();
+            return projectile;
+        }
+
+        private void CreateGround()
+        {
+            GameObject ground = GameObject.CreatePrimitive(PrimitiveType.Plane);
+            ground.name = "Ground";
+            ground.transform.localScale = new Vector3(3f, 1f, 3f);
+            createdObjects.Add(ground);
+        }
+
+        private T CreateAsset<T>() where T : ScriptableObject
+        {
+            T asset = ScriptableObject.CreateInstance<T>();
+            createdAssets.Add(asset);
+            return asset;
         }
 
         private static void SetControllerConfig(StatisticsController controller, StatisticsConfig statisticsConfig)
@@ -236,6 +639,10 @@ namespace RPGame.Enemies.Tests
 
             public PlayerTargetable Targetable { get; }
             public StatisticsController Statistics { get; }
+        }
+
+        private sealed class UnsupportedEnemyBehaviourConfig : EnemyBehaviourConfigBase
+        {
         }
     }
 }

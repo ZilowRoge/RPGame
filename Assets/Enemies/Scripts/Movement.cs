@@ -4,7 +4,7 @@ using UnityEngine.AI;
 namespace RPGame.Enemies
 {
     [RequireComponent(typeof(NavMeshAgent))]
-    public sealed class Movement : MonoBehaviour
+    public sealed class Movement : MonoBehaviour, IEnemyMovement
     {
         [SerializeField] private float moveSpeed = 3.5f;
         [SerializeField] private float destinationChangeThreshold = 0.05f;
@@ -13,7 +13,7 @@ namespace RPGame.Enemies
         private Vector3 lastDestination;
         private bool hasDestination;
 
-        public float MoveSpeed => moveSpeed;
+        private Vector3 Position => transform.position;
 
         private void Start()
         {
@@ -27,7 +27,7 @@ namespace RPGame.Enemies
             ConfigureAgent();
         }
 
-        public void MoveTo(Vector3 position)
+        internal void MoveTo(Vector3 position)
         {
             if (!CanUseAgent())
             {
@@ -50,7 +50,7 @@ namespace RPGame.Enemies
             }
         }
 
-        public void Stop()
+        internal void Stop()
         {
             if (!CanUseAgent())
             {
@@ -58,6 +58,23 @@ namespace RPGame.Enemies
             }
 
             agent.isStopped = true;
+        }
+
+        private bool TryResolvePosition(Vector3 desiredPosition, out Vector3 validPosition)
+        {
+            validPosition = default;
+            if (agent == null)
+            {
+                return false;
+            }
+
+            if (!NavMesh.SamplePosition(desiredPosition, out NavMeshHit hit, agent.height, agent.areaMask))
+            {
+                return false;
+            }
+
+            validPosition = hit.position;
+            return true;
         }
 
         private void ConfigureAgent()
@@ -106,6 +123,23 @@ namespace RPGame.Enemies
             moveSpeed = Mathf.Max(0f, moveSpeed);
             destinationChangeThreshold = Mathf.Max(0f, destinationChangeThreshold);
             ConfigureAgent();
+        }
+
+        void IEnemyMovement.MoveTo(Vector3 position)
+        {
+            MoveTo(position);
+        }
+
+        void IEnemyMovement.Stop()
+        {
+            Stop();
+        }
+
+        Vector3 IEnemyMovement.Position => Position;
+
+        bool IEnemyMovement.TryResolvePosition(Vector3 desiredPosition, out Vector3 validPosition)
+        {
+            return TryResolvePosition(desiredPosition, out validPosition);
         }
     }
 }

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
+using RPGame.Combat.Projectiles;
 using RPGame.Combat.Damage;
 using RPGame.Core.Damage;
 using RPGame.Core.Statistics;
@@ -24,7 +25,7 @@ namespace RPGame.Enemies.Tests
         {
             attackerObject = CreateObject("Enemy");
             attack = attackerObject.AddComponent<Attack>();
-            ConfigureAttack(attack, 2f, 0.1f, 10f);
+            ConfigureAttack(attack, 2f, 0.05f, 10f);
         }
 
         [TearDown]
@@ -49,8 +50,8 @@ namespace RPGame.Enemies.Tests
         {
             PlayerTargetable target = CreateDamageableTarget("Target", new Vector3(3f, 0f, 0f)).Targetable;
 
-            Assert.IsFalse(attack.IsInRange(target));
-            Assert.IsFalse(attack.TryAttack(target));
+            Assert.IsFalse(AttackInterface.IsInRange(CreateSelectedTarget(target)));
+            Assert.IsFalse(AttackInterface.TryAttack(CreateSelectedTarget(target)));
         }
 
         [Test]
@@ -58,7 +59,7 @@ namespace RPGame.Enemies.Tests
         {
             PlayerTargetable target = CreateDamageableTarget("Target", new Vector3(1f, 0f, 0f)).Targetable;
 
-            Assert.IsTrue(attack.IsInRange(target));
+            Assert.IsTrue(AttackInterface.IsInRange(CreateSelectedTarget(target)));
         }
 
         [Test]
@@ -68,7 +69,7 @@ namespace RPGame.Enemies.Tests
             DamageResult receivedResult = default;
             target.DamageReceiver.DamageReceived += result => receivedResult = result;
 
-            bool attacked = attack.TryAttack(target.Targetable);
+            bool attacked = AttackInterface.TryAttack(CreateSelectedTarget(target.Targetable));
 
             Assert.IsTrue(attacked);
             Assert.IsTrue(receivedResult.WasApplied);
@@ -83,7 +84,7 @@ namespace RPGame.Enemies.Tests
         {
             TargetFixture target = CreateDamageableTarget("Target", new Vector3(1f, 0f, 0f));
 
-            bool attacked = attack.TryAttack(target.Targetable);
+            bool attacked = AttackInterface.TryAttack(CreateSelectedTarget(target.Targetable));
 
             Assert.IsTrue(attacked);
             Assert.AreEqual(90f, target.Statistics.CurrentHealth);
@@ -94,24 +95,87 @@ namespace RPGame.Enemies.Tests
         {
             TargetFixture target = CreateDamageableTarget("Target", new Vector3(1f, 0f, 0f));
 
-            Assert.IsTrue(attack.TryAttack(target.Targetable));
-            Assert.IsFalse(attack.TryAttack(target.Targetable));
+            Assert.IsTrue(AttackInterface.TryAttack(CreateSelectedTarget(target.Targetable)));
+            Assert.IsFalse(AttackInterface.TryAttack(CreateSelectedTarget(target.Targetable)));
             Assert.AreEqual(90f, target.Statistics.CurrentHealth);
         }
 
         [Test]
         public void TryAttack_WhenAttackIntervalExpired_IsAllowedAgain()
         {
-            ConfigureAttack(attack, 2f, 0.05f, 10f);
             TargetFixture target = CreateDamageableTarget("Target", new Vector3(1f, 0f, 0f));
 
-            Assert.IsTrue(attack.TryAttack(target.Targetable));
+            Assert.IsTrue(AttackInterface.TryAttack(CreateSelectedTarget(target.Targetable)));
 
-            SetNextAttackTime(attack, Time.time);
+            AttackInterface.Tick(0.05f);
 
-            Assert.IsTrue(attack.TryAttack(target.Targetable));
+            Assert.IsTrue(AttackInterface.TryAttack(CreateSelectedTarget(target.Targetable)));
             Assert.AreEqual(80f, target.Statistics.CurrentHealth);
         }
+
+        [Test]
+        public void AttackAdapter_DoesNotOwnCooldownRangeOrDamageData()
+        {
+            FieldInfo[] fields = typeof(Attack).GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+
+            Assert.IsFalse(fields.Any(field => field.Name.Contains("nextAttackTime")));
+            Assert.IsFalse(fields.Any(field => field.Name.Contains("attackRange")));
+            Assert.IsFalse(fields.Any(field => field.Name.Contains("attackInterval")));
+            Assert.IsFalse(fields.Any(field => field.FieldType == typeof(List<PartialDamageRange>)));
+        }
+
+        [Test]
+        public void TryAttack_WhenConfiguredAsStraightProjectile_DelegatesToProjectileRuntime()
+        {
+            GameObject rangedEnemy = CreateObject("RangedEnemy");
+            Attack rangedAttack = rangedEnemy.AddComponent<Attack>();
+            LineOfSight lineOfSight = rangedEnemy.AddComponent<LineOfSight>();
+            ProjectileLauncher projectileLauncher = rangedEnemy.AddComponent<ProjectileLauncher>();
+            EnemyStraightProjectile projectilePrefab = CreateProjectilePrefab("StraightProjectilePrefab");
+            ConfigureStraightProjectileAttack(rangedAttack, lineOfSight, projectileLauncher, projectilePrefab);
+            TargetFixture target = CreateDamageableTarget("Target", new Vector3(0f, 0f, 10f));
+
+            bool attacked = ((IEnemyAttack)rangedAttack).TryAttack(CreateSelectedTarget(target.Targetable));
+
+            EnemyStraightProjectile spawnedProjectile = UnityEngine.Object
+                .FindObjectsByType<EnemyStraightProjectile>()
+                .First(projectile => projectile != projectilePrefab);
+            createdObjects.Add(spawnedProjectile.gameObject);
+
+            Assert.IsTrue(attacked);
+            Assert.IsTrue(spawnedProjectile.IsInitialized);
+            Assert.AreEqual(6f, spawnedProjectile.CurrentSpeed);
+        }
+
+        [Test]
+        public void TryAttack_WhenConfiguredAsParabolicProjectile_DelegatesToProjectileRuntime()
+        {
+            GameObject rangedEnemy = CreateObject("ParabolicRangedEnemy");
+            rangedEnemy.transform.position = new Vector3(0f, 1f, 0f);
+            Attack rangedAttack = rangedEnemy.AddComponent<Attack>();
+            LineOfSight lineOfSight = rangedEnemy.AddComponent<LineOfSight>();
+            GroundProjection groundProjection = rangedEnemy.AddComponent<GroundProjection>();
+            ProjectileLauncher projectileLauncher = rangedEnemy.AddComponent<ProjectileLauncher>();
+            EnemyParabolicProjectile projectilePrefab = CreateParabolicProjectilePrefab("ParabolicProjectilePrefab");
+            ConfigureParabolicProjectileAttack(rangedAttack, lineOfSight, groundProjection, projectileLauncher, projectilePrefab);
+            CreateGround();
+            TargetFixture target = CreateDamageableTarget("ParabolicTarget", new Vector3(0f, 1f, 10f));
+            Physics.SyncTransforms();
+
+            bool attacked = ((IEnemyAttack)rangedAttack).TryAttack(CreateSelectedTarget(target.Targetable));
+
+            Assert.IsTrue(attacked);
+
+            EnemyParabolicProjectile spawnedProjectile = UnityEngine.Object
+                .FindObjectsByType<EnemyParabolicProjectile>()
+                .First(projectile => projectile != projectilePrefab);
+            createdObjects.Add(spawnedProjectile.gameObject);
+
+            Assert.IsTrue(spawnedProjectile.IsInitialized);
+            AssertVector(new Vector3(0f, 0f, 10f), spawnedProjectile.ImpactPoint);
+            Assert.AreEqual(3f, spawnedProjectile.ApexPoint.y - 0.5f, 0.0001f);
+        }
+
 
         [Test]
         public void Attack_DoesNotReferencePlayerDetectionOrMovement()
@@ -170,21 +234,152 @@ namespace RPGame.Enemies.Tests
             return statisticsConfig;
         }
 
-        private static void ConfigureAttack(Attack attack, float attackRange, float attackInterval, float damageAmount)
+        private void ConfigureAttack(Attack attack, float attackRange, float attackInterval, float damageAmount)
         {
-            SerializedObject serializedAttack = new(attack);
-            serializedAttack.FindProperty("attackRange").floatValue = attackRange;
-            serializedAttack.FindProperty("attackInterval").floatValue = attackInterval;
+            MeleeAttackConfig meleeAttackConfig = ScriptableObject.CreateInstance<MeleeAttackConfig>();
+            createdAssets.Add(meleeAttackConfig);
+            SerializedObject serializedMeleeConfig = new(meleeAttackConfig);
+            serializedMeleeConfig.FindProperty("attackInterval").floatValue = attackInterval;
+            serializedMeleeConfig.FindProperty("attackRange").floatValue = attackRange;
 
-            SerializedProperty damageProperty = serializedAttack.FindProperty("damage");
+            SerializedProperty damageProperty = serializedMeleeConfig.FindProperty("damage");
             damageProperty.arraySize = 1;
             SerializedProperty damageEntry = damageProperty.GetArrayElementAtIndex(0);
             damageEntry.FindPropertyRelative("minDamage").floatValue = damageAmount;
             damageEntry.FindPropertyRelative("maxDamage").floatValue = damageAmount;
             damageEntry.FindPropertyRelative("damageType").enumValueIndex = (int)DamageType.Physical;
             damageEntry.FindPropertyRelative("damageElement").enumValueIndex = (int)DamageElement.None;
+            serializedMeleeConfig.ApplyModifiedPropertiesWithoutUndo();
 
+            Config config = ScriptableObject.CreateInstance<Config>();
+            createdAssets.Add(config);
+            SerializedObject serializedConfig = new(config);
+            SerializedProperty attacksProperty = serializedConfig.FindProperty("attacks");
+            attacksProperty.arraySize = 1;
+            SerializedProperty attackEntry = attacksProperty.GetArrayElementAtIndex(0);
+            attackEntry.FindPropertyRelative("type").enumValueIndex = (int)AttackType.Melee;
+            attackEntry.FindPropertyRelative("config").objectReferenceValue = meleeAttackConfig;
+            serializedConfig.ApplyModifiedPropertiesWithoutUndo();
+
+            SerializedObject serializedAttack = new(attack);
+            serializedAttack.FindProperty("attackType").enumValueIndex = (int)AttackType.Melee;
             serializedAttack.ApplyModifiedPropertiesWithoutUndo();
+            attack.SetConfig(config);
+        }
+
+        private void ConfigureStraightProjectileAttack(
+            Attack attack,
+            LineOfSight lineOfSight,
+            ProjectileLauncher projectileLauncher,
+            EnemyStraightProjectile projectilePrefab)
+        {
+            StraightProjectileAttackConfig straightConfig = ScriptableObject.CreateInstance<StraightProjectileAttackConfig>();
+            createdAssets.Add(straightConfig);
+            SerializedObject serializedStraightConfig = new(straightConfig);
+            serializedStraightConfig.FindProperty("projectilePrefab").objectReferenceValue = projectilePrefab.gameObject;
+            serializedStraightConfig.FindProperty("attackInterval").floatValue = 0.1f;
+
+            SerializedProperty damageProperty = serializedStraightConfig.FindProperty("damage");
+            damageProperty.arraySize = 1;
+            SerializedProperty damageEntry = damageProperty.GetArrayElementAtIndex(0);
+            damageEntry.FindPropertyRelative("minDamage").floatValue = 10f;
+            damageEntry.FindPropertyRelative("maxDamage").floatValue = 10f;
+            damageEntry.FindPropertyRelative("damageType").enumValueIndex = (int)DamageType.Physical;
+            damageEntry.FindPropertyRelative("damageElement").enumValueIndex = (int)DamageElement.None;
+            serializedStraightConfig.ApplyModifiedPropertiesWithoutUndo();
+
+            Config config = ScriptableObject.CreateInstance<Config>();
+            createdAssets.Add(config);
+            SerializedObject serializedConfig = new(config);
+            SerializedProperty attacksProperty = serializedConfig.FindProperty("attacks");
+            attacksProperty.arraySize = 1;
+            SerializedProperty attackEntry = attacksProperty.GetArrayElementAtIndex(0);
+            attackEntry.FindPropertyRelative("type").enumValueIndex = (int)AttackType.StraightProjectile;
+            attackEntry.FindPropertyRelative("config").objectReferenceValue = straightConfig;
+            serializedConfig.ApplyModifiedPropertiesWithoutUndo();
+
+            SerializedObject serializedAttack = new(attack);
+            serializedAttack.FindProperty("attackType").enumValueIndex = (int)AttackType.StraightProjectile;
+            serializedAttack.FindProperty("lineOfSight").objectReferenceValue = lineOfSight;
+            serializedAttack.FindProperty("projectileLauncher").objectReferenceValue = projectileLauncher;
+            serializedAttack.ApplyModifiedPropertiesWithoutUndo();
+            attack.SetConfig(config);
+        }
+
+        private void ConfigureParabolicProjectileAttack(
+            Attack attack,
+            LineOfSight lineOfSight,
+            GroundProjection groundProjection,
+            ProjectileLauncher projectileLauncher,
+            EnemyParabolicProjectile projectilePrefab)
+        {
+            ParabolicProjectileAttackConfig parabolicConfig = ScriptableObject.CreateInstance<ParabolicProjectileAttackConfig>();
+            createdAssets.Add(parabolicConfig);
+            SerializedObject serializedParabolicConfig = new(parabolicConfig);
+            serializedParabolicConfig.FindProperty("projectilePrefab").objectReferenceValue = projectilePrefab.gameObject;
+            serializedParabolicConfig.FindProperty("attackInterval").floatValue = 0.1f;
+            serializedParabolicConfig.FindProperty("targetRandomRadius").floatValue = 0f;
+
+            SerializedProperty damageProperty = serializedParabolicConfig.FindProperty("damage");
+            damageProperty.arraySize = 1;
+            SerializedProperty damageEntry = damageProperty.GetArrayElementAtIndex(0);
+            damageEntry.FindPropertyRelative("minDamage").floatValue = 10f;
+            damageEntry.FindPropertyRelative("maxDamage").floatValue = 10f;
+            damageEntry.FindPropertyRelative("damageType").enumValueIndex = (int)DamageType.Physical;
+            damageEntry.FindPropertyRelative("damageElement").enumValueIndex = (int)DamageElement.None;
+            serializedParabolicConfig.ApplyModifiedPropertiesWithoutUndo();
+
+            Config config = ScriptableObject.CreateInstance<Config>();
+            createdAssets.Add(config);
+            SerializedObject serializedConfig = new(config);
+            SerializedProperty attacksProperty = serializedConfig.FindProperty("attacks");
+            attacksProperty.arraySize = 1;
+            SerializedProperty attackEntry = attacksProperty.GetArrayElementAtIndex(0);
+            attackEntry.FindPropertyRelative("type").enumValueIndex = (int)AttackType.ParabolicProjectile;
+            attackEntry.FindPropertyRelative("config").objectReferenceValue = parabolicConfig;
+            serializedConfig.ApplyModifiedPropertiesWithoutUndo();
+
+            SerializedObject serializedAttack = new(attack);
+            serializedAttack.FindProperty("attackType").enumValueIndex = (int)AttackType.ParabolicProjectile;
+            serializedAttack.FindProperty("lineOfSight").objectReferenceValue = lineOfSight;
+            serializedAttack.FindProperty("groundProjection").objectReferenceValue = groundProjection;
+            serializedAttack.FindProperty("projectileLauncher").objectReferenceValue = projectileLauncher;
+            serializedAttack.ApplyModifiedPropertiesWithoutUndo();
+            attack.SetConfig(config);
+        }
+
+        private EnemyStraightProjectile CreateProjectilePrefab(string objectName)
+        {
+            GameObject projectileObject = CreateObject(objectName);
+            projectileObject.AddComponent<StraightProjectileMover>();
+            EnemyStraightProjectile projectile = projectileObject.AddComponent<EnemyStraightProjectile>();
+            SerializedObject serializedProjectile = new(projectile);
+            serializedProjectile.FindProperty("projectileSpeed").floatValue = 6f;
+            serializedProjectile.FindProperty("projectileLifetime").floatValue = 5f;
+            serializedProjectile.ApplyModifiedPropertiesWithoutUndo();
+            return projectile;
+        }
+
+        private EnemyParabolicProjectile CreateParabolicProjectilePrefab(string objectName)
+        {
+            GameObject projectileObject = CreateObject(objectName);
+            projectileObject.AddComponent<ParabolicProjectileMover>();
+            EnemyParabolicProjectile projectile = projectileObject.AddComponent<EnemyParabolicProjectile>();
+            SerializedObject serializedProjectile = new(projectile);
+            serializedProjectile.FindProperty("projectileLifetime").floatValue = 5f;
+            serializedProjectile.FindProperty("arcHeight").floatValue = 3f;
+            serializedProjectile.FindProperty("ascentDuration").floatValue = 0.75f;
+            serializedProjectile.FindProperty("descentDuration").floatValue = 0.5f;
+            serializedProjectile.ApplyModifiedPropertiesWithoutUndo();
+            return projectile;
+        }
+
+        private void CreateGround()
+        {
+            GameObject ground = GameObject.CreatePrimitive(PrimitiveType.Plane);
+            ground.name = "Ground";
+            ground.transform.localScale = new Vector3(3f, 1f, 3f);
+            createdObjects.Add(ground);
         }
 
         private static void SetControllerConfig(StatisticsController controller, StatisticsConfig statisticsConfig)
@@ -202,11 +397,19 @@ namespace RPGame.Enemies.Tests
             serializedReceiver.ApplyModifiedPropertiesWithoutUndo();
         }
 
-        private static void SetNextAttackTime(Attack attack, float nextAttackTime)
+        private static SelectedTarget CreateSelectedTarget(PlayerTargetable targetable)
         {
-            FieldInfo field = typeof(Attack).GetField("nextAttackTime", BindingFlags.Instance | BindingFlags.NonPublic);
-            field.SetValue(attack, nextAttackTime);
+            return new SelectedTarget(targetable, targetable.TargetPoint.position);
         }
+
+        private static void AssertVector(Vector3 expected, Vector3 actual)
+        {
+            Assert.AreEqual(expected.x, actual.x, 0.0001f);
+            Assert.AreEqual(expected.y, actual.y, 0.0001f);
+            Assert.AreEqual(expected.z, actual.z, 0.0001f);
+        }
+
+        private IEnemyAttack AttackInterface => attack;
 
         private readonly struct TargetFixture
         {
