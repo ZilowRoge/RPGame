@@ -14,9 +14,10 @@ namespace RPGame.Inventory
         [SerializeField] private List<ItemDefinition> startingItems = new();
         [SerializeField] private InventoryModel inventory = new();
         [SerializeField] private Equipment equipment = new();
+        [SerializeField] private ConsumableSlots consumableSlots = new();
         [SerializeField] private EffectAggregator effectAggregator;
 
-        private InventoryEquipmentService equipmentService;
+        private InventoryEquipmentService itemTransferService;
         private InventoryConsumableService consumableService;
         private bool initialized;
 
@@ -48,6 +49,20 @@ namespace RPGame.Inventory
             }
         }
 
+        public event Action OnConsumableSlotsChanged
+        {
+            add
+            {
+                EnsureInitialized();
+                consumableSlots.OnConsumableSlotsChanged += value;
+            }
+            remove
+            {
+                EnsureInitialized();
+                consumableSlots.OnConsumableSlotsChanged -= value;
+            }
+        }
+
         public InventoryModel Inventory
         {
             get
@@ -66,6 +81,15 @@ namespace RPGame.Inventory
             }
         }
 
+        public ConsumableSlots ConsumableSlots
+        {
+            get
+            {
+                EnsureInitialized();
+                return consumableSlots;
+            }
+        }
+
         private void Awake()
         {
             EnsureInitialized();
@@ -74,13 +98,13 @@ namespace RPGame.Inventory
         public bool EquipFromInventory(int inventoryIndex)
         {
             EnsureInitialized();
-            return equipmentService.EquipFromInventory(inventoryIndex);
+            return itemTransferService.EquipFromInventory(inventoryIndex);
         }
 
         public bool UnequipToInventory(EquipmentSlotType slotType)
         {
             EnsureInitialized();
-            return equipmentService.UnequipToInventory(slotType);
+            return itemTransferService.UnequipToInventory(slotType);
         }
 
         public bool AddItem(ItemDefinition definition, int amount)
@@ -98,13 +122,19 @@ namespace RPGame.Inventory
         public bool MoveItem(ItemSlotReference from, ItemSlotReference to)
         {
             EnsureInitialized();
-            return equipmentService.MoveItem(from, to);
+            return itemTransferService.MoveItem(from, to);
         }
 
         public bool UseConsumableFromInventory(int inventoryIndex)
         {
             EnsureInitialized();
             return consumableService.UseFromInventory(inventoryIndex);
+        }
+
+        public bool UseConsumableSlot(ConsumableSlotType slotType)
+        {
+            EnsureInitialized();
+            return consumableService.UseFromConsumableSlot(slotType);
         }
 
         public ItemInstance GetEquippedItem(EquipmentSlotType slotType)
@@ -124,9 +154,11 @@ namespace RPGame.Inventory
             inventory.Initialize(inventorySize);
             equipment ??= new Equipment();
             equipment.Initialize();
+            consumableSlots ??= new ConsumableSlots();
+            consumableSlots.Initialize();
             effectAggregator ??= GetComponent<EffectAggregator>();
-            equipmentService = new InventoryEquipmentService(inventory, equipment);
-            consumableService = new InventoryConsumableService(inventory, effectAggregator);
+            itemTransferService = new InventoryEquipmentService(inventory, equipment, consumableSlots);
+            consumableService = new InventoryConsumableService(inventory, consumableSlots, effectAggregator);
             AddStartingItems();
             initialized = true;
         }

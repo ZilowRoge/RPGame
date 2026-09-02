@@ -2,7 +2,8 @@
     "name": "RPGame.Inventory",
     "rootNamespace": "RPGame.Inventory",
     "references": [
-        "RPGame.Core"
+        "RPGame.Core",
+        "Unity.InputSystem"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
