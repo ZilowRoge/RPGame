@@ -2,13 +2,13 @@ using System.Collections.Generic;
 
 namespace RPGame.Core.Effects
 {
-    public sealed class EffectContainer
+    public sealed class PernamentEffectContainer
     {
         private readonly List<EffectInstance> effects = new();
 
         public IReadOnlyList<EffectInstance> Effects => effects;
 
-        public void Add(EffectDefinition definition)
+        public void Add(PassiveEffectDefinition definition)
         {
             if (definition == null)
             {
@@ -22,14 +22,14 @@ namespace RPGame.Core.Effects
             }
         }
 
-        public void AddRange(IEnumerable<EffectDefinition> definitions)
+        public void AddRange(IEnumerable<PassiveEffectDefinition> definitions)
         {
             if (definitions == null)
             {
                 return;
             }
 
-            foreach (EffectDefinition definition in definitions)
+            foreach (PassiveEffectDefinition definition in definitions)
             {
                 Add(definition);
             }
@@ -60,7 +60,7 @@ namespace RPGame.Core.Effects
             }
         }
 
-        private static EffectInstance CreateInstance(EffectDefinition definition)
+        private static EffectInstance CreateInstance(PassiveEffectDefinition definition)
         {
             if (definition is StatEffectDefinition statEffect)
             {

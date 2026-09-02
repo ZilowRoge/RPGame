@@ -5,23 +5,40 @@ namespace RPGame.Core.Effects
 {
     public sealed class EffectAggregator : MonoBehaviour
     {
-        private readonly EffectContainer container = new();
+        private readonly PernamentEffectContainer pernamentContainer = new();
+        private readonly TimedEffectContainer timedContainer = new();
 
-        public IReadOnlyList<EffectInstance> Effects => container.Effects;
+        public IReadOnlyList<EffectInstance> Effects => pernamentContainer.Effects;
+        public IReadOnlyList<TimedEffectInstance> TimedEffects => timedContainer.Effects;
 
-        public void Add(EffectDefinition definition)
+        private void Update()
         {
-            container.Add(definition);
+            timedContainer.Tick(Time.deltaTime);
         }
 
-        public void AddRange(IEnumerable<EffectDefinition> definitions)
+        public void Add(PassiveEffectDefinition definition)
         {
-            container.AddRange(definitions);
+            pernamentContainer.Add(definition);
+        }
+
+        public void AddRange(IEnumerable<PassiveEffectDefinition> definitions)
+        {
+            pernamentContainer.AddRange(definitions);
+        }
+
+        public void AddTimedEffect(ActiveEffectDefinition definition, float duration)
+        {
+            timedContainer.Add(definition, duration);
+        }
+
+        public void ClearTimedEffects()
+        {
+            timedContainer.Clear();
         }
 
         public float GetEffectValue(EffectStat stat, EffectModifierType modifierType)
         {
-            return container.GetEffectValue(stat, modifierType);
+            return pernamentContainer.GetEffectValue(stat, modifierType);
         }
     }
 }
