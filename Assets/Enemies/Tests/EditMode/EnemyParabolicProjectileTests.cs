@@ -72,7 +72,7 @@ namespace RPGame.Enemies.Tests
         }
 
         [Test]
-        public void Tick_ReachesApexOnceWithZeroSpeedAndStartsDescent()
+        public void Tick_ReachesApexOnceWithoutPauseAndStartsDescent()
         {
             EnemyParabolicProjectile projectile = CreateProjectile(Vector3.zero);
             int eventCount = 0;
@@ -87,7 +87,7 @@ namespace RPGame.Enemies.Tests
             Assert.IsTrue(projectile.HasReachedApex);
             Assert.AreEqual(1, projectile.ApexReachedCount);
             Assert.AreEqual(1, eventCount);
-            Assert.AreEqual(0f, projectile.CurrentSpeed, 0.0001f);
+            Assert.Greater(projectile.CurrentSpeed, 0f);
             Assert.AreEqual(ParabolicProjectilePhase.Descending, projectile.Phase);
         }
 
@@ -143,7 +143,7 @@ namespace RPGame.Enemies.Tests
         public void Tick_AscentSpeedIncreasesThenFallsToZeroAtApex()
         {
             EnemyParabolicProjectile projectile = CreateProjectile(Vector3.zero);
-            ConfigureProjectile(projectile, 10f, 4f, 1f, 1f);
+            ConfigureProjectile(projectile, 10f, 4f, 1f, 0.5f, 1f);
             projectile.Initialize(new Vector3(10f, 0f, 0f), null, CreateDamageParts(), null);
 
             projectile.Tick(0.25f);
@@ -266,7 +266,49 @@ namespace RPGame.Enemies.Tests
             Assert.AreEqual(1, splitStep.ApexReachedCount);
             Assert.AreEqual(ParabolicProjectilePhase.Descending, singleStep.Phase);
             AssertVector(singleStep.ApexPoint, singleStepPositionAtApex);
-            Assert.AreEqual(0f, singleStepSpeedAtApex, 0.0001f);
+            Assert.Greater(singleStepSpeedAtApex, 0f);
+            AssertVector(splitStep.transform.position, singleStep.transform.position);
+            Assert.AreEqual(splitStep.CurrentSpeed, singleStep.CurrentSpeed, 0.0001f);
+            Assert.AreNotEqual(singleStep.ApexPoint, singleStep.transform.position);
+        }
+
+        [Test]
+        public void Tick_WithApexPause_HoldsProjectileAtApex()
+        {
+            EnemyParabolicProjectile projectile = CreateProjectile(Vector3.zero);
+            ConfigureProjectile(projectile, 10f, 4f, 1f, 0.5f, 1f);
+            projectile.Initialize(new Vector3(10f, 0f, 0f), null, CreateDamageParts(), null);
+
+            projectile.Tick(1.25f);
+
+            Assert.AreEqual(ParabolicProjectilePhase.Apex, projectile.Phase);
+            AssertVector(projectile.ApexPoint, projectile.transform.position);
+            Assert.AreEqual(0f, projectile.CurrentSpeed, 0.0001f);
+            Assert.AreEqual(1, projectile.ApexReachedCount);
+        }
+
+        [Test]
+        public void Tick_WhenDeltaTimeCrossesApexPause_ConsumesRemainingTimeInDescent()
+        {
+            Vector3 impact = new(10f, 0f, 0f);
+            EnemyParabolicProjectile singleStep = CreateProjectile(Vector3.zero);
+            EnemyParabolicProjectile splitStep = CreateProjectile(Vector3.zero);
+            int eventCount = 0;
+            singleStep.ApexReached += _ => eventCount++;
+            ConfigureProjectile(singleStep, 10f, 4f, 1f, 0.5f, 1f);
+            ConfigureProjectile(splitStep, 10f, 4f, 1f, 0.5f, 1f);
+            singleStep.Initialize(impact, null, CreateDamageParts(), null);
+            splitStep.Initialize(impact, null, CreateDamageParts(), null);
+
+            singleStep.Tick(1.75f);
+            splitStep.Tick(1f);
+            splitStep.Tick(0.5f);
+            splitStep.Tick(0.25f);
+
+            Assert.AreEqual(1, eventCount);
+            Assert.AreEqual(1, singleStep.ApexReachedCount);
+            Assert.AreEqual(1, splitStep.ApexReachedCount);
+            Assert.AreEqual(ParabolicProjectilePhase.Descending, singleStep.Phase);
             AssertVector(splitStep.transform.position, singleStep.transform.position);
             Assert.AreEqual(splitStep.CurrentSpeed, singleStep.CurrentSpeed, 0.0001f);
             Assert.AreNotEqual(singleStep.ApexPoint, singleStep.transform.position);
@@ -481,7 +523,7 @@ namespace RPGame.Enemies.Tests
             TestDamageable blocked = CreateDamageable("Blocked", new Vector3(13f, 0f, 0f));
             TestDamageable visible = CreateDamageable("Visible", new Vector3(10f, 0f, 1f));
             CreateEnvironment("Wall", new Vector3(11.5f, 0f, 0f), new Vector3(0.2f, 3f, 3f));
-            ConfigureProjectile(projectile, 10f, 4f, 1f, 1f, null, 4f, LayerMask.GetMask("Default"));
+            ConfigureProjectile(projectile, 10f, 4f, 1f, 0f, 1f, null, 4f, LayerMask.GetMask("Default"));
             projectile.Initialize(new Vector3(10f, 0f, 0f), null, CreateDamageParts(), null);
             Physics.SyncTransforms();
 
@@ -559,7 +601,18 @@ namespace RPGame.Enemies.Tests
             float ascentDuration,
             float descentDuration)
         {
-            ConfigureProjectile(projectile, projectileLifetime, arcHeight, ascentDuration, descentDuration, null, 2f);
+            ConfigureProjectile(projectile, projectileLifetime, arcHeight, ascentDuration, 0f, descentDuration, null, 2f, 0);
+        }
+
+        private static void ConfigureProjectile(
+            EnemyParabolicProjectile projectile,
+            float projectileLifetime,
+            float arcHeight,
+            float ascentDuration,
+            float apexPauseDuration,
+            float descentDuration)
+        {
+            ConfigureProjectile(projectile, projectileLifetime, arcHeight, ascentDuration, apexPauseDuration, descentDuration, null, 2f, 0);
         }
 
         private static void ConfigureProjectile(
@@ -576,6 +629,7 @@ namespace RPGame.Enemies.Tests
                 projectileLifetime,
                 arcHeight,
                 ascentDuration,
+                0f,
                 descentDuration,
                 telegraphPrefab,
                 aoeRadius,
@@ -587,6 +641,7 @@ namespace RPGame.Enemies.Tests
             float projectileLifetime,
             float arcHeight,
             float ascentDuration,
+            float apexPauseDuration,
             float descentDuration,
             GameObject telegraphPrefab,
             float aoeRadius,
@@ -597,6 +652,7 @@ namespace RPGame.Enemies.Tests
             serializedProjectile.FindProperty("projectileLifetime").floatValue = projectileLifetime;
             serializedProjectile.FindProperty("arcHeight").floatValue = arcHeight;
             serializedProjectile.FindProperty("ascentDuration").floatValue = ascentDuration;
+            serializedProjectile.FindProperty("apexPauseDuration").floatValue = apexPauseDuration;
             serializedProjectile.FindProperty("descentDuration").floatValue = descentDuration;
             serializedProjectile.FindProperty("telegraphPrefab").objectReferenceValue = telegraphPrefab;
             serializedProjectile.FindProperty("aoeRadius").floatValue = aoeRadius;

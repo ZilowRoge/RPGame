@@ -15,6 +15,7 @@ namespace RPGame.Enemies
         [SerializeField] private float projectileLifetime = 5f;
         [SerializeField] private float arcHeight = 3f;
         [SerializeField] private float ascentDuration = 0.75f;
+        [SerializeField] private float apexPauseDuration;
         [SerializeField] private float descentDuration = 0.5f;
         [SerializeField] private GameObject telegraphPrefab;
         [SerializeField] private float aoeRadius = 2f;
@@ -64,6 +65,7 @@ namespace RPGame.Enemies
                 targetPosition,
                 arcHeight,
                 ascentDuration,
+                apexPauseDuration,
                 descentDuration);
         }
 
@@ -224,6 +226,7 @@ namespace RPGame.Enemies
             projectileLifetime = Mathf.Max(0f, projectileLifetime);
             arcHeight = Mathf.Max(0f, arcHeight);
             ascentDuration = Mathf.Max(0.001f, ascentDuration);
+            apexPauseDuration = Mathf.Max(0f, apexPauseDuration);
             descentDuration = Mathf.Max(0.001f, descentDuration);
             aoeRadius = Mathf.Max(0f, aoeRadius);
         }

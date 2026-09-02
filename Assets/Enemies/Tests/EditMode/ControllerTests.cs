@@ -137,7 +137,7 @@ namespace RPGame.Enemies.Tests
 
             Assert.AreEqual(RangedBehaviourState.Retreat, rangedBehaviour.State);
             EnemyStraightProjectile spawnedStraightProjectile = UnityEngine.Object
-                .FindObjectsByType<EnemyStraightProjectile>(FindObjectsSortMode.None)
+                .FindObjectsByType<EnemyStraightProjectile>()
                 .FirstOrDefault(projectile => !createdObjects.Contains(projectile.gameObject));
             if (spawnedStraightProjectile != null)
             {
@@ -145,7 +145,7 @@ namespace RPGame.Enemies.Tests
             }
 
             Assert.IsNotNull(spawnedStraightProjectile);
-            Assert.IsFalse(UnityEngine.Object.FindObjectsByType<EnemyParabolicProjectile>(FindObjectsSortMode.None)
+            Assert.IsFalse(UnityEngine.Object.FindObjectsByType<EnemyParabolicProjectile>()
                 .Any(projectile => !createdObjects.Contains(projectile.gameObject)));
         }
 
@@ -162,7 +162,7 @@ namespace RPGame.Enemies.Tests
             rangedBehaviour.Tick(0.1f);
 
             EnemyParabolicProjectile spawnedParabolicProjectile = UnityEngine.Object
-                .FindObjectsByType<EnemyParabolicProjectile>(FindObjectsSortMode.None)
+                .FindObjectsByType<EnemyParabolicProjectile>()
                 .FirstOrDefault(projectile => !createdObjects.Contains(projectile.gameObject));
             if (spawnedParabolicProjectile != null)
             {
@@ -171,7 +171,7 @@ namespace RPGame.Enemies.Tests
 
             Assert.AreEqual(RangedBehaviourState.Hold, rangedBehaviour.State);
             Assert.IsNotNull(spawnedParabolicProjectile);
-            Assert.IsFalse(UnityEngine.Object.FindObjectsByType<EnemyStraightProjectile>(FindObjectsSortMode.None)
+            Assert.IsFalse(UnityEngine.Object.FindObjectsByType<EnemyStraightProjectile>()
                 .Any(projectile => !createdObjects.Contains(projectile.gameObject)));
         }
 
