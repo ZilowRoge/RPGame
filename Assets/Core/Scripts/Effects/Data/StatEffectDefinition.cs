@@ -5,7 +5,7 @@ using UnityEngine;
 namespace RPGame.Core.Effects
 {
     [CreateAssetMenu(fileName = "StatEffect", menuName = "RPGame/Progression/Effects/Stat Effect")]
-    public sealed class StatEffectDefinition : EffectDefinition
+    public sealed class StatEffectDefinition : PassiveEffectDefinition
     {
         [SerializeField] private EffectStat stat = EffectStat.MaxHealth;
         [SerializeField] private EffectModifierType modifierType = EffectModifierType.Flat;
