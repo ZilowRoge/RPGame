@@ -16,6 +16,7 @@ namespace RPGame.Enemies
         private readonly IEnemyAttack straightAttack;
         private readonly IEnemyAttack parabolicAttack;
         private float repositionSearchCooldown;
+        private float attackDelay;
 
         internal RangedBehaviourState State { get; private set; } = RangedBehaviourState.Idle;
 
@@ -33,6 +34,7 @@ namespace RPGame.Enemies
             this.lineOfSight = lineOfSight;
             this.straightAttack = straightAttack;
             this.parabolicAttack = parabolicAttack;
+            attackDelay = Mathf.Max(0f, Random.Range(-config.AttackDelay, config.AttackDelay));
         }
 
         public void Tick(float deltaTime)
@@ -48,6 +50,7 @@ namespace RPGame.Enemies
             }
 
             repositionSearchCooldown = Mathf.Max(0f, repositionSearchCooldown - deltaTime);
+            attackDelay -= deltaTime;
 
             float distance = Vector3.Distance(movement.Position, target.Position);
             RangedBehaviourState previousState = State;
@@ -63,7 +66,7 @@ namespace RPGame.Enemies
             if (nextState == RangedBehaviourState.Retreat)
             {
                 RetreatFrom(target.Position);
-                straightAttack?.TryAttack(target);
+                TryAttack(straightAttack, target);
                 return;
             }
 
@@ -74,7 +77,20 @@ namespace RPGame.Enemies
             }
 
             movement.Stop();
-            parabolicAttack?.TryAttack(target);
+            TryAttack(parabolicAttack, target);
+        }
+
+        private void TryAttack(IEnemyAttack attack, SelectedTarget target)
+        {
+            if (attackDelay > 0f || attack == null)
+            {
+                return;
+            }
+
+            if (attack.TryAttack(target))
+            {
+                attackDelay = Random.Range(-config.AttackDelay, config.AttackDelay);
+            }
         }
 
         private RangedBehaviourState SelectState(float distance, Vector3 targetPosition)

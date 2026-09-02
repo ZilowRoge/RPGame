@@ -792,6 +792,7 @@ namespace RPGame.Enemies.Tests
             public float MaxRange => maxRange;
             public float RangeHysteresis => rangeHysteresis;
             public float RepositionSearchInterval => 0.5f;
+            public float AttackDelay => 0f;
 
             public static TestRangedEnemyBehaviourConfig Create(
                 float minRange,

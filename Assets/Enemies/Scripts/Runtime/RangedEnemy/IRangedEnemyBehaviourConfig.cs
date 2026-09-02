@@ -6,5 +6,6 @@ namespace RPGame.Enemies
         float MaxRange { get; }
         float RangeHysteresis { get; }
         float RepositionSearchInterval { get; }
+        float AttackDelay { get; }
     }
 }

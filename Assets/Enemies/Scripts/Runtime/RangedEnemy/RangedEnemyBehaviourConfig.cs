@@ -14,11 +14,13 @@ namespace RPGame.Enemies
         [SerializeField] private float maxRange = 8f;
         [SerializeField] private float rangeHysteresis = 0.5f;
         [SerializeField] private float repositionSearchInterval = 0.5f;
+        [SerializeField] private float attackDelay;
 
         public float MinRange => minRange;
         public float MaxRange => maxRange;
         public float RangeHysteresis => rangeHysteresis;
         public float RepositionSearchInterval => repositionSearchInterval;
+        public float AttackDelay => attackDelay;
 
         private void OnValidate()
         {
@@ -27,6 +29,7 @@ namespace RPGame.Enemies
             rangeHysteresis = Mathf.Max(0f, rangeHysteresis);
             rangeHysteresis = Mathf.Min(rangeHysteresis, GetMaxRangeHysteresis(minRange, maxRange));
             repositionSearchInterval = Mathf.Max(MinRepositionSearchInterval, repositionSearchInterval);
+            attackDelay = Mathf.Max(0f, attackDelay);
 
             ValidateRanges(minRange, maxRange, rangeHysteresis);
         }
