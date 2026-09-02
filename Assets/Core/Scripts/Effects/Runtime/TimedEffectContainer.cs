@@ -29,6 +29,13 @@ namespace RPGame.Core.Effects
                 return;
             }
 
+            TimedEffectInstance existingInstance = FindInstance(definition);
+            if (existingInstance != null)
+            {
+                existingInstance.Merge(definition, duration);
+                return;
+            }
+
             if (!instance.IsFinished)
             {
                 effects.Add(instance);
@@ -51,6 +58,19 @@ namespace RPGame.Core.Effects
         public void Clear()
         {
             effects.Clear();
+        }
+
+        private TimedEffectInstance FindInstance(ActiveEffectDefinition definition)
+        {
+            foreach (TimedEffectInstance effect in effects)
+            {
+                if (!effect.IsFinished && effect.CanMerge(definition))
+                {
+                    return effect;
+                }
+            }
+
+            return null;
         }
     }
 }
