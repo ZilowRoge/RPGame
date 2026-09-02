@@ -178,7 +178,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: RPGame.Enemies::RPGame.Enemies.Controller
   detection: {fileID: 896530926046458949}
   movement: {fileID: 8546718972918938816}
-  attack: {fileID: 1434449273843886759}
+  config: {fileID: 11400000, guid: ed08f6085c824b2a8b77efbd58d79cee, type: 2}
 --- !u!114 &896530926046458949
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -219,7 +219,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5c0421790a2f4964903cff3f255e32de, type: 3}
   m_Name: 
   m_EditorClassIdentifier: RPGame.Enemies::RPGame.Enemies.Attack
-  config: {fileID: 11400000, guid: ed08f6085c824b2a8b77efbd58d79cee, type: 2}
   attackType: 0
 --- !u!114 &2422390360541412733
 MonoBehaviour:

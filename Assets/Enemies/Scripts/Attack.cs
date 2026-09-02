@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using RPGame.Core.Damage;
 using UnityEngine;
 
@@ -5,70 +6,78 @@ namespace RPGame.Enemies
 {
     public sealed class Attack : MonoBehaviour, IEnemyAttack
     {
-        [SerializeField] private Config config;
         [SerializeField] private AttackType attackType = AttackType.Melee;
         [SerializeField] private LineOfSight lineOfSight;
         [SerializeField] private GroundProjection groundProjection;
         [SerializeField] private ProjectileLauncher projectileLauncher;
 
-        private IEnemyAttack runtimeAttack;
+        private Config config;
+        private readonly Dictionary<AttackType, IEnemyAttack> runtimeAttacks = new();
 
         float IEnemyAttack.Range
         {
-            get => runtimeAttack != null ? runtimeAttack.Range : 0f;
+            get => TryGetRuntimeAttack(attackType, out IEnemyAttack attack) ? attack.Range : 0f;
         }
 
-        private void Start()
+        internal void SetConfig(Config config)
         {
-            EnsureRuntimeAttack();
-            if (runtimeAttack == null)
+            if (this.config == config)
             {
-                enabled = false;
+                return;
             }
+
+            this.config = config;
+            runtimeAttacks.Clear();
         }
 
         void IEnemyAttack.Tick(float deltaTime)
         {
-            runtimeAttack?.Tick(deltaTime);
+            if (TryGetRuntimeAttack(attackType, out IEnemyAttack attack))
+            {
+                attack.Tick(deltaTime);
+            }
         }
 
         bool IEnemyAttack.IsInRange(SelectedTarget target)
         {
-            return runtimeAttack != null && runtimeAttack.IsInRange(target);
+            return TryGetRuntimeAttack(attackType, out IEnemyAttack attack) && attack.IsInRange(target);
         }
 
         bool IEnemyAttack.TryAttack(SelectedTarget target)
         {
-            return runtimeAttack != null && runtimeAttack.TryAttack(target);
+            return TryGetRuntimeAttack(attackType, out IEnemyAttack attack) && attack.TryAttack(target);
         }
 
-        private void EnsureRuntimeAttack()
+        internal bool TryGetRuntimeAttack(AttackType type, out IEnemyAttack attack)
         {
-            if (runtimeAttack != null)
+            if (runtimeAttacks.TryGetValue(type, out attack))
             {
-                return;
+                return true;
             }
 
             if (config == null)
             {
                 Debug.LogError("Missing field config.", this);
-                return;
+                return false;
             }
 
             try
             {
-                runtimeAttack = CreateRuntimeAttack();
+                attack = CreateRuntimeAttack(type);
+                runtimeAttacks.Add(type, attack);
+                return true;
             }
             catch (System.InvalidOperationException exception)
             {
                 Debug.LogError(exception.Message, this);
-                return;
+                attack = null;
+                return false;
             }
         }
 
-        private IEnemyAttack CreateRuntimeAttack()
+        private IEnemyAttack CreateRuntimeAttack(AttackType type)
         {
-            return attackType switch
+            return type switch
             {
                 AttackType.Melee => new MeleeAttack(
                     config.GetAttack<MeleeAttackConfig>(AttackType.Melee),
@@ -90,7 +99,7 @@ namespace RPGame.Enemies
                     GetProjectileLauncher(),
                     () => gameObject),
 
-                _ => throw new System.InvalidOperationException($"Unsupported attack type '{attackType}'.")
+                _ => throw new System.InvalidOperationException($"Unsupported attack type '{type}'.")
             };
         }
 

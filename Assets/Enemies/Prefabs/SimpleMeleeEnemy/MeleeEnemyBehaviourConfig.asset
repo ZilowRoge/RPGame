@@ -9,10 +9,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6895df9c967c41758aeb7fe3f742d041, type: 3}
-  m_Name: Config
+  m_Script: {fileID: 11500000, guid: 8bbf63c67c1d46f1b99806ab0b4e6d6a, type: 3}
+  m_Name: MeleeEnemyBehaviourConfig
   m_EditorClassIdentifier: 
-  behaviourConfig: {fileID: 11400000, guid: f1a36f3bbd7b41a5a16c3f12d2bf037c, type: 2}
-  attacks:
-  - type: 0
-    config: {fileID: 11400000, guid: 85113169b61d4984a61fd3ca3c2bb6d4, type: 2}

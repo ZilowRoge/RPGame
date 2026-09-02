@@ -26,7 +26,6 @@ namespace RPGame.Enemies.Tests
             attackerObject = CreateObject("Enemy");
             attack = attackerObject.AddComponent<Attack>();
             ConfigureAttack(attack, 2f, 0.05f, 10f);
-            InvokeStart(attack);
         }
 
         [TearDown]
@@ -134,7 +133,6 @@ namespace RPGame.Enemies.Tests
             ProjectileLauncher projectileLauncher = rangedEnemy.AddComponent<ProjectileLauncher>();
             EnemyStraightProjectile projectilePrefab = CreateProjectilePrefab("StraightProjectilePrefab");
             ConfigureStraightProjectileAttack(rangedAttack, lineOfSight, projectileLauncher, projectilePrefab);
-            InvokeStart(rangedAttack);
             TargetFixture target = CreateDamageableTarget("Target", new Vector3(0f, 0f, 10f));
 
             bool attacked = ((IEnemyAttack)rangedAttack).TryAttack(CreateSelectedTarget(target.Targetable));
@@ -160,7 +158,6 @@ namespace RPGame.Enemies.Tests
             ProjectileLauncher projectileLauncher = rangedEnemy.AddComponent<ProjectileLauncher>();
             EnemyParabolicProjectile projectilePrefab = CreateParabolicProjectilePrefab("ParabolicProjectilePrefab");
             ConfigureParabolicProjectileAttack(rangedAttack, lineOfSight, groundProjection, projectileLauncher, projectilePrefab);
-            InvokeStart(rangedAttack);
             CreateGround();
             TargetFixture target = CreateDamageableTarget("ParabolicTarget", new Vector3(0f, 1f, 10f));
             Physics.SyncTransforms();
@@ -265,9 +262,9 @@ namespace RPGame.Enemies.Tests
             serializedConfig.ApplyModifiedPropertiesWithoutUndo();
 
             SerializedObject serializedAttack = new(attack);
-            serializedAttack.FindProperty("config").objectReferenceValue = config;
             serializedAttack.FindProperty("attackType").enumValueIndex = (int)AttackType.Melee;
             serializedAttack.ApplyModifiedPropertiesWithoutUndo();
+            attack.SetConfig(config);
         }
 
         private void ConfigureStraightProjectileAttack(
@@ -302,11 +299,11 @@ namespace RPGame.Enemies.Tests
             serializedConfig.ApplyModifiedPropertiesWithoutUndo();
 
             SerializedObject serializedAttack = new(attack);
-            serializedAttack.FindProperty("config").objectReferenceValue = config;
             serializedAttack.FindProperty("attackType").enumValueIndex = (int)AttackType.StraightProjectile;
             serializedAttack.FindProperty("lineOfSight").objectReferenceValue = lineOfSight;
             serializedAttack.FindProperty("projectileLauncher").objectReferenceValue = projectileLauncher;
             serializedAttack.ApplyModifiedPropertiesWithoutUndo();
+            attack.SetConfig(config);
         }
 
         private void ConfigureParabolicProjectileAttack(
@@ -343,12 +340,12 @@ namespace RPGame.Enemies.Tests
             serializedConfig.ApplyModifiedPropertiesWithoutUndo();
 
             SerializedObject serializedAttack = new(attack);
-            serializedAttack.FindProperty("config").objectReferenceValue = config;
             serializedAttack.FindProperty("attackType").enumValueIndex = (int)AttackType.ParabolicProjectile;
             serializedAttack.FindProperty("lineOfSight").objectReferenceValue = lineOfSight;
             serializedAttack.FindProperty("groundProjection").objectReferenceValue = groundProjection;
             serializedAttack.FindProperty("projectileLauncher").objectReferenceValue = projectileLauncher;
             serializedAttack.ApplyModifiedPropertiesWithoutUndo();
+            attack.SetConfig(config);
         }
 
         private EnemyStraightProjectile CreateProjectilePrefab(string objectName)
@@ -398,12 +395,6 @@ namespace RPGame.Enemies.Tests
             SerializedObject serializedReceiver = new(damageReceiver);
             serializedReceiver.FindProperty("loggingEnabled").boolValue = loggingEnabled;
             serializedReceiver.ApplyModifiedPropertiesWithoutUndo();
-        }
-
-        private static void InvokeStart(Attack attack)
-        {
-            MethodInfo method = typeof(Attack).GetMethod("Start", BindingFlags.Instance | BindingFlags.NonPublic);
-            method.Invoke(attack, null);
         }
 
         private static SelectedTarget CreateSelectedTarget(PlayerTargetable targetable)
