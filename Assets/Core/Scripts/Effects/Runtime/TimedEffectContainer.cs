@@ -15,31 +15,33 @@ namespace RPGame.Core.Effects
             this.statisticsController = statisticsController;
         }
 
-        public void Add(ActiveEffectDefinition definition, float duration)
+        public bool Add(ActiveEffectDefinition definition, float duration)
         {
-            if (definition == null || statisticsController == null || definition.IsFinished(statisticsController))
+            if (definition == null || statisticsController == null)
             {
-                return;
+                return false;
             }
 
             TimedEffectInstance instance = new TimedEffectInstance(definition, duration);
             if (instance.IsInstant)
             {
                 instance.Definition.Apply(statisticsController, definition.Amount);
-                return;
+                return true;
             }
 
             TimedEffectInstance existingInstance = FindInstance(definition);
             if (existingInstance != null)
             {
                 existingInstance.Merge(definition, duration);
-                return;
+                return true;
             }
 
             if (!instance.IsFinished)
             {
                 effects.Add(instance);
             }
+
+            return true;
         }
 
         public void Tick(float deltaTime)

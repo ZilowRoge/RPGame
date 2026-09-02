@@ -37,13 +37,18 @@ namespace RPGame.Core.Effects
 
         public void AddTimedEffect(ActiveEffectDefinition definition, float duration)
         {
+            TryAddTimedEffect(definition, duration);
+        }
+
+        public bool TryAddTimedEffect(ActiveEffectDefinition definition, float duration)
+        {
             IStatisticsController targetStatisticsController = GetStatisticsController();
             if (definition == null || targetStatisticsController == null)
             {
-                return;
+                return false;
             }
 
-            timedContainer.Add(definition, duration);
+            return timedContainer.Add(definition, duration);
         }
 
         public void ClearTimedEffects()

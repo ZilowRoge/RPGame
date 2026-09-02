@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using RPGame.Core.Effects;
 using RPGame.Inventory.Data;
 using RPGame.Inventory.Logic;
 using UnityEngine;
@@ -13,8 +14,10 @@ namespace RPGame.Inventory
         [SerializeField] private List<ItemDefinition> startingItems = new();
         [SerializeField] private InventoryModel inventory = new();
         [SerializeField] private Equipment equipment = new();
+        [SerializeField] private EffectAggregator effectAggregator;
 
-        private InventoryEquipmentService service;
+        private InventoryEquipmentService equipmentService;
+        private InventoryConsumableService consumableService;
         private bool initialized;
 
         public event Action OnInventoryChanged
@@ -71,13 +74,13 @@ namespace RPGame.Inventory
         public bool EquipFromInventory(int inventoryIndex)
         {
             EnsureInitialized();
-            return service.EquipFromInventory(inventoryIndex);
+            return equipmentService.EquipFromInventory(inventoryIndex);
         }
 
         public bool UnequipToInventory(EquipmentSlotType slotType)
         {
             EnsureInitialized();
-            return service.UnequipToInventory(slotType);
+            return equipmentService.UnequipToInventory(slotType);
         }
 
         public bool AddItem(ItemDefinition definition, int amount)
@@ -95,7 +98,13 @@ namespace RPGame.Inventory
         public bool MoveItem(ItemSlotReference from, ItemSlotReference to)
         {
             EnsureInitialized();
-            return service.MoveItem(from, to);
+            return equipmentService.MoveItem(from, to);
+        }
+
+        public bool UseConsumableFromInventory(int inventoryIndex)
+        {
+            EnsureInitialized();
+            return consumableService.UseFromInventory(inventoryIndex);
         }
 
         public ItemInstance GetEquippedItem(EquipmentSlotType slotType)
@@ -115,7 +124,9 @@ namespace RPGame.Inventory
             inventory.Initialize(inventorySize);
             equipment ??= new Equipment();
             equipment.Initialize();
-            service = new InventoryEquipmentService(inventory, equipment);
+            effectAggregator ??= GetComponent<EffectAggregator>();
+            equipmentService = new InventoryEquipmentService(inventory, equipment);
+            consumableService = new InventoryConsumableService(inventory, effectAggregator);
             AddStartingItems();
             initialized = true;
         }
