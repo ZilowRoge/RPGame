@@ -291,6 +291,11 @@ namespace RPGame.Enemies.Tests
                 hasLineOfSight = true;
                 return result;
             }
+
+            public bool HasLineOfSightFrom(Vector3 origin, Vector3 targetPosition)
+            {
+                return hasLineOfSight;
+            }
         }
 
         private sealed class FakeGroundProjection : IEnemyGroundProjection

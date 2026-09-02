@@ -8,13 +8,17 @@ namespace RPGame.Enemies
         menuName = "RPGame/Enemies/Ranged Enemy Behaviour Config")]
     public sealed class RangedEnemyBehaviourConfig : EnemyBehaviourConfigBase, IRangedEnemyBehaviourConfig
     {
+        private const float MinRepositionSearchInterval = 0.001f;
+
         [SerializeField] private float minRange = 3f;
         [SerializeField] private float maxRange = 8f;
         [SerializeField] private float rangeHysteresis = 0.5f;
+        [SerializeField] private float repositionSearchInterval = 0.5f;
 
         public float MinRange => minRange;
         public float MaxRange => maxRange;
         public float RangeHysteresis => rangeHysteresis;
+        public float RepositionSearchInterval => repositionSearchInterval;
 
         private void OnValidate()
         {
@@ -22,6 +26,7 @@ namespace RPGame.Enemies
             maxRange = Mathf.Max(minRange + 0.01f, maxRange);
             rangeHysteresis = Mathf.Max(0f, rangeHysteresis);
             rangeHysteresis = Mathf.Min(rangeHysteresis, GetMaxRangeHysteresis(minRange, maxRange));
+            repositionSearchInterval = Mathf.Max(MinRepositionSearchInterval, repositionSearchInterval);
 
             ValidateRanges(minRange, maxRange, rangeHysteresis);
         }

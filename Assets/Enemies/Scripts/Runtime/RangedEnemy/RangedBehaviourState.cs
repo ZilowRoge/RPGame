@@ -5,6 +5,7 @@ namespace RPGame.Enemies
         Idle,
         Approach,
         Hold,
-        Retreat
+        Retreat,
+        Reposition
     }
 }

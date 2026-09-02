@@ -104,6 +104,7 @@ namespace RPGame.Enemies
                         detection,
                         movement,
                         rangedConfig,
+                        GetComponent<LineOfSight>(),
                         straightAttack,
                         parabolicAttack);
                     return true;

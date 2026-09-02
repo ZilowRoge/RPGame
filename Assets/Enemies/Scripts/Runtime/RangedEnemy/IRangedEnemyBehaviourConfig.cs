@@ -5,5 +5,6 @@ namespace RPGame.Enemies
         float MinRange { get; }
         float MaxRange { get; }
         float RangeHysteresis { get; }
+        float RepositionSearchInterval { get; }
     }
 }

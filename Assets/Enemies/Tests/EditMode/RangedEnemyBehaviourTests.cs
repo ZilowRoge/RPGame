@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -63,6 +64,172 @@ namespace RPGame.Enemies.Tests
             Assert.AreEqual(0, movement.MoveToCount);
             Assert.AreEqual(0, straightAttack.TryAttackCount);
             Assert.AreEqual(1, parabolicAttack.TryAttackCount);
+        }
+
+        [Test]
+        public void Tick_WhenTargetIsInRangeWithoutLineOfSight_Repositions()
+        {
+            FakeDetection detection = CreateDetectionWithTarget(new Vector3(4f, 0f, 0f));
+            FakeMovement movement = new();
+            FakeLineOfSight lineOfSight = new() { HasLineOfSightResult = false };
+            FakeAttack parabolicAttack = new();
+            RangedEnemyBehaviour behaviour = CreateBehaviour(detection, movement, lineOfSight, null, parabolicAttack);
+
+            behaviour.Tick(0.1f);
+
+            Assert.AreEqual(RangedBehaviourState.Reposition, behaviour.State);
+            Assert.AreEqual(1, movement.StopCount);
+            Assert.AreEqual(0, parabolicAttack.TryAttackCount);
+        }
+
+        [Test]
+        public void Tick_WhenRepositionCandidateHasNoLineOfSight_RejectsIt()
+        {
+            Vector3 targetPosition = Vector3.zero;
+            FakeDetection detection = CreateDetectionWithTarget(targetPosition);
+            FakeMovement movement = new() { Position = new Vector3(0f, 0f, -4f) };
+            FakeLineOfSight lineOfSight = new() { HasLineOfSightResult = false };
+            Vector3 blockedCandidate = GetRepositionCandidate(targetPosition, movement.Position, 0);
+            Vector3 visibleCandidate = GetRepositionCandidate(targetPosition, movement.Position, 1);
+            lineOfSight.AddVisibleOrigin(visibleCandidate);
+            RangedEnemyBehaviour behaviour = CreateBehaviour(detection, movement, lineOfSight);
+
+            behaviour.Tick(0.1f);
+
+            Assert.AreEqual(RangedBehaviourState.Reposition, behaviour.State);
+            Assert.AreEqual(1, movement.MoveToCount);
+            Assert.AreEqual(visibleCandidate, movement.LastDestination);
+            Assert.AreNotEqual(blockedCandidate, movement.LastDestination);
+        }
+
+        [Test]
+        public void Tick_WhenRepositionCandidateCannotResolvePosition_RejectsIt()
+        {
+            Vector3 targetPosition = Vector3.zero;
+            FakeDetection detection = CreateDetectionWithTarget(targetPosition);
+            FakeMovement movement = new() { Position = new Vector3(0f, 0f, -4f) };
+            FakeLineOfSight lineOfSight = new() { HasLineOfSightResult = false };
+            Vector3 unresolvedCandidate = GetRepositionCandidate(targetPosition, movement.Position, 0);
+            Vector3 validCandidate = GetRepositionCandidate(targetPosition, movement.Position, 1);
+            movement.RejectDesiredPosition(unresolvedCandidate);
+            lineOfSight.AddVisibleOrigin(unresolvedCandidate);
+            lineOfSight.AddVisibleOrigin(validCandidate);
+            RangedEnemyBehaviour behaviour = CreateBehaviour(detection, movement, lineOfSight);
+
+            behaviour.Tick(0.1f);
+
+            Assert.AreEqual(RangedBehaviourState.Reposition, behaviour.State);
+            Assert.AreEqual(1, movement.MoveToCount);
+            Assert.AreEqual(validCandidate, movement.LastDestination);
+        }
+
+        [Test]
+        public void Tick_WhenRepositionFindsCandidate_MovesToCandidate()
+        {
+            Vector3 targetPosition = Vector3.zero;
+            FakeDetection detection = CreateDetectionWithTarget(targetPosition);
+            FakeMovement movement = new() { Position = new Vector3(0f, 0f, -4f) };
+            FakeLineOfSight lineOfSight = new() { HasLineOfSightResult = false };
+            Vector3 candidate = GetRepositionCandidate(targetPosition, movement.Position, 0);
+            lineOfSight.AddVisibleOrigin(candidate);
+            RangedEnemyBehaviour behaviour = CreateBehaviour(detection, movement, lineOfSight);
+
+            behaviour.Tick(0.1f);
+
+            Assert.AreEqual(RangedBehaviourState.Reposition, behaviour.State);
+            Assert.AreEqual(1, movement.MoveToCount);
+            Assert.AreEqual(candidate, movement.LastDestination);
+        }
+
+        [Test]
+        public void Tick_WhenRepositioning_DoesNotUseParabolicAttack()
+        {
+            Vector3 targetPosition = Vector3.zero;
+            FakeDetection detection = CreateDetectionWithTarget(targetPosition);
+            FakeMovement movement = new() { Position = new Vector3(0f, 0f, -4f) };
+            FakeLineOfSight lineOfSight = new() { HasLineOfSightResult = false };
+            FakeAttack parabolicAttack = new();
+            lineOfSight.AddVisibleOrigin(GetRepositionCandidate(targetPosition, movement.Position, 0));
+            RangedEnemyBehaviour behaviour = CreateBehaviour(detection, movement, lineOfSight, null, parabolicAttack);
+
+            behaviour.Tick(0.1f);
+
+            Assert.AreEqual(RangedBehaviourState.Reposition, behaviour.State);
+            Assert.AreEqual(0, parabolicAttack.TryAttackCount);
+        }
+
+        [Test]
+        public void Tick_WhenRepositioningRegainsLineOfSight_EntersHold()
+        {
+            Vector3 targetPosition = Vector3.zero;
+            FakeDetection detection = CreateDetectionWithTarget(targetPosition);
+            FakeMovement movement = new() { Position = new Vector3(0f, 0f, -4f) };
+            FakeLineOfSight lineOfSight = new() { HasLineOfSightResult = false };
+            FakeAttack parabolicAttack = new();
+            lineOfSight.AddVisibleOrigin(GetRepositionCandidate(targetPosition, movement.Position, 0));
+            RangedEnemyBehaviour behaviour = CreateBehaviour(detection, movement, lineOfSight, null, parabolicAttack);
+            behaviour.Tick(0.1f);
+
+            lineOfSight.HasLineOfSightResult = true;
+            behaviour.Tick(0.1f);
+
+            Assert.AreEqual(RangedBehaviourState.Hold, behaviour.State);
+            Assert.AreEqual(1, movement.StopCount);
+            Assert.AreEqual(1, parabolicAttack.TryAttackCount);
+        }
+
+        [Test]
+        public void Tick_WhenRepositioningBecomesTooFar_Approaches()
+        {
+            Vector3 targetPosition = Vector3.zero;
+            FakeDetection detection = CreateDetectionWithTarget(targetPosition);
+            FakeMovement movement = new() { Position = new Vector3(0f, 0f, -4f) };
+            FakeLineOfSight lineOfSight = new() { HasLineOfSightResult = false };
+            lineOfSight.AddVisibleOrigin(GetRepositionCandidate(targetPosition, movement.Position, 0));
+            RangedEnemyBehaviour behaviour = CreateBehaviour(detection, movement, lineOfSight);
+            behaviour.Tick(0.1f);
+
+            detection.SetTarget(new SelectedTarget(detection.Target.Targetable, new Vector3(8f, 0f, 0f)));
+            behaviour.Tick(0.1f);
+
+            Assert.AreEqual(RangedBehaviourState.Approach, behaviour.State);
+            Assert.AreEqual(new Vector3(8f, 0f, 0f), movement.LastDestination);
+        }
+
+        [Test]
+        public void Tick_WhenRepositioningBecomesTooClose_Retreats()
+        {
+            Vector3 targetPosition = Vector3.zero;
+            FakeDetection detection = CreateDetectionWithTarget(targetPosition);
+            FakeMovement movement = new() { Position = new Vector3(0f, 0f, -4f) };
+            FakeLineOfSight lineOfSight = new() { HasLineOfSightResult = false };
+            FakeAttack straightAttack = new();
+            lineOfSight.AddVisibleOrigin(GetRepositionCandidate(targetPosition, movement.Position, 0));
+            RangedEnemyBehaviour behaviour = CreateBehaviour(detection, movement, lineOfSight, straightAttack);
+            behaviour.Tick(0.1f);
+
+            movement.Position = new Vector3(1f, 0f, 0f);
+            behaviour.Tick(0.1f);
+
+            Assert.AreEqual(RangedBehaviourState.Retreat, behaviour.State);
+            Assert.AreEqual(1, straightAttack.TryAttackCount);
+        }
+
+        [Test]
+        public void Tick_WhenNoRepositionCandidateIsValid_StopsAndThrottlesSearch()
+        {
+            FakeDetection detection = CreateDetectionWithTarget(new Vector3(4f, 0f, 0f));
+            FakeMovement movement = new();
+            FakeLineOfSight lineOfSight = new() { HasLineOfSightResult = false };
+            RangedEnemyBehaviour behaviour = CreateBehaviour(detection, movement, lineOfSight);
+
+            behaviour.Tick(0.1f);
+            behaviour.Tick(0.1f);
+
+            Assert.AreEqual(RangedBehaviourState.Reposition, behaviour.State);
+            Assert.AreEqual(1, movement.StopCount);
+            Assert.AreEqual(8, movement.TryResolvePositionCount);
+            Assert.AreEqual(0, movement.MoveToCount);
         }
 
         [Test]
@@ -367,7 +534,6 @@ namespace RPGame.Enemies.Tests
             Assert.IsFalse(hasForbiddenField);
             Assert.IsFalse(source.Contains("NavMesh", StringComparison.Ordinal));
             Assert.IsFalse(source.Contains("Physics", StringComparison.Ordinal));
-            Assert.IsFalse(source.Contains("LineOfSight", StringComparison.Ordinal));
             Assert.IsFalse(source.Contains("CanStartAttack", StringComparison.Ordinal));
         }
 
@@ -438,7 +604,7 @@ namespace RPGame.Enemies.Tests
 
         private RangedEnemyBehaviour CreateBehaviour(FakeDetection detection, FakeMovement movement)
         {
-            return CreateBehaviour(detection, movement, null, null);
+            return CreateBehaviour(detection, movement, new FakeLineOfSight(), null, null);
         }
 
         private RangedEnemyBehaviour CreateBehaviour(
@@ -447,10 +613,21 @@ namespace RPGame.Enemies.Tests
             IEnemyAttack straightAttack,
             IEnemyAttack parabolicAttack)
         {
+            return CreateBehaviour(detection, movement, new FakeLineOfSight(), straightAttack, parabolicAttack);
+        }
+
+        private RangedEnemyBehaviour CreateBehaviour(
+            FakeDetection detection,
+            FakeMovement movement,
+            FakeLineOfSight lineOfSight,
+            IEnemyAttack straightAttack = null,
+            IEnemyAttack parabolicAttack = null)
+        {
             return new RangedEnemyBehaviour(
                 detection,
                 movement,
                 CreateConfig(2f, 5f, 0.5f),
+                lineOfSight,
                 straightAttack,
                 parabolicAttack);
         }
@@ -468,6 +645,22 @@ namespace RPGame.Enemies.Tests
             FakeDetection detection = new();
             detection.SetTarget(new SelectedTarget(new FakeTargetable(), position));
             return detection;
+        }
+
+        private static Vector3 GetRepositionCandidate(Vector3 targetPosition, Vector3 enemyPosition, int candidateIndex)
+        {
+            Vector3 baseDirection = enemyPosition - targetPosition;
+            baseDirection.y = 0f;
+            if (baseDirection.sqrMagnitude <= 0.0001f)
+            {
+                baseDirection = Vector3.forward;
+            }
+
+            baseDirection.Normalize();
+            int step = (candidateIndex + 1) / 2;
+            int side = candidateIndex % 2 == 0 ? 1 : -1;
+            float angle = 360f / 8f * step * side;
+            return targetPosition + Quaternion.AngleAxis(angle, Vector3.up) * baseDirection * 3.5f;
         }
 
         private sealed class FakeDetection : IEnemyDetection
@@ -497,9 +690,12 @@ namespace RPGame.Enemies.Tests
 
         private sealed class FakeMovement : IEnemyMovement
         {
+            private readonly HashSet<Vector3> unresolvedDesiredPositions = new();
+
             public bool CanResolvePosition { get; set; } = true;
             public int MoveToCount { get; private set; }
             public int StopCount { get; private set; }
+            public int TryResolvePositionCount { get; private set; }
             public Vector3 Position { get; set; }
             public Vector3 LastDestination { get; private set; }
             public Vector3 LastDesiredPosition { get; private set; }
@@ -517,9 +713,15 @@ namespace RPGame.Enemies.Tests
 
             public bool TryResolvePosition(Vector3 desiredPosition, out Vector3 validPosition)
             {
+                TryResolvePositionCount++;
                 LastDesiredPosition = desiredPosition;
                 validPosition = desiredPosition;
-                return CanResolvePosition;
+                return CanResolvePosition && !unresolvedDesiredPositions.Contains(desiredPosition);
+            }
+
+            public void RejectDesiredPosition(Vector3 desiredPosition)
+            {
+                unresolvedDesiredPositions.Add(desiredPosition);
             }
         }
 
@@ -551,6 +753,30 @@ namespace RPGame.Enemies.Tests
             }
         }
 
+        private sealed class FakeLineOfSight : IEnemyLineOfSight
+        {
+            private readonly HashSet<Vector3> visibleOrigins = new();
+
+            public bool HasLineOfSightResult { get; set; } = true;
+            public int HasLineOfSightCount { get; private set; }
+
+            public bool HasLineOfSight(Vector3 targetPosition)
+            {
+                HasLineOfSightCount++;
+                return HasLineOfSightResult;
+            }
+
+            public bool HasLineOfSightFrom(Vector3 origin, Vector3 targetPosition)
+            {
+                return visibleOrigins.Contains(origin);
+            }
+
+            public void AddVisibleOrigin(Vector3 origin)
+            {
+                visibleOrigins.Add(origin);
+            }
+        }
+
         private sealed class FakeTargetable : ITargetable
         {
             public Transform TargetPoint => null;
@@ -565,6 +791,7 @@ namespace RPGame.Enemies.Tests
             public float MinRange => minRange;
             public float MaxRange => maxRange;
             public float RangeHysteresis => rangeHysteresis;
+            public float RepositionSearchInterval => 0.5f;
 
             public static TestRangedEnemyBehaviourConfig Create(
                 float minRange,

@@ -12,6 +12,16 @@ namespace RPGame.Enemies
         bool IEnemyLineOfSight.HasLineOfSight(Vector3 targetPosition)
         {
             Vector3 originPosition = origin != null ? origin.position : transform.position;
+            return HasLineOfSightBetween(originPosition, targetPosition);
+        }
+
+        bool IEnemyLineOfSight.HasLineOfSightFrom(Vector3 origin, Vector3 targetPosition)
+        {
+            return HasLineOfSightBetween(origin, targetPosition);
+        }
+
+        private bool HasLineOfSightBetween(Vector3 originPosition, Vector3 targetPosition)
+        {
             Vector3 ray = targetPosition - originPosition;
             float distance = ray.magnitude;
             if (distance <= MinRaycastDistance)

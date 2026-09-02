@@ -67,6 +67,19 @@ namespace RPGame.Enemies.Tests
             Assert.IsFalse(hasLineOfSight);
         }
 
+        [Test]
+        public void HasLineOfSightFrom_UsesProvidedOrigin()
+        {
+            LineOfSight lineOfSight = CreateLineOfSight(new Vector3(0f, 10f, 0f), LayerMask.GetMask("Default"));
+            CreateBlockingCube("Obstacle", new Vector3(5f, 0f, 0f), 0);
+
+            bool hasLineOfSight = ((IEnemyLineOfSight)lineOfSight).HasLineOfSightFrom(
+                Vector3.zero,
+                new Vector3(10f, 0f, 0f));
+
+            Assert.IsFalse(hasLineOfSight);
+        }
+
 
         [Test]
         public void LineOfSight_DoesNotReferencePlayer()

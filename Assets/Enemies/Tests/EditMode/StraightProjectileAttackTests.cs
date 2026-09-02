@@ -204,6 +204,11 @@ namespace RPGame.Enemies.Tests
             {
                 return hasLineOfSight;
             }
+
+            public bool HasLineOfSightFrom(Vector3 origin, Vector3 targetPosition)
+            {
+                return hasLineOfSight;
+            }
         }
 
         private sealed class FakeProjectileLauncher : IProjectileLauncher
