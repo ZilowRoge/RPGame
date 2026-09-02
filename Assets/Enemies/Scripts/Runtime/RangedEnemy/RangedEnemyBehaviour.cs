@@ -8,7 +8,6 @@ namespace RPGame.Enemies
 
         private readonly IEnemyDetection detection;
         private readonly IEnemyMovement movement;
-        private readonly IEnemyLineOfSight lineOfSight;
         private readonly IRangedEnemyBehaviourConfig config;
         private readonly IEnemyAttack straightAttack;
         private readonly IEnemyAttack parabolicAttack;
@@ -18,32 +17,15 @@ namespace RPGame.Enemies
         public RangedEnemyBehaviour(
             IEnemyDetection detection,
             IEnemyMovement movement,
-            IEnemyLineOfSight lineOfSight,
-            IRangedEnemyBehaviourConfig config)
-            : this(detection, movement, lineOfSight, config, null, null)
-        {
-        }
-
-        public RangedEnemyBehaviour(
-            IEnemyDetection detection,
-            IEnemyMovement movement,
-            IEnemyLineOfSight lineOfSight,
             IRangedEnemyBehaviourConfig config,
             IEnemyAttack straightAttack,
             IEnemyAttack parabolicAttack)
         {
             this.detection = detection;
             this.movement = movement;
-            this.lineOfSight = lineOfSight;
             this.config = config;
             this.straightAttack = straightAttack;
             this.parabolicAttack = parabolicAttack;
-        }
-
-        public bool CanStartAttack()
-        {
-            return detection.TryGetTarget(out SelectedTarget target)
-                && lineOfSight.HasLineOfSight(target.Position);
         }
 
         public void Tick(float deltaTime)

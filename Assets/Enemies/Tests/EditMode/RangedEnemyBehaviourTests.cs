@@ -16,17 +16,15 @@ namespace RPGame.Enemies.Tests
         {
             FakeDetection detection = new();
             FakeMovement movement = new();
-            FakeLineOfSight lineOfSight = new();
             FakeAttack straightAttack = new();
             FakeAttack parabolicAttack = new();
-            RangedEnemyBehaviour behaviour = CreateBehaviour(detection, movement, lineOfSight, straightAttack, parabolicAttack);
+            RangedEnemyBehaviour behaviour = CreateBehaviour(detection, movement, straightAttack, parabolicAttack);
 
             behaviour.Tick(0.1f);
 
             Assert.AreEqual(RangedBehaviourState.Idle, behaviour.State);
             Assert.AreEqual(1, movement.StopCount);
             Assert.AreEqual(0, movement.MoveToCount);
-            Assert.AreEqual(0, lineOfSight.CheckCount);
             Assert.AreEqual(0, straightAttack.TryAttackCount);
             Assert.AreEqual(0, parabolicAttack.TryAttackCount);
         }
@@ -38,7 +36,7 @@ namespace RPGame.Enemies.Tests
             FakeMovement movement = new();
             FakeAttack straightAttack = new();
             FakeAttack parabolicAttack = new();
-            RangedEnemyBehaviour behaviour = CreateBehaviour(detection, movement, new FakeLineOfSight(), straightAttack, parabolicAttack);
+            RangedEnemyBehaviour behaviour = CreateBehaviour(detection, movement, straightAttack, parabolicAttack);
 
             behaviour.Tick(0.1f);
 
@@ -56,7 +54,7 @@ namespace RPGame.Enemies.Tests
             FakeMovement movement = new();
             FakeAttack straightAttack = new();
             FakeAttack parabolicAttack = new();
-            RangedEnemyBehaviour behaviour = CreateBehaviour(detection, movement, new FakeLineOfSight(), straightAttack, parabolicAttack);
+            RangedEnemyBehaviour behaviour = CreateBehaviour(detection, movement, straightAttack, parabolicAttack);
 
             behaviour.Tick(0.1f);
 
@@ -75,7 +73,7 @@ namespace RPGame.Enemies.Tests
             FakeAttack straightAttack = new();
             FakeAttack parabolicAttack = new();
             movement.Position = Vector3.zero;
-            RangedEnemyBehaviour behaviour = CreateBehaviour(detection, movement, new FakeLineOfSight(), straightAttack, parabolicAttack);
+            RangedEnemyBehaviour behaviour = CreateBehaviour(detection, movement, straightAttack, parabolicAttack);
 
             behaviour.Tick(0.1f);
 
@@ -93,7 +91,7 @@ namespace RPGame.Enemies.Tests
             FakeMovement movement = new();
             FakeAttack straightAttack = new();
             FakeAttack parabolicAttack = new();
-            RangedEnemyBehaviour behaviour = CreateBehaviour(detection, movement, new FakeLineOfSight(), straightAttack, parabolicAttack);
+            RangedEnemyBehaviour behaviour = CreateBehaviour(detection, movement, straightAttack, parabolicAttack);
 
             behaviour.Tick(0.1f);
 
@@ -110,7 +108,7 @@ namespace RPGame.Enemies.Tests
             FakeMovement movement = new();
             FakeAttack straightAttack = new();
             FakeAttack parabolicAttack = new();
-            RangedEnemyBehaviour behaviour = CreateBehaviour(detection, movement, new FakeLineOfSight(), straightAttack, parabolicAttack);
+            RangedEnemyBehaviour behaviour = CreateBehaviour(detection, movement, straightAttack, parabolicAttack);
 
             behaviour.Tick(0.25f);
 
@@ -128,7 +126,7 @@ namespace RPGame.Enemies.Tests
             FakeMovement movement = new();
             FakeAttack straightAttack = new();
             FakeAttack parabolicAttack = new();
-            RangedEnemyBehaviour behaviour = CreateBehaviour(detection, movement, new FakeLineOfSight(), straightAttack, parabolicAttack);
+            RangedEnemyBehaviour behaviour = CreateBehaviour(detection, movement, straightAttack, parabolicAttack);
 
             behaviour.Tick(0.4f);
 
@@ -146,7 +144,7 @@ namespace RPGame.Enemies.Tests
             FakeMovement movement = new();
             FakeAttack straightAttack = new();
             FakeAttack parabolicAttack = new();
-            RangedEnemyBehaviour behaviour = CreateBehaviour(detection, movement, new FakeLineOfSight(), straightAttack, parabolicAttack);
+            RangedEnemyBehaviour behaviour = CreateBehaviour(detection, movement, straightAttack, parabolicAttack);
 
             behaviour.Tick(0.4f);
 
@@ -164,7 +162,7 @@ namespace RPGame.Enemies.Tests
             FakeMovement movement = new();
             FakeAttack parabolicAttack = new();
             parabolicAttack.TryAttackResult = false;
-            RangedEnemyBehaviour behaviour = CreateBehaviour(detection, movement, new FakeLineOfSight(), new FakeAttack(), parabolicAttack);
+            RangedEnemyBehaviour behaviour = CreateBehaviour(detection, movement, new FakeAttack(), parabolicAttack);
 
             behaviour.Tick(0.1f);
 
@@ -180,7 +178,7 @@ namespace RPGame.Enemies.Tests
             FakeMovement movement = new();
             FakeAttack straightAttack = new();
             FakeAttack parabolicAttack = new();
-            RangedEnemyBehaviour behaviour = CreateBehaviour(detection, movement, new FakeLineOfSight(), straightAttack, parabolicAttack);
+            RangedEnemyBehaviour behaviour = CreateBehaviour(detection, movement, straightAttack, parabolicAttack);
 
             behaviour.Tick(0.1f);
             detection.ClearTarget();
@@ -200,7 +198,7 @@ namespace RPGame.Enemies.Tests
             FakeMovement movement = new();
             FakeAttack straightAttack = new();
             FakeAttack parabolicAttack = new();
-            RangedEnemyBehaviour behaviour = CreateBehaviour(detection, movement, new FakeLineOfSight(), straightAttack, parabolicAttack);
+            RangedEnemyBehaviour behaviour = CreateBehaviour(detection, movement, straightAttack, parabolicAttack);
 
             behaviour.Tick(0.1f);
 
@@ -343,50 +341,6 @@ namespace RPGame.Enemies.Tests
         }
 
         [Test]
-        public void CanStartAttack_WhenTargetHasLineOfSight_ReturnsTrue()
-        {
-            FakeDetection detection = CreateDetectionWithTarget(new Vector3(4f, 0f, 0f));
-            FakeMovement movement = new();
-            FakeLineOfSight lineOfSight = new();
-            lineOfSight.HasLineOfSightResult = true;
-            RangedEnemyBehaviour behaviour = CreateBehaviour(detection, movement, lineOfSight);
-
-            bool canStartAttack = behaviour.CanStartAttack();
-
-            Assert.IsTrue(canStartAttack);
-            Assert.AreEqual(1, lineOfSight.CheckCount);
-            Assert.AreEqual(new Vector3(4f, 0f, 0f), lineOfSight.LastTargetPosition);
-        }
-
-        [Test]
-        public void CanStartAttack_WhenTargetHasNoLineOfSight_ReturnsFalse()
-        {
-            FakeDetection detection = CreateDetectionWithTarget(new Vector3(4f, 0f, 0f));
-            FakeMovement movement = new();
-            FakeLineOfSight lineOfSight = new();
-            lineOfSight.HasLineOfSightResult = false;
-            RangedEnemyBehaviour behaviour = CreateBehaviour(detection, movement, lineOfSight);
-
-            bool canStartAttack = behaviour.CanStartAttack();
-
-            Assert.IsFalse(canStartAttack);
-            Assert.AreEqual(1, lineOfSight.CheckCount);
-        }
-
-        [Test]
-        public void Tick_DoesNotCheckLineOfSight()
-        {
-            FakeDetection detection = CreateDetectionWithTarget(new Vector3(4f, 0f, 0f));
-            FakeMovement movement = new();
-            FakeLineOfSight lineOfSight = new();
-            RangedEnemyBehaviour behaviour = CreateBehaviour(detection, movement, lineOfSight);
-
-            behaviour.Tick(0.1f);
-
-            Assert.AreEqual(0, lineOfSight.CheckCount);
-        }
-
-        [Test]
         public void RangedEnemyBehaviour_DoesNotDependOnMonoBehaviourNavMeshAgentOrPhysics()
         {
             Assert.IsFalse(typeof(RangedEnemyBehaviour).IsSubclassOf(typeof(MonoBehaviour)));
@@ -413,6 +367,8 @@ namespace RPGame.Enemies.Tests
             Assert.IsFalse(hasForbiddenField);
             Assert.IsFalse(source.Contains("NavMesh", StringComparison.Ordinal));
             Assert.IsFalse(source.Contains("Physics", StringComparison.Ordinal));
+            Assert.IsFalse(source.Contains("LineOfSight", StringComparison.Ordinal));
+            Assert.IsFalse(source.Contains("CanStartAttack", StringComparison.Ordinal));
         }
 
         [Test]
@@ -482,28 +438,18 @@ namespace RPGame.Enemies.Tests
 
         private RangedEnemyBehaviour CreateBehaviour(FakeDetection detection, FakeMovement movement)
         {
-            return CreateBehaviour(detection, movement, new FakeLineOfSight());
+            return CreateBehaviour(detection, movement, null, null);
         }
 
         private RangedEnemyBehaviour CreateBehaviour(
             FakeDetection detection,
             FakeMovement movement,
-            FakeLineOfSight lineOfSight)
-        {
-            return CreateBehaviour(detection, movement, lineOfSight, null, null);
-        }
-
-        private RangedEnemyBehaviour CreateBehaviour(
-            FakeDetection detection,
-            FakeMovement movement,
-            FakeLineOfSight lineOfSight,
             IEnemyAttack straightAttack,
             IEnemyAttack parabolicAttack)
         {
             return new RangedEnemyBehaviour(
                 detection,
                 movement,
-                lineOfSight,
                 CreateConfig(2f, 5f, 0.5f),
                 straightAttack,
                 parabolicAttack);
@@ -574,20 +520,6 @@ namespace RPGame.Enemies.Tests
                 LastDesiredPosition = desiredPosition;
                 validPosition = desiredPosition;
                 return CanResolvePosition;
-            }
-        }
-
-        private sealed class FakeLineOfSight : IEnemyLineOfSight
-        {
-            public bool HasLineOfSightResult { get; set; } = true;
-            public int CheckCount { get; private set; }
-            public Vector3 LastTargetPosition { get; private set; }
-
-            public bool HasLineOfSight(Vector3 targetPosition)
-            {
-                CheckCount++;
-                LastTargetPosition = targetPosition;
-                return HasLineOfSightResult;
             }
         }
 
