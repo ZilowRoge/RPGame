@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8a3d744614a5488d9ac7ba23677bf38b, type: 3}
+  m_Name: ParabolicProjectileAttackConfig
+  m_EditorClassIdentifier: RPGame.Enemies::RPGame.Enemies.ParabolicProjectileAttackConfig
+  attackInterval: 4
+  damage:
+  - minDamage: 5
+    maxDamage: 8
+    damageType: 1
+    damageElement: 0
+  targetRandomRadius: 0.5
+  projectilePrefab: {fileID: 836988738784912767, guid: 6ef891fd01f9f7a4e879a1e3e8db1ab7, type: 3}
