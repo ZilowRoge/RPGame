@@ -1,21 +1,34 @@
 using System.Collections.Generic;
+using RPGame.Core.Statistics;
 
 namespace RPGame.Core.Effects
 {
     public sealed class TimedEffectContainer
     {
         private readonly List<TimedEffectInstance> effects = new();
+        private IStatisticsController statisticsController;
 
         public IReadOnlyList<TimedEffectInstance> Effects => effects;
 
+        public void SetStatisticsController(IStatisticsController statisticsController)
+        {
+            this.statisticsController = statisticsController;
+        }
+
         public void Add(ActiveEffectDefinition definition, float duration)
         {
-            if (definition == null)
+            if (definition == null || statisticsController == null || definition.IsFinished(statisticsController))
             {
                 return;
             }
 
             TimedEffectInstance instance = new TimedEffectInstance(definition, duration);
+            if (instance.IsInstant)
+            {
+                instance.Definition.Apply(statisticsController, definition.Amount);
+                return;
+            }
+
             if (!instance.IsFinished)
             {
                 effects.Add(instance);
@@ -26,7 +39,7 @@ namespace RPGame.Core.Effects
         {
             for (int i = effects.Count - 1; i >= 0; i--)
             {
-                effects[i].Tick(deltaTime);
+                effects[i].Tick(deltaTime, statisticsController);
 
                 if (effects[i].IsFinished)
                 {

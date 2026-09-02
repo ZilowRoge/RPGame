@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using RPGame.Core.Statistics;
 using UnityEngine;
 
 namespace RPGame.Core.Effects
@@ -7,9 +8,17 @@ namespace RPGame.Core.Effects
     {
         private readonly PermanentEffectContainer permanentContainer = new();
         private readonly TimedEffectContainer timedContainer = new();
+        private IStatisticsController statisticsController;
 
         public IReadOnlyList<EffectInstance> Effects => permanentContainer.Effects;
         public IReadOnlyList<TimedEffectInstance> TimedEffects => timedContainer.Effects;
+        public IStatisticsController StatisticsController => GetStatisticsController();
+
+        private void Awake()
+        {
+            statisticsController = GetComponent<IStatisticsController>();
+            timedContainer.SetStatisticsController(statisticsController);
+        }
 
         private void Update()
         {
@@ -28,6 +37,12 @@ namespace RPGame.Core.Effects
 
         public void AddTimedEffect(ActiveEffectDefinition definition, float duration)
         {
+            IStatisticsController targetStatisticsController = GetStatisticsController();
+            if (definition == null || targetStatisticsController == null)
+            {
+                return;
+            }
+
             timedContainer.Add(definition, duration);
         }
 
@@ -39,6 +54,17 @@ namespace RPGame.Core.Effects
         public float GetEffectValue(EffectStat stat, EffectModifierType modifierType)
         {
             return permanentContainer.GetEffectValue(stat, modifierType);
+        }
+
+        private IStatisticsController GetStatisticsController()
+        {
+            if (statisticsController == null)
+            {
+                statisticsController = GetComponent<IStatisticsController>();
+                timedContainer.SetStatisticsController(statisticsController);
+            }
+
+            return statisticsController;
         }
     }
 }
