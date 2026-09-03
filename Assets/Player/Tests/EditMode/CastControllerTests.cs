@@ -223,6 +223,8 @@ namespace RPGame.Player.Tests
         {
             public CasterData LastCasterData { get; private set; }
 
+            public override SpellTags Tags => SpellTags.None;
+
             public override void OnCast(CasterData casterData)
             {
                 LastCasterData = casterData;
@@ -235,6 +237,8 @@ namespace RPGame.Player.Tests
             {
                 new PartialDamageRange(3f, 7f, DamageType.Magical, DamageElement.Fire)
             };
+
+            public override SpellTags Tags => SpellTags.None;
 
             public override void OnCast(CasterData casterData)
             {

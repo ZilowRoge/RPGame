@@ -64,7 +64,8 @@ namespace RPGame.Inventory.Logic
                 return false;
             }
 
-            return effectAggregator.AddTimedEffect(consumableData.Effect, consumableData.Duration);
+            effectAggregator.AddTimedEffect(consumableData.Effect, consumableData.Duration);
+            return true;
         }
     }
 }
