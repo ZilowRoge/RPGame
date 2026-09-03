@@ -21,6 +21,8 @@ namespace RPGame.UI.Inventory
         [SerializeField] private Image iconImage;
         [SerializeField] private TextMeshProUGUI shortcutText;
         [SerializeField] private TextMeshProUGUI stackSizeText;
+        [SerializeField] private Image stackSizeBackgroundImage;
+        [SerializeField] private bool targetable = true;
 
         private float doubleClickThreshold;
         private float lastClickTime = -1f;
@@ -35,6 +37,11 @@ namespace RPGame.UI.Inventory
         public event Action<ItemSlotReference> Dropped;
 
         public ConsumableSlotType SlotType { get; private set; }
+        public bool Targetable
+        {
+            get => targetable;
+            set => targetable = value;
+        }
 
         public void Initialize(ConsumableSlotType slotType, float doubleClickThreshold)
         {
@@ -67,6 +74,11 @@ namespace RPGame.UI.Inventory
                 stackSizeText.enabled = hasItem;
                 stackSizeText.text = hasItem ? item.StackSize.ToString() : string.Empty;
             }
+
+            if (stackSizeBackgroundImage != null)
+            {
+                stackSizeBackgroundImage.enabled = hasItem && stackSizeText != null;
+            }
         }
 
         public void OnPointerEnter(PointerEventData eventData)
@@ -84,7 +96,7 @@ namespace RPGame.UI.Inventory
 
         public void OnPointerClick(PointerEventData eventData)
         {
-            if (!IsLeftPointerClick(eventData))
+            if (!targetable || !IsLeftPointerClick(eventData))
             {
                 return;
             }
@@ -102,7 +114,8 @@ namespace RPGame.UI.Inventory
 
         public void OnBeginDrag(PointerEventData eventData)
         {
-            if (eventData.button != PointerEventData.InputButton.Left
+            if (!targetable
+                || eventData.button != PointerEventData.InputButton.Left
                 || currentItem == null
                 || currentItem.Definition == null)
             {
@@ -114,16 +127,31 @@ namespace RPGame.UI.Inventory
 
         public void OnDrag(PointerEventData eventData)
         {
+            if (!targetable)
+            {
+                return;
+            }
+
             Dragged?.Invoke(eventData.position);
         }
 
         public void OnEndDrag(PointerEventData eventData)
         {
+            if (!targetable)
+            {
+                return;
+            }
+
             DragEnded?.Invoke();
         }
 
         public void OnDrop(PointerEventData eventData)
         {
+            if (!targetable)
+            {
+                return;
+            }
+
             Dropped?.Invoke(ItemSlotReference.Consumable(SlotType));
         }
 
