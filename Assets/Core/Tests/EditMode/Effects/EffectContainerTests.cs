@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace RPGame.Core.Tests.Effects
 {
-    public sealed class EffectContainerTests
+    public sealed class PermanentEffectContainerTests
     {
         private StatEffectDefinition maxHealthEffect;
         private StatEffectDefinition manaRegenerationEffect;
@@ -27,7 +27,7 @@ namespace RPGame.Core.Tests.Effects
         [Test]
         public void Add_WhenDefinitionIsFlatStatEffect_StoresRuntimeEffect()
         {
-            EffectContainer container = new EffectContainer();
+            PermanentEffectContainer container = new PermanentEffectContainer();
 
             container.Add(maxHealthEffect);
 
@@ -42,7 +42,7 @@ namespace RPGame.Core.Tests.Effects
         [Test]
         public void GetEffectValue_WhenMaxHealthHasFlatBonus_ReturnsFlatValue()
         {
-            EffectContainer container = new EffectContainer();
+            PermanentEffectContainer container = new PermanentEffectContainer();
             container.Add(maxHealthEffect);
 
             float value = container.GetEffectValue(EffectStat.MaxHealth, EffectModifierType.Flat);
@@ -53,7 +53,7 @@ namespace RPGame.Core.Tests.Effects
         [Test]
         public void GetEffectValue_WhenManaRegenerationHasPercentageBonus_ReturnsFractionalValue()
         {
-            EffectContainer container = new EffectContainer();
+            PermanentEffectContainer container = new PermanentEffectContainer();
             container.Add(manaRegenerationEffect);
 
             float value = container.GetEffectValue(EffectStat.ManaRegeneration, EffectModifierType.Percent);
@@ -83,7 +83,7 @@ namespace RPGame.Core.Tests.Effects
         public void GetEffectValue_WhenAttributeHasFlatBonus_ReturnsFlatValue(EffectStat attributeStat)
         {
             StatEffectDefinition attributeEffect = CreateStatEffect(attributeStat, EffectModifierType.Flat, 3f);
-            EffectContainer container = new EffectContainer();
+            PermanentEffectContainer container = new PermanentEffectContainer();
             container.Add(attributeEffect);
 
             float value = container.GetEffectValue(attributeStat, EffectModifierType.Flat);
@@ -96,7 +96,7 @@ namespace RPGame.Core.Tests.Effects
         public void GetEffectValue_WhenMultiplePercentageEffects_ReturnsSumOfFractions()
         {
             StatEffectDefinition secondEffect = CreateStatEffect(EffectStat.ManaRegeneration, EffectModifierType.Percent, 0.10f);
-            EffectContainer container = new EffectContainer();
+            PermanentEffectContainer container = new PermanentEffectContainer();
             container.Add(manaRegenerationEffect);
             container.Add(secondEffect);
 

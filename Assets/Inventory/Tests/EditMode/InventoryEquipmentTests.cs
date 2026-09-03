@@ -40,7 +40,7 @@ namespace RPGame.Inventory.Tests
         {
             InventoryModel inventory = new InventoryModel(2);
             Equipment equipment = new Equipment();
-            InventoryEquipmentService service = new InventoryEquipmentService(inventory, equipment);
+            InventoryEquipmentService service = CreateEquipmentService(inventory, equipment);
             ItemInstance item = new ItemInstance(weaponDefinition);
 
             inventory.AddItem(item);
@@ -57,7 +57,7 @@ namespace RPGame.Inventory.Tests
         {
             InventoryModel inventory = new InventoryModel(1);
             Equipment equipment = new Equipment();
-            InventoryEquipmentService service = new InventoryEquipmentService(inventory, equipment);
+            InventoryEquipmentService service = CreateEquipmentService(inventory, equipment);
             ItemInstance inventoryItem = new ItemInstance(weaponDefinition);
             ItemInstance equippedItem = new ItemInstance(weaponDefinition);
 
@@ -76,7 +76,7 @@ namespace RPGame.Inventory.Tests
         {
             InventoryModel inventory = new InventoryModel(2);
             Equipment equipment = new Equipment();
-            InventoryEquipmentService service = new InventoryEquipmentService(inventory, equipment);
+            InventoryEquipmentService service = CreateEquipmentService(inventory, equipment);
             ItemInstance item = new ItemInstance(equipmentWithoutSlotDefinition);
 
             inventory.AddItem(item);
@@ -93,7 +93,7 @@ namespace RPGame.Inventory.Tests
         {
             InventoryModel inventory = new InventoryModel(1);
             Equipment equipment = new Equipment();
-            InventoryEquipmentService service = new InventoryEquipmentService(inventory, equipment);
+            InventoryEquipmentService service = CreateEquipmentService(inventory, equipment);
             ItemInstance item = new ItemInstance(weaponDefinition);
 
             equipment.Equip(item);
@@ -110,7 +110,7 @@ namespace RPGame.Inventory.Tests
         {
             InventoryModel inventory = new InventoryModel(1);
             Equipment equipment = new Equipment();
-            InventoryEquipmentService service = new InventoryEquipmentService(inventory, equipment);
+            InventoryEquipmentService service = CreateEquipmentService(inventory, equipment);
             ItemInstance equippedItem = new ItemInstance(weaponDefinition);
             ItemInstance inventoryItem = new ItemInstance(weaponDefinition);
 
@@ -242,7 +242,7 @@ namespace RPGame.Inventory.Tests
         {
             InventoryModel inventory = new InventoryModel(2);
             Equipment equipment = new Equipment();
-            InventoryEquipmentService service = new InventoryEquipmentService(inventory, equipment);
+            InventoryEquipmentService service = CreateEquipmentService(inventory, equipment);
             ItemInstance firstItem = new ItemInstance(weaponDefinition);
             ItemInstance secondItem = new ItemInstance(weaponDefinition);
 
@@ -261,7 +261,7 @@ namespace RPGame.Inventory.Tests
         {
             InventoryModel inventory = new InventoryModel(1);
             Equipment equipment = new Equipment();
-            InventoryEquipmentService service = new InventoryEquipmentService(inventory, equipment);
+            InventoryEquipmentService service = CreateEquipmentService(inventory, equipment);
             ItemInstance inventoryItem = new ItemInstance(weaponDefinition);
             ItemInstance equippedItem = new ItemInstance(weaponDefinition);
 
@@ -282,7 +282,7 @@ namespace RPGame.Inventory.Tests
         {
             InventoryModel inventory = new InventoryModel(1);
             Equipment equipment = new Equipment();
-            InventoryEquipmentService service = new InventoryEquipmentService(inventory, equipment);
+            InventoryEquipmentService service = CreateEquipmentService(inventory, equipment);
             ItemInstance inventoryItem = new ItemInstance(weaponDefinition);
             ItemInstance equippedItem = new ItemInstance(weaponDefinition);
 
@@ -303,7 +303,7 @@ namespace RPGame.Inventory.Tests
         {
             InventoryModel inventory = new InventoryModel(1);
             Equipment equipment = new Equipment();
-            InventoryEquipmentService service = new InventoryEquipmentService(inventory, equipment);
+            InventoryEquipmentService service = CreateEquipmentService(inventory, equipment);
             ItemInstance inventoryItem = new ItemInstance(equipmentWithoutSlotDefinition);
             ItemInstance equippedItem = new ItemInstance(weaponDefinition);
 
@@ -384,6 +384,13 @@ namespace RPGame.Inventory.Tests
 
             serializedDefinition.ApplyModifiedPropertiesWithoutUndo();
             return itemDefinition;
+        }
+
+        private static InventoryEquipmentService CreateEquipmentService(
+            InventoryModel inventory,
+            Equipment equipment)
+        {
+            return new InventoryEquipmentService(inventory, equipment, new ConsumableSlots());
         }
 
         private static void SetWeaponDamage(ItemWeaponData itemWeaponData, params PartialDamageRange[] damageRanges)

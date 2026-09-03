@@ -181,6 +181,42 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""interactions"": """",
                     ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""UseConsumable1"",
+                    ""type"": ""Button"",
+                    ""id"": ""3079e51c-53f6-4455-b9e2-9d3f886f3b2a"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""UseConsumable2"",
+                    ""type"": ""Button"",
+                    ""id"": ""d7928d3b-b2fa-493e-8e32-9fd7d37ea0a8"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""UseConsumable3"",
+                    ""type"": ""Button"",
+                    ""id"": ""04be48e7-a683-40f4-925d-6a7dd03b8382"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""UseConsumable4"",
+                    ""type"": ""Button"",
+                    ""id"": ""3b735564-9a1d-42ac-be5f-f0f138631196"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
                 }
             ],
             ""bindings"": [
@@ -577,6 +613,50 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
                     ""processors"": """",
                     ""groups"": """",
                     ""action"": ""AlternativeUse"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""ba8d91f7-261c-436e-a7ed-405ed87a814b"",
+                    ""path"": ""<Keyboard>/q"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard&Mouse"",
+                    ""action"": ""UseConsumable1"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""b9ab557d-798e-423f-ab3d-1d080f94be12"",
+                    ""path"": ""<Keyboard>/e"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard&Mouse"",
+                    ""action"": ""UseConsumable2"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""600f4501-15e7-4a7f-9604-be22d2990ad2"",
+                    ""path"": ""<Keyboard>/z"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard&Mouse"",
+                    ""action"": ""UseConsumable3"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""c91afb36-fb02-4855-934f-97969278a8e8"",
+                    ""path"": ""<Keyboard>/c"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": ""Keyboard&Mouse"",
+                    ""action"": ""UseConsumable4"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -1194,6 +1274,10 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
         m_Player_Next = m_Player.FindAction("Next", throwIfNotFound: true);
         m_Player_Sprint = m_Player.FindAction("Sprint", throwIfNotFound: true);
         m_Player_AlternativeUse = m_Player.FindAction("AlternativeUse", throwIfNotFound: true);
+        m_Player_UseConsumable1 = m_Player.FindAction("UseConsumable1", throwIfNotFound: true);
+        m_Player_UseConsumable2 = m_Player.FindAction("UseConsumable2", throwIfNotFound: true);
+        m_Player_UseConsumable3 = m_Player.FindAction("UseConsumable3", throwIfNotFound: true);
+        m_Player_UseConsumable4 = m_Player.FindAction("UseConsumable4", throwIfNotFound: true);
         // UI
         m_UI = asset.FindActionMap("UI", throwIfNotFound: true);
         m_UI_Navigate = m_UI.FindAction("Navigate", throwIfNotFound: true);
@@ -1298,6 +1382,10 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
     private readonly InputAction m_Player_Next;
     private readonly InputAction m_Player_Sprint;
     private readonly InputAction m_Player_AlternativeUse;
+    private readonly InputAction m_Player_UseConsumable1;
+    private readonly InputAction m_Player_UseConsumable2;
+    private readonly InputAction m_Player_UseConsumable3;
+    private readonly InputAction m_Player_UseConsumable4;
     /// <summary>
     /// Provides access to input actions defined in input action map "Player".
     /// </summary>
@@ -1349,6 +1437,22 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
         /// Provides access to the underlying input action "Player/AlternativeUse".
         /// </summary>
         public InputAction @AlternativeUse => m_Wrapper.m_Player_AlternativeUse;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/UseConsumable1".
+        /// </summary>
+        public InputAction @UseConsumable1 => m_Wrapper.m_Player_UseConsumable1;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/UseConsumable2".
+        /// </summary>
+        public InputAction @UseConsumable2 => m_Wrapper.m_Player_UseConsumable2;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/UseConsumable3".
+        /// </summary>
+        public InputAction @UseConsumable3 => m_Wrapper.m_Player_UseConsumable3;
+        /// <summary>
+        /// Provides access to the underlying input action "Player/UseConsumable4".
+        /// </summary>
+        public InputAction @UseConsumable4 => m_Wrapper.m_Player_UseConsumable4;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -1405,6 +1509,18 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
             @AlternativeUse.started += instance.OnAlternativeUse;
             @AlternativeUse.performed += instance.OnAlternativeUse;
             @AlternativeUse.canceled += instance.OnAlternativeUse;
+            @UseConsumable1.started += instance.OnUseConsumable1;
+            @UseConsumable1.performed += instance.OnUseConsumable1;
+            @UseConsumable1.canceled += instance.OnUseConsumable1;
+            @UseConsumable2.started += instance.OnUseConsumable2;
+            @UseConsumable2.performed += instance.OnUseConsumable2;
+            @UseConsumable2.canceled += instance.OnUseConsumable2;
+            @UseConsumable3.started += instance.OnUseConsumable3;
+            @UseConsumable3.performed += instance.OnUseConsumable3;
+            @UseConsumable3.canceled += instance.OnUseConsumable3;
+            @UseConsumable4.started += instance.OnUseConsumable4;
+            @UseConsumable4.performed += instance.OnUseConsumable4;
+            @UseConsumable4.canceled += instance.OnUseConsumable4;
         }
 
         /// <summary>
@@ -1446,6 +1562,18 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
             @AlternativeUse.started -= instance.OnAlternativeUse;
             @AlternativeUse.performed -= instance.OnAlternativeUse;
             @AlternativeUse.canceled -= instance.OnAlternativeUse;
+            @UseConsumable1.started -= instance.OnUseConsumable1;
+            @UseConsumable1.performed -= instance.OnUseConsumable1;
+            @UseConsumable1.canceled -= instance.OnUseConsumable1;
+            @UseConsumable2.started -= instance.OnUseConsumable2;
+            @UseConsumable2.performed -= instance.OnUseConsumable2;
+            @UseConsumable2.canceled -= instance.OnUseConsumable2;
+            @UseConsumable3.started -= instance.OnUseConsumable3;
+            @UseConsumable3.performed -= instance.OnUseConsumable3;
+            @UseConsumable3.canceled -= instance.OnUseConsumable3;
+            @UseConsumable4.started -= instance.OnUseConsumable4;
+            @UseConsumable4.performed -= instance.OnUseConsumable4;
+            @UseConsumable4.canceled -= instance.OnUseConsumable4;
         }
 
         /// <summary>
@@ -1827,6 +1955,34 @@ public partial class @PlayerControls: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnAlternativeUse(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "UseConsumable1" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnUseConsumable1(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "UseConsumable2" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnUseConsumable2(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "UseConsumable3" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnUseConsumable3(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "UseConsumable4" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnUseConsumable4(InputAction.CallbackContext context);
     }
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "UI" which allows adding and removing callbacks.

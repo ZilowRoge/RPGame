@@ -95,6 +95,42 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "UseConsumable1",
+                    "type": "Button",
+                    "id": "3079e51c-53f6-4455-b9e2-9d3f886f3b2a",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "UseConsumable2",
+                    "type": "Button",
+                    "id": "d7928d3b-b2fa-493e-8e32-9fd7d37ea0a8",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "UseConsumable3",
+                    "type": "Button",
+                    "id": "04be48e7-a683-40f4-925d-6a7dd03b8382",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "UseConsumable4",
+                    "type": "Button",
+                    "id": "3b735564-9a1d-42ac-be5f-f0f138631196",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -491,6 +527,50 @@
                     "processors": "",
                     "groups": "",
                     "action": "AlternativeUse",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "ba8d91f7-261c-436e-a7ed-405ed87a814b",
+                    "path": "<Keyboard>/q",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
+                    "action": "UseConsumable1",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "b9ab557d-798e-423f-ab3d-1d080f94be12",
+                    "path": "<Keyboard>/e",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
+                    "action": "UseConsumable2",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "600f4501-15e7-4a7f-9604-be22d2990ad2",
+                    "path": "<Keyboard>/z",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
+                    "action": "UseConsumable3",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "c91afb36-fb02-4855-934f-97969278a8e8",
+                    "path": "<Keyboard>/c",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "Keyboard&Mouse",
+                    "action": "UseConsumable4",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

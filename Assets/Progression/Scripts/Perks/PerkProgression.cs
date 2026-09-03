@@ -50,9 +50,9 @@ namespace RPGame.Progression
             return true;
         }
 
-        public EffectContainer CreateEffectContainer(JobInstance job)
+        public PermanentEffectContainer CreateEffectContainer(JobInstance job)
         {
-            EffectContainer container = new EffectContainer();
+            PermanentEffectContainer container = new PermanentEffectContainer();
             if (job?.Definition == null)
             {
                 return container;
