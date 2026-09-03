@@ -13,6 +13,8 @@ namespace RPGame.Combat.Spells
         [SerializeField] private PartialDamageRange baseDamageRange = new(10f, 10f, DamageType.Magical, DamageElement.None);
         [SerializeField] private float powerDamageScaling;
 
+        public override SpellTags Tags => SpellTags.Projectile;
+
         public override void OnCast(CasterData casterData)
         {
             if (SpellPrefab == null)
