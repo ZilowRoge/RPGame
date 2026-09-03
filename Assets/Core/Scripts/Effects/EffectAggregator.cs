@@ -9,6 +9,7 @@ namespace RPGame.Core.Effects
         private readonly PermanentEffectContainer permanentContainer = new();
         private readonly TimedEffectContainer timedContainer = new();
         private IStatisticsController statisticsController;
+        private IStatisticsController subscribedStatisticsController;
 
         public IReadOnlyList<EffectInstance> Effects => permanentContainer.Effects;
         public IReadOnlyList<TimedEffectInstance> TimedEffects => timedContainer.Effects;
@@ -18,6 +19,21 @@ namespace RPGame.Core.Effects
         {
             statisticsController = GetComponent<IStatisticsController>();
             timedContainer.SetStatisticsController(statisticsController);
+        }
+
+        private void OnEnable()
+        {
+            SubscribeToDied(GetStatisticsController());
+        }
+
+        private void OnDisable()
+        {
+            UnsubscribeFromDied();
+        }
+
+        private void OnDestroy()
+        {
+            UnsubscribeFromDied();
         }
 
         private void Update()
@@ -67,9 +83,38 @@ namespace RPGame.Core.Effects
             {
                 statisticsController = GetComponent<IStatisticsController>();
                 timedContainer.SetStatisticsController(statisticsController);
+                SubscribeToDied(statisticsController);
             }
 
             return statisticsController;
+        }
+
+        private void SubscribeToDied(IStatisticsController targetStatisticsController)
+        {
+            if (targetStatisticsController == null || subscribedStatisticsController == targetStatisticsController)
+            {
+                return;
+            }
+
+            UnsubscribeFromDied();
+            targetStatisticsController.Died += HandleDied;
+            subscribedStatisticsController = targetStatisticsController;
+        }
+
+        private void UnsubscribeFromDied()
+        {
+            if (subscribedStatisticsController == null)
+            {
+                return;
+            }
+
+            subscribedStatisticsController.Died -= HandleDied;
+            subscribedStatisticsController = null;
+        }
+
+        private void HandleDied()
+        {
+            ClearTimedEffects();
         }
     }
 }
