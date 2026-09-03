@@ -53,7 +53,7 @@ namespace RPGame.Core.Effects
 
         public void AddTimedEffect(ActiveEffectDefinition definition, float duration)
         {
-            return timedContainer.Add(definition, duration);
+            timedContainer.Add(definition, duration);
         }
 
         public void ClearTimedEffects()
