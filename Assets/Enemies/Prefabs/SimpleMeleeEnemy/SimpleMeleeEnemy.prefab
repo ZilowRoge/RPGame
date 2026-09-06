@@ -22,7 +22,7 @@ GameObject:
   - component: {fileID: 98207530189551780}
   - component: {fileID: 2738486469158683143}
   - component: {fileID: 2767910605759657526}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: SimpleMeleeEnemy
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -179,6 +179,7 @@ MonoBehaviour:
   detection: {fileID: 896530926046458949}
   movement: {fileID: 8546718972918938816}
   config: {fileID: 11400000, guid: ed08f6085c824b2a8b77efbd58d79cee, type: 2}
+  attack: {fileID: 0}
 --- !u!114 &896530926046458949
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -205,7 +206,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: edccce2911de4a20a111080d8b1ca37e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: RPGame.Enemies::RPGame.Enemies.Movement
-  moveSpeed: 3.5
+  moveSpeed: 1.5
   destinationChangeThreshold: 0.05
 --- !u!114 &1434449273843886759
 MonoBehaviour:
@@ -220,6 +221,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: RPGame.Enemies::RPGame.Enemies.Attack
   attackType: 0
+  lineOfSight: {fileID: 0}
+  groundProjection: {fileID: 0}
+  projectileLauncher: {fileID: 0}
 --- !u!114 &2422390360541412733
 MonoBehaviour:
   m_ObjectHideFlags: 0
