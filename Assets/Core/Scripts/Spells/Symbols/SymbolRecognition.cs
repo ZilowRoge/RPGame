@@ -11,6 +11,12 @@ namespace RPGame.Core.Spells.Symbols
         [SerializeField] private string rawSymbolsDirectoryName = "SubmittedSymbolsRaw";
         [SerializeField] private string preprocessedSymbolsDirectoryName = "SubmittedSymbols";
 
+        public void OnDrawingStarted()
+        {
+            Debug.Log("Drawing started; forwarding notification to symbol receiver.", this);
+            symbolReceiver?.OnDrawingStarted();
+        }
+
         public override void SubmitDrawing(Texture2D drawingTexture)
         {
             if (recognizer == null)
@@ -29,6 +35,8 @@ namespace RPGame.Core.Spells.Symbols
             {
                 result = SymbolRecognitionResult.NotRecognized;
             }
+
+            Debug.Log($"Symbol recognition completed. Recognized: {result.IsRecognized}, SymbolId: {result.SymbolId}.", this);
 
             if (saveSubmittedSymbols)
             {
