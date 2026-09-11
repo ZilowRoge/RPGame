@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace RPGame.Core.Effects
 {
-    public sealed class EffectAggregator : MonoBehaviour, IStatusApplicator
+    public sealed class EffectAggregator : MonoBehaviour, ITimedEffectReceiver
     {
         private readonly PermanentEffectContainer permanentContainer = new();
         private TimedEffectContainer timedContainer;
@@ -60,7 +60,7 @@ namespace RPGame.Core.Effects
             timedContainer.Add(definition, duration);
         }
 
-        public void ApplyStatus(ActiveEffectDefinition effect, float duration)
+        public void ApplyTimedEffect(ActiveEffectDefinition effect, float duration)
         {
             AddTimedEffect(effect, duration);
         }
