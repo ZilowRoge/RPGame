@@ -5,13 +5,11 @@ using UnityEngine;
 
 namespace RPGame.Core.Effects
 {
-    [RequireComponent(typeof(StatusController))]
     public sealed class EffectAggregator : MonoBehaviour, IStatusApplicator
     {
         private readonly PermanentEffectContainer permanentContainer = new();
         private TimedEffectContainer timedContainer;
         private IStatisticsController statisticsController;
-        private IStatusController statusController;
         private IMovement movement;
         private EffectTarget effectTarget;
         private IStatisticsController subscribedStatisticsController;
@@ -96,9 +94,8 @@ namespace RPGame.Core.Effects
                 statisticsController = GetComponent<IStatisticsController>();
             }
 
-            statusController ??= GetComponent<IStatusController>();
             movement ??= GetComponent<IMovement>();
-            effectTarget = new EffectTarget(statisticsController, statusController, movement);
+            effectTarget = new EffectTarget(statisticsController, movement);
         }
 
         private void SubscribeToDied(IStatisticsController targetStatisticsController)

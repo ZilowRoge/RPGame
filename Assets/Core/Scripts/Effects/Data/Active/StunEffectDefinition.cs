@@ -9,18 +9,16 @@ namespace RPGame.Core.Effects
 
         public override bool CanApply(EffectTarget target)
         {
-            return target.StatusController != null && target.Movement != null;
+            return target.Movement != null;
         }
 
         public override void OnApply(EffectTarget target, TimedEffectInstance instance)
         {
-            target.StatusController.BeginStun();
             target.Movement.BlockMovement();
         }
 
         public override void OnRemove(EffectTarget target, TimedEffectInstance instance)
         {
-            target.StatusController.EndStun();
             target.Movement.UnblockMovement();
         }
 

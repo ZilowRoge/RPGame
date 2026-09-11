@@ -1,5 +1,4 @@
 using RPGame.Combat.Damage;
-using RPGame.Core.Effects;
 using RPGame.Core.Statistics;
 using RPGame.Core.Targeting;
 using UnityEngine;
@@ -13,14 +12,12 @@ namespace RPGame.Enemies
     [RequireComponent(typeof(EnemyTargetable))]
     [RequireComponent(typeof(DamageReceiver))]
     [RequireComponent(typeof(Death))]
-    [RequireComponent(typeof(StatusController))]
     public sealed class Controller : MonoBehaviour
     {
         [SerializeField] private Detection detection;
         [SerializeField] private Movement movement;
         [SerializeField] private Config config;
         [SerializeField] private Attack attack;
-        [SerializeField] private StatusController statusController;
 
         private IEnemyBehaviour behaviour;
 
@@ -37,12 +34,6 @@ namespace RPGame.Enemies
 
         private void Update()
         {
-            if (IsStunned())
-            {
-                movement?.Stop();
-                return;
-            }
-
             behaviour?.Tick(Time.deltaTime);
         }
 
@@ -50,12 +41,6 @@ namespace RPGame.Enemies
         {
             if (!isActiveAndEnabled)
             {
-                return;
-            }
-
-            if (IsStunned())
-            {
-                movement?.Stop();
                 return;
             }
 
@@ -79,15 +64,6 @@ namespace RPGame.Enemies
                 attack = GetComponent<Attack>();
             }
 
-            if (statusController == null)
-            {
-                statusController = GetComponent<StatusController>();
-            }
-        }
-
-        private bool IsStunned()
-        {
-            return statusController != null && statusController.IsStunned;
         }
 
         private bool TryCreateBehaviour(out IEnemyBehaviour createdBehaviour)
