@@ -1,6 +1,5 @@
 using RPGame.Core.Movement;
 using RPGame.Core.Statistics;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Serialization;
@@ -59,7 +58,7 @@ namespace RPGame.Player
         private int movementBlockCount;
         private bool isAirMoveLocked;
         private bool isSprinting;
-        private readonly Dictionary<IModifierSource, float> movementSpeedModifiers = new();
+        private readonly MovementSpeedModifiers movementSpeedModifiers = new();
 
         public bool IsGrounded { get; private set; }
         public bool IsSprinting => isSprinting;
@@ -449,23 +448,9 @@ namespace RPGame.Player
 
         private bool IsMovementBlocked => movementBlockCount > 0;
 
-        private float MovementSpeedMultiplier
-        {
-            get
-            {
-                float multiplier = 1f;
-                foreach (float speedModifier in movementSpeedModifiers.Values)
-                {
-                    multiplier *= speedModifier;
-                }
-
-                return multiplier;
-            }
-        }
-
         private float GetModifiedSpeed(float baseSpeed)
         {
-            return baseSpeed * MovementSpeedMultiplier;
+            return baseSpeed * movementSpeedModifiers.Multiplier;
         }
 
         public void BlockMovement()
@@ -486,7 +471,7 @@ namespace RPGame.Player
                 return;
             }
 
-            movementSpeedModifiers[source] = Mathf.Max(0f, multiplier);
+            movementSpeedModifiers.Add(source, multiplier);
         }
 
         public void RemoveMovementSpeedModifier(IModifierSource source)

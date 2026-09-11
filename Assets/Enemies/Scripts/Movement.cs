@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
 using RPGame.Core.Movement;
 using UnityEngine;
 using UnityEngine.AI;
@@ -19,7 +18,7 @@ namespace RPGame.Enemies
         private int movementBlockCount;
         private bool isKnockedBack;
         private readonly RaycastHit[] knockbackHitBuffer = new RaycastHit[16];
-        private readonly Dictionary<IModifierSource, float> movementSpeedModifiers = new();
+        private readonly MovementSpeedModifiers movementSpeedModifiers = new();
 
         private Vector3 Position => transform.position;
 
@@ -254,23 +253,9 @@ namespace RPGame.Enemies
 
         private bool IsMovementBlocked => movementBlockCount > 0;
 
-        private float MovementSpeedMultiplier
-        {
-            get
-            {
-                float multiplier = 1f;
-                foreach (float speedModifier in movementSpeedModifiers.Values)
-                {
-                    multiplier *= speedModifier;
-                }
-
-                return multiplier;
-            }
-        }
-
         private float GetModifiedSpeed(float baseSpeed)
         {
-            return baseSpeed * MovementSpeedMultiplier;
+            return baseSpeed * movementSpeedModifiers.Multiplier;
         }
 
         public void BlockMovement()
@@ -291,13 +276,13 @@ namespace RPGame.Enemies
                 return;
             }
 
-            movementSpeedModifiers[source] = Mathf.Max(0f, multiplier);
+            movementSpeedModifiers.Add(source, multiplier);
             ConfigureAgent();
         }
 
         public void RemoveMovementSpeedModifier(IModifierSource source)
         {
-            if (source != null && movementSpeedModifiers.Remove(source))
+            if (movementSpeedModifiers.Remove(source))
             {
                 ConfigureAgent();
             }
