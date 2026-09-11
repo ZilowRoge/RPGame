@@ -1,4 +1,7 @@
+using RPGame.Core.Effects;
+using RPGame.Core.Movement;
 using RPGame.Core.Statistics;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Serialization;
@@ -6,13 +9,15 @@ using UnityEngine.Serialization;
 namespace RPGame.Player
 {
     [RequireComponent(typeof(CharacterController))]
-    public sealed class ThirdPersonMovement : MonoBehaviour
+    [RequireComponent(typeof(StatusController))]
+    public sealed class ThirdPersonMovement : MonoBehaviour, IMovement
     {
         [Header("References")]
         [SerializeField] private CharacterController characterController;
         [SerializeField] private Transform cameraTransform;
         [SerializeField] private PlayerInput playerInput;
         [SerializeField] private StatisticsController statisticsController;
+        [SerializeField] private StatusController statusController;
 
         [Header("Input")]
         [SerializeField] private InputActionProperty moveAction;
@@ -54,8 +59,11 @@ namespace RPGame.Player
         private InputAction resolvedJumpAction;
         private float coyoteTimer;
         private float jumpBufferTimer;
+        private int movementBlockCount;
+        private int nextMovementSpeedModifierId;
         private bool isAirMoveLocked;
         private bool isSprinting;
+        private readonly Dictionary<int, float> movementSpeedModifiers = new();
 
         public bool IsGrounded { get; private set; }
         public bool IsSprinting => isSprinting;
@@ -83,6 +91,11 @@ namespace RPGame.Player
             if (statisticsController == null)
             {
                 statisticsController = GetComponent<StatisticsController>();
+            }
+
+            if (statusController == null)
+            {
+                statusController = GetComponent<StatusController>();
             }
 
             ResolveInputActions();
@@ -116,6 +129,13 @@ namespace RPGame.Player
 
         private void Update()
         {
+            if (IsMovementBlocked || (statusController != null && statusController.IsStunned))
+            {
+                StopNormalMovement();
+                ApplyVerticalMovement();
+                return;
+            }
+
             if (resolvedJumpAction == null && WasFallbackJumpPressed())
             {
                 BufferJump();
@@ -189,7 +209,7 @@ namespace RPGame.Player
             }
 
             Vector3 moveDirection = cameraForward * moveInput.y + cameraRight * moveInput.x;
-            float speed = isSprinting ? sprintSpeed : walkSpeed;
+            float speed = GetModifiedSpeed(isSprinting ? sprintSpeed : walkSpeed);
 
             return moveDirection.sqrMagnitude > 1f ? moveDirection.normalized * speed : moveDirection * speed;
         }
@@ -414,6 +434,72 @@ namespace RPGame.Player
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationStep);
         }
 
+        private void StopNormalMovement()
+        {
+            MoveInput = Vector2.zero;
+            isSprinting = false;
+            isAirMoveLocked = false;
+            jumpBufferTimer = 0f;
+            groundedMoveVelocity = Vector3.zero;
+            lockedAirMoveVelocity = Vector3.zero;
+        }
+
+        private void ApplyVerticalMovement()
+        {
+            IsGrounded = characterController.isGrounded;
+            if (IsGrounded && verticalVelocity.y < 0f)
+            {
+                verticalVelocity.y = groundedVerticalVelocity;
+            }
+
+            verticalVelocity.y += gravity * Time.deltaTime;
+            characterController.Move(verticalVelocity * Time.deltaTime);
+        }
+
+        private bool IsMovementBlocked => movementBlockCount > 0;
+
+        private float MovementSpeedMultiplier
+        {
+            get
+            {
+                float multiplier = 1f;
+                foreach (float speedModifier in movementSpeedModifiers.Values)
+                {
+                    multiplier *= speedModifier;
+                }
+
+                return multiplier;
+            }
+        }
+
+        private float GetModifiedSpeed(float baseSpeed)
+        {
+            return baseSpeed * MovementSpeedMultiplier;
+        }
+
+        public void BlockMovement()
+        {
+            movementBlockCount++;
+            StopNormalMovement();
+        }
+
+        public void UnblockMovement()
+        {
+            movementBlockCount = Mathf.Max(0, movementBlockCount - 1);
+        }
+
+        public int AddMovementSpeedModifier(float multiplier)
+        {
+            int modifierId = ++nextMovementSpeedModifierId;
+            movementSpeedModifiers.Add(modifierId, Mathf.Max(0f, multiplier));
+            return modifierId;
+        }
+
+        public void RemoveMovementSpeedModifier(int modifierId)
+        {
+            movementSpeedModifiers.Remove(modifierId);
+        }
+
         private void OnJumpPerformed(InputAction.CallbackContext context)
         {
             BufferJump();
@@ -488,6 +574,11 @@ namespace RPGame.Player
             if (statisticsController == null)
             {
                 statisticsController = GetComponent<StatisticsController>();
+            }
+
+            if (statusController == null)
+            {
+                statusController = GetComponent<StatusController>();
             }
 
             walkSpeed = Mathf.Max(0f, walkSpeed);

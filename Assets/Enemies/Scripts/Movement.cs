@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using RPGame.Core.Movement;
 using UnityEngine;
 using UnityEngine.AI;
@@ -6,7 +7,7 @@ using UnityEngine.AI;
 namespace RPGame.Enemies
 {
     [RequireComponent(typeof(NavMeshAgent))]
-    public sealed class Movement : MonoBehaviour, IEnemyMovement, IKnockbackable
+    public sealed class Movement : MonoBehaviour, IEnemyMovement, IKnockbackable, IMovement
     {
         [SerializeField] private float moveSpeed = 3.5f;
         [SerializeField] private float destinationChangeThreshold = 0.05f;
@@ -15,8 +16,11 @@ namespace RPGame.Enemies
         private Vector3 lastDestination;
         private bool hasDestination;
         private Coroutine knockbackCoroutine;
+        private int movementBlockCount;
+        private int nextMovementSpeedModifierId = 0;
         private bool isKnockedBack;
         private readonly RaycastHit[] knockbackHitBuffer = new RaycastHit[16];
+        private readonly Dictionary<int, float> movementSpeedModifiers = new();
 
         private Vector3 Position => transform.position;
 
@@ -34,7 +38,7 @@ namespace RPGame.Enemies
 
         internal void MoveTo(Vector3 position)
         {
-            if (isKnockedBack || !CanUseAgent())
+            if (isKnockedBack || IsMovementBlocked || !CanUseAgent())
             {
                 return;
             }
@@ -86,7 +90,7 @@ namespace RPGame.Enemies
         {
             if (agent != null)
             {
-                agent.speed = moveSpeed;
+                agent.speed = GetModifiedSpeed(moveSpeed);
             }
         }
 
@@ -245,7 +249,55 @@ namespace RPGame.Enemies
 
             if (agent.enabled && agent.isOnNavMesh)
             {
-                agent.isStopped = false;
+                agent.isStopped = !IsMovementBlocked;
+            }
+        }
+
+        private bool IsMovementBlocked => movementBlockCount > 0;
+
+        private float MovementSpeedMultiplier
+        {
+            get
+            {
+                float multiplier = 1f;
+                foreach (float speedModifier in movementSpeedModifiers.Values)
+                {
+                    multiplier *= speedModifier;
+                }
+
+                return multiplier;
+            }
+        }
+
+        private float GetModifiedSpeed(float baseSpeed)
+        {
+            return baseSpeed * MovementSpeedMultiplier;
+        }
+
+        public void BlockMovement()
+        {
+            movementBlockCount++;
+            Stop();
+        }
+
+        public void UnblockMovement()
+        {
+            movementBlockCount = Mathf.Max(0, movementBlockCount - 1);
+        }
+
+        public int AddMovementSpeedModifier(float multiplier)
+        {
+            int modifierId = ++nextMovementSpeedModifierId;
+            movementSpeedModifiers.Add(modifierId, Mathf.Max(0f, multiplier));
+            ConfigureAgent();
+            return modifierId;
+        }
+
+        public void RemoveMovementSpeedModifier(int modifierId)
+        {
+            if (movementSpeedModifiers.Remove(modifierId))
+            {
+                ConfigureAgent();
             }
         }
 

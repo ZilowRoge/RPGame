@@ -1,10 +1,12 @@
 using System.Collections.Generic;
 using RPGame.Core.Damage;
+using RPGame.Core.Movement;
 using RPGame.Core.Statistics;
 using UnityEngine;
 
 namespace RPGame.Core.Effects
 {
+    [RequireComponent(typeof(StatusController))]
     public sealed class EffectAggregator : MonoBehaviour, IStatusApplicator
     {
         private readonly PermanentEffectContainer permanentContainer = new();
@@ -12,6 +14,7 @@ namespace RPGame.Core.Effects
         private IStatisticsController statisticsController;
         private IStatusController statusController;
         private IDamageable damageable;
+        private IMovement movement;
         private EffectTarget effectTarget;
         private IStatisticsController subscribedStatisticsController;
 
@@ -97,7 +100,8 @@ namespace RPGame.Core.Effects
 
             statusController ??= GetComponent<IStatusController>();
             damageable ??= GetComponent<IDamageable>();
-            effectTarget = new EffectTarget(statisticsController, statusController, damageable);
+            movement ??= GetComponent<IMovement>();
+            effectTarget = new EffectTarget(statisticsController, statusController, damageable, movement);
         }
 
         private void SubscribeToDied(IStatisticsController targetStatisticsController)

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using RPGame.Combat.Spells;
 using RPGame.Core.Damage;
+using RPGame.Core.Effects;
 using RPGame.Core.Spells;
 using RPGame.Core.Statistics;
 using RPGame.Core.Statistics.Attributes;
@@ -20,6 +21,7 @@ namespace RPGame.Player.Spells
         [SerializeField] private InputActionReference cancelPlacementAction;
         [SerializeField] private TargetingController targeting;
         [SerializeField] private StatisticsController statisticsController;
+        [SerializeField] private StatusController statusController;
         [SerializeField] private GameObject casterObject;
         [SerializeField] private Transform castOrigin;
         [SerializeField] private CharacterAttributes characterAttributes;
@@ -78,6 +80,11 @@ namespace RPGame.Player.Spells
 
         internal void CastSpell(Spell spell)
         {
+            if (IsStunned())
+            {
+                return;
+            }
+
             CasterData casterData = CreateCasterData();
             bool wasCast = spellCaster.TryCast(spell, casterData);
 
@@ -117,6 +124,12 @@ namespace RPGame.Player.Spells
 
         private void OnSpellSelected(Spell spell)
         {
+            if (IsStunned())
+            {
+                CancelPlacement();
+                return;
+            }
+
             if (pendingPlaceableSpell != null || (spellPlacementController != null && spellPlacementController.IsActive))
             {
                 CancelPlacement();
@@ -144,6 +157,11 @@ namespace RPGame.Player.Spells
 
         private void ConfirmPlacement()
         {
+            if (IsStunned())
+            {
+                return;
+            }
+
             if (pendingPlaceableSpell == null || spellPlacementController == null || !spellPlacementController.HasValidPlacement)
             {
                 return;
@@ -170,6 +188,11 @@ namespace RPGame.Player.Spells
         {
             spellPlacementController?.Cancel();
             pendingPlaceableSpell = null;
+        }
+
+        private bool IsStunned()
+        {
+            return statusController != null && statusController.IsStunned;
         }
 
         private void UpdateLastUsedSpell(Spell spell, CasterData casterData)
@@ -228,6 +251,11 @@ namespace RPGame.Player.Spells
             if (spellPlacementController == null)
             {
                 spellPlacementController = GetComponent<SpellPlacementController>();
+            }
+
+            if (statusController == null)
+            {
+                statusController = GetComponent<StatusController>();
             }
 
             if (targeting == null)
