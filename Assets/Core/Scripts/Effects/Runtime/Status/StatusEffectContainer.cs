@@ -2,33 +2,33 @@ using System.Collections.Generic;
 
 namespace RPGame.Core.Effects
 {
-    public sealed class TimedEffectContainer
+    public sealed class StatusEffectContainer
     {
-        private readonly List<TimedEffectInstance> effects = new();
-        private readonly EffectTarget target;
+        private readonly List<StatusEffectInstance> effects = new();
+        private readonly StatusEffectTarget target;
 
-        public IReadOnlyList<TimedEffectInstance> Effects => effects;
+        public IReadOnlyList<StatusEffectInstance> Effects => effects;
 
-        public TimedEffectContainer(EffectTarget target)
+        public StatusEffectContainer(StatusEffectTarget target)
         {
             this.target = target;
         }
 
-        public bool Add(ActiveEffectDefinition definition, float duration)
+        public bool Add(StatusEffectDefinition definition, float duration)
         {
             if (definition == null || !definition.CanApply(target))
             {
                 return false;
             }
 
-            TimedEffectInstance instance = new TimedEffectInstance(definition, duration);
+            StatusEffectInstance instance = new StatusEffectInstance(definition, duration);
             if (instance.IsInstant)
             {
                 instance.ApplyInstant(target);
                 return true;
             }
 
-            TimedEffectInstance existingInstance = FindInstance(definition);
+            StatusEffectInstance existingInstance = FindInstance(definition);
             if (existingInstance != null)
             {
                 existingInstance.Merge(definition, duration);
@@ -68,9 +68,9 @@ namespace RPGame.Core.Effects
             effects.Clear();
         }
 
-        private TimedEffectInstance FindInstance(ActiveEffectDefinition definition)
+        private StatusEffectInstance FindInstance(StatusEffectDefinition definition)
         {
-            foreach (TimedEffectInstance effect in effects)
+            foreach (StatusEffectInstance effect in effects)
             {
                 if (!effect.IsFinished && effect.CanMerge(definition))
                 {

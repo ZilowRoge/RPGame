@@ -269,20 +269,16 @@ namespace RPGame.Enemies
             movementBlockCount = Mathf.Max(0, movementBlockCount - 1);
         }
 
-        public void AddMovementSpeedModifier(IModifierSource source, float multiplier)
+        public int AddMovementSpeedModifier(float multiplier)
         {
-            if (source == null)
-            {
-                return;
-            }
-
-            movementSpeedModifiers.Add(source, multiplier);
+            int modifierId = movementSpeedModifiers.Add(multiplier);
             ConfigureAgent();
+            return modifierId;
         }
 
-        public void RemoveMovementSpeedModifier(IModifierSource source)
+        public void RemoveMovementSpeedModifier(int modifierId)
         {
-            if (movementSpeedModifiers.Remove(source))
+            if (movementSpeedModifiers.Remove(modifierId))
             {
                 ConfigureAgent();
             }

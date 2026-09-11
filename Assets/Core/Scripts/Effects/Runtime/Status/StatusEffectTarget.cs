@@ -3,9 +3,9 @@ using RPGame.Core.Statistics;
 
 namespace RPGame.Core.Effects
 {
-    public readonly struct EffectTarget
+    public readonly struct StatusEffectTarget
     {
-        public EffectTarget(
+        public StatusEffectTarget(
             IStatisticsController statisticsController,
             IMovement movement)
         {

@@ -13580,10 +13580,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: SimpleMeleeEnemy
       objectReference: {fileID: 0}
-    - target: {fileID: 3977383957096067067, guid: 5db7af69051163a4fb31dd64fcae5607, type: 3}
-      propertyPath: m_Layer
-      value: 6
-      objectReference: {fileID: 0}
     - target: {fileID: 6175671529599007758, guid: 5db7af69051163a4fb31dd64fcae5607, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -16495,6 +16491,9 @@ PrefabInstance:
       addedObject: {fileID: 1536372347364793593}
     - targetCorrespondingSourceObject: {fileID: 8024470455656626075, guid: db388f493d4197a42b9bf51d3fb801a9, type: 3}
       insertIndex: -1
+      addedObject: {fileID: 1536372347364793613}
+    - targetCorrespondingSourceObject: {fileID: 8024470455656626075, guid: db388f493d4197a42b9bf51d3fb801a9, type: 3}
+      insertIndex: -1
       addedObject: {fileID: 1536372347364793603}
   m_SourcePrefab: {fileID: 100100000, guid: db388f493d4197a42b9bf51d3fb801a9, type: 3}
 --- !u!1 &1536372347364793586 stripped
@@ -16574,6 +16573,18 @@ MonoBehaviour:
   useConsumable2Action: {fileID: 592556507038501651, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   useConsumable3Action: {fileID: 6080199500199042029, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   useConsumable4Action: {fileID: 7082954424428698044, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+--- !u!114 &1536372347364793613
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1536372347364793586}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a2dbfd3740605de4faf2c301c5ad9c81, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: RPGame.Core::RPGame.Core.Effects.StatusEffectAggregator
 --- !u!1001 &4867130635632330196
 PrefabInstance:
   m_ObjectHideFlags: 0

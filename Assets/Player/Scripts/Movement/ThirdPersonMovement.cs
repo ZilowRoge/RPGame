@@ -464,24 +464,14 @@ namespace RPGame.Player
             movementBlockCount = Mathf.Max(0, movementBlockCount - 1);
         }
 
-        public void AddMovementSpeedModifier(IModifierSource source, float multiplier)
+        public int AddMovementSpeedModifier(float multiplier)
         {
-            if (source == null)
-            {
-                return;
-            }
-
-            movementSpeedModifiers.Add(source, multiplier);
+            return movementSpeedModifiers.Add(multiplier);
         }
 
-        public void RemoveMovementSpeedModifier(IModifierSource source)
+        public void RemoveMovementSpeedModifier(int modifierId)
         {
-            if (source == null)
-            {
-                return;
-            }
-
-            movementSpeedModifiers.Remove(source);
+            movementSpeedModifiers.Remove(modifierId);
         }
 
         private void OnJumpPerformed(InputAction.CallbackContext context)

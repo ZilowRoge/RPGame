@@ -3,18 +3,18 @@ using UnityEngine;
 
 namespace RPGame.Core.Effects
 {
-    public abstract class RestoreResourceEffectDefinition : ActiveEffectDefinition, IAmountTimedEffect
+    public abstract class RestoreResourceEffectDefinition : StatusEffectDefinition, IAmountStatusEffect
     {
         [SerializeField] private float amount = 25f;
 
         public float Amount => Mathf.Max(0f, amount);
 
-        public override bool CanApply(EffectTarget target)
+        public override bool CanApply(StatusEffectTarget target)
         {
             return target.StatisticsController != null;
         }
 
-        public void Tick(EffectTarget target, float deltaTime, float amount)
+        public void Tick(StatusEffectTarget target, float deltaTime, float amount)
         {
             IStatisticsController statisticsController = target.StatisticsController;
             if (statisticsController == null || amount <= 0f)

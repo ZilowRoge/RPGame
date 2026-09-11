@@ -22,6 +22,7 @@ GameObject:
   - component: {fileID: 98207530189551780}
   - component: {fileID: 2738486469158683143}
   - component: {fileID: 2767910605759657526}
+  - component: {fileID: 5001817109333800252}
   m_Layer: 6
   m_Name: SimpleMeleeEnemy
   m_TagString: Untagged
@@ -281,3 +282,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: RPGame.Combat::RPGame.Combat.Damage.DamageReceiver
   statisticsController: {fileID: 1754915428058411402}
   loggingEnabled: 1
+--- !u!114 &5001817109333800252
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3977383957096067067}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a2dbfd3740605de4faf2c301c5ad9c81, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: RPGame.Core::RPGame.Core.Effects.StatusEffectAggregator

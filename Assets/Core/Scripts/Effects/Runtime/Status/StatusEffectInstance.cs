@@ -1,20 +1,21 @@
 using System;
-using RPGame.Core.Movement;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace RPGame.Core.Effects
 {
     [Serializable]
-    public sealed class TimedEffectInstance : IModifierSource
+    public sealed class StatusEffectInstance
     {
-        [SerializeField] private ActiveEffectDefinition definition;
+        [SerializeField] private StatusEffectDefinition definition;
         [SerializeField] private float duration;
         [SerializeField] private float remainingDuration;
         [SerializeField] private float remainingAmount;
+        private readonly List<Action> cleanupActions = new();
         private bool wasApplied;
         private bool wasRemoved;
 
-        public TimedEffectInstance(ActiveEffectDefinition definition, float duration)
+        public StatusEffectInstance(StatusEffectDefinition definition, float duration)
         {
             this.definition = definition;
             this.duration = Mathf.Max(0f, duration);
@@ -22,21 +23,29 @@ namespace RPGame.Core.Effects
             remainingAmount = GetAmount(definition);
         }
 
-        public ActiveEffectDefinition Definition => definition;
+        public StatusEffectDefinition Definition => definition;
         public float Duration => duration;
         public float RemainingDuration => remainingDuration;
         public float RemainingAmount => remainingAmount;
         public bool IsFinished => remainingDuration <= 0f;
         public bool IsInstant => duration <= 0f;
 
-        public bool CanMerge(ActiveEffectDefinition definition)
+        public void RegisterCleanup(Action cleanup)
+        {
+            if (cleanup != null)
+            {
+                cleanupActions.Add(cleanup);
+            }
+        }
+
+        public bool CanMerge(StatusEffectDefinition definition)
         {
             return this.definition != null
                 && definition != null
                 && ReferenceEquals(this.definition, definition);
         }
 
-        public void Merge(ActiveEffectDefinition definition, float duration)
+        public void Merge(StatusEffectDefinition definition, float duration)
         {
             if (!CanMerge(definition))
             {
@@ -68,7 +77,7 @@ namespace RPGame.Core.Effects
             }
         }
 
-        public void Apply(EffectTarget target)
+        public void Apply(StatusEffectTarget target)
         {
             if (wasApplied || definition == null)
             {
@@ -79,7 +88,7 @@ namespace RPGame.Core.Effects
             definition.OnApply(target, this);
         }
 
-        public void ApplyInstant(EffectTarget target)
+        public void ApplyInstant(StatusEffectTarget target)
         {
             Apply(target);
             definition?.Tick(target, 0f);
@@ -89,7 +98,7 @@ namespace RPGame.Core.Effects
             Remove(target);
         }
 
-        public void Tick(float deltaTime, EffectTarget target)
+        public void Tick(float deltaTime, StatusEffectTarget target)
         {
             if (IsFinished)
             {
@@ -120,7 +129,7 @@ namespace RPGame.Core.Effects
             }
         }
 
-        public void Remove(EffectTarget target)
+        public void Remove(StatusEffectTarget target)
         {
             if (wasRemoved || definition == null)
             {
@@ -129,19 +138,30 @@ namespace RPGame.Core.Effects
 
             wasRemoved = true;
             definition.OnRemove(target, this);
+            RunCleanupActions();
         }
 
-        private void TickAmountEffect(EffectTarget target, float deltaTime, float amount)
+        private void TickAmountEffect(StatusEffectTarget target, float deltaTime, float amount)
         {
-            if (definition is IAmountTimedEffect amountTimedEffect)
+            if (definition is IAmountStatusEffect amountStatusEffect)
             {
-                amountTimedEffect.Tick(target, deltaTime, amount);
+                amountStatusEffect.Tick(target, deltaTime, amount);
             }
         }
 
-        private static float GetAmount(ActiveEffectDefinition definition)
+        private static float GetAmount(StatusEffectDefinition definition)
         {
-            return definition is IAmountTimedEffect amountTimedEffect ? amountTimedEffect.Amount : 0f;
+            return definition is IAmountStatusEffect amountStatusEffect ? amountStatusEffect.Amount : 0f;
+        }
+
+        private void RunCleanupActions()
+        {
+            for (int i = 0; i < cleanupActions.Count; i++)
+            {
+                cleanupActions[i]?.Invoke();
+            }
+
+            cleanupActions.Clear();
         }
     }
 }

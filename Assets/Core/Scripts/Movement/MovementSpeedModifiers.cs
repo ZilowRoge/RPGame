@@ -5,7 +5,8 @@ namespace RPGame.Core.Movement
 {
     public sealed class MovementSpeedModifiers
     {
-        private readonly Dictionary<IModifierSource, float> modifiers = new();
+        private readonly Dictionary<int, float> modifiers = new();
+        private int nextModifierId;
 
         public float Multiplier
         {
@@ -21,19 +22,35 @@ namespace RPGame.Core.Movement
             }
         }
 
-        public void Add(IModifierSource source, float multiplier)
+        public int Add(float multiplier)
         {
-            if (source == null)
-            {
-                return;
-            }
-
-            modifiers[source] = Mathf.Max(0f, multiplier);
+            int modifierId = GetNextModifierId();
+            modifiers.Add(modifierId, Mathf.Max(0f, multiplier));
+            return modifierId;
         }
 
-        public bool Remove(IModifierSource source)
+        public bool Remove(int modifierId)
         {
-            return source != null && modifiers.Remove(source);
+            return modifiers.Remove(modifierId);
+        }
+
+        private int GetNextModifierId()
+        {
+            for (int i = 0; i < int.MaxValue; i++)
+            {
+                if (nextModifierId == int.MaxValue)
+                {
+                    nextModifierId = 0;
+                }
+
+                nextModifierId++;
+                if (!modifiers.ContainsKey(nextModifierId))
+                {
+                    return nextModifierId;
+                }
+            }
+
+            return 0;
         }
     }
 }

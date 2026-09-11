@@ -5,24 +5,21 @@ using UnityEngine;
 
 namespace RPGame.Core.Effects
 {
-    public sealed class EffectAggregator : MonoBehaviour, ITimedEffectReceiver
+    public sealed class StatusEffectAggregator : MonoBehaviour, IStatusEffectReceiver
     {
-        private readonly PermanentEffectContainer permanentContainer = new();
-        private TimedEffectContainer timedContainer;
+        private StatusEffectContainer statusContainer;
         private IStatisticsController statisticsController;
         private IMovement movement;
-        private EffectTarget effectTarget;
+        private StatusEffectTarget statusEffectTarget;
         private IStatisticsController subscribedStatisticsController;
 
-        public IReadOnlyList<EffectInstance> Effects => permanentContainer.Effects;
-        public IReadOnlyList<TimedEffectInstance> TimedEffects => timedContainer.Effects;
-        public IStatisticsController StatisticsController => GetStatisticsController();
+        public IReadOnlyList<StatusEffectInstance> StatusEffects => statusContainer.Effects;
 
         private void Awake()
         {
             statisticsController = GetComponent<IStatisticsController>();
-            CacheEffectTarget();
-            timedContainer = new TimedEffectContainer(effectTarget);
+            CacheStatusEffectTarget();
+            statusContainer = new StatusEffectContainer(statusEffectTarget);
         }
 
         private void OnEnable()
@@ -42,37 +39,17 @@ namespace RPGame.Core.Effects
 
         private void Update()
         {
-            timedContainer.Tick(Time.deltaTime);
+            statusContainer.Tick(Time.deltaTime);
         }
 
-        public void Add(PassiveEffectDefinition definition)
+        public void ApplyStatusEffect(StatusEffectDefinition effect, float duration)
         {
-            permanentContainer.Add(definition);
+            statusContainer.Add(effect, duration);
         }
 
-        public void AddRange(IEnumerable<PassiveEffectDefinition> definitions)
+        public void ClearStatusEffects()
         {
-            permanentContainer.AddRange(definitions);
-        }
-
-        public void AddTimedEffect(ActiveEffectDefinition definition, float duration)
-        {
-            timedContainer.Add(definition, duration);
-        }
-
-        public void ApplyTimedEffect(ActiveEffectDefinition effect, float duration)
-        {
-            AddTimedEffect(effect, duration);
-        }
-
-        public void ClearTimedEffects()
-        {
-            timedContainer.Clear();
-        }
-
-        public float GetEffectValue(EffectStat stat, EffectModifierType modifierType)
-        {
-            return permanentContainer.GetEffectValue(stat, modifierType);
+            statusContainer.Clear();
         }
 
         private IStatisticsController GetStatisticsController()
@@ -80,14 +57,14 @@ namespace RPGame.Core.Effects
             if (statisticsController == null)
             {
                 statisticsController = GetComponent<IStatisticsController>();
-                CacheEffectTarget();
+                CacheStatusEffectTarget();
                 SubscribeToDied(statisticsController);
             }
 
             return statisticsController;
         }
 
-        private void CacheEffectTarget()
+        private void CacheStatusEffectTarget()
         {
             if (statisticsController == null)
             {
@@ -95,7 +72,7 @@ namespace RPGame.Core.Effects
             }
 
             movement ??= GetComponent<IMovement>();
-            effectTarget = new EffectTarget(statisticsController, movement);
+            statusEffectTarget = new StatusEffectTarget(statisticsController, movement);
         }
 
         private void SubscribeToDied(IStatisticsController targetStatisticsController)
@@ -123,7 +100,7 @@ namespace RPGame.Core.Effects
 
         private void HandleDied()
         {
-            ClearTimedEffects();
+            ClearStatusEffects();
         }
     }
 }

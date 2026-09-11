@@ -7,16 +7,16 @@ namespace RPGame.Inventory.Logic
     {
         private readonly Inventory inventory;
         private readonly ConsumableSlots consumableSlots;
-        private readonly EffectAggregator effectAggregator;
+        private readonly StatusEffectAggregator statusEffectAggregator;
 
         public InventoryConsumableService(
             Inventory inventory,
             ConsumableSlots consumableSlots,
-            EffectAggregator effectAggregator)
+            StatusEffectAggregator statusEffectAggregator)
         {
             this.inventory = inventory;
             this.consumableSlots = consumableSlots;
-            this.effectAggregator = effectAggregator;
+            this.statusEffectAggregator = statusEffectAggregator;
         }
 
         public bool UseFromInventory(int inventoryIndex)
@@ -59,12 +59,12 @@ namespace RPGame.Inventory.Logic
                 || definition.ItemType != ItemType.Consumable
                 || consumableData == null
                 || consumableData.Effect == null
-                || effectAggregator == null)
+                || statusEffectAggregator == null)
             {
                 return false;
             }
 
-            effectAggregator.AddTimedEffect(consumableData.Effect, consumableData.Duration);
+            statusEffectAggregator.ApplyStatusEffect(consumableData.Effect, consumableData.Duration);
             return true;
         }
     }

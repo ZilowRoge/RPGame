@@ -4,7 +4,7 @@ namespace RPGame.Core.Movement
     {
         void BlockMovement();
         void UnblockMovement();
-        void AddMovementSpeedModifier(IModifierSource source, float multiplier);
-        void RemoveMovementSpeedModifier(IModifierSource source);
+        int AddMovementSpeedModifier(float multiplier);
+        void RemoveMovementSpeedModifier(int modifierId);
     }
 }

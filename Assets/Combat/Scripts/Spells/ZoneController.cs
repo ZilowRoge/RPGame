@@ -16,7 +16,7 @@ namespace RPGame.Combat.Spells
         private IZoneBehaviour zoneBehaviour;
         private Coroutine lifecycleRoutine;
         private bool isActive;
-        private readonly Dictionary<ITimedEffectReceiver, TargetZoneState> targetsInside = new();
+        private readonly Dictionary<IStatusEffectReceiver, TargetZoneState> targetsInside = new();
 
         private void Awake()
         {
@@ -68,7 +68,7 @@ namespace RPGame.Combat.Spells
                 }
 
                 targetState.ReapplyTimer = 0f;
-                ApplyTimedEffect(targetState.TimedEffectReceiver, statusApplication);
+                ApplyStatusEffect(targetState.StatusEffectReceiver, statusApplication);
             }
         }
 
@@ -79,33 +79,33 @@ namespace RPGame.Combat.Spells
                 return;
             }
 
-            ITimedEffectReceiver timedEffectReceiver = other.GetComponentInParent<ITimedEffectReceiver>();
-            if (timedEffectReceiver == null)
+            IStatusEffectReceiver statusEffectReceiver = other.GetComponentInParent<IStatusEffectReceiver>();
+            if (statusEffectReceiver == null)
             {
                 return;
             }
 
-            if (targetsInside.TryGetValue(timedEffectReceiver, out TargetZoneState targetState))
+            if (targetsInside.TryGetValue(statusEffectReceiver, out TargetZoneState targetState))
             {
                 targetState.Colliders.Add(other);
                 return;
             }
 
-            targetState = new TargetZoneState(timedEffectReceiver);
+            targetState = new TargetZoneState(statusEffectReceiver);
             targetState.Colliders.Add(other);
-            targetsInside.Add(timedEffectReceiver, targetState);
-            ApplyTimedEffect(timedEffectReceiver, zoneBehaviour.StatusApplication);
+            targetsInside.Add(statusEffectReceiver, targetState);
+            ApplyStatusEffect(statusEffectReceiver, zoneBehaviour.StatusApplication);
         }
 
         private void OnTriggerExit(Collider other)
         {
-            ITimedEffectReceiver timedEffectReceiver = other.GetComponentInParent<ITimedEffectReceiver>();
-            if (timedEffectReceiver == null)
+            IStatusEffectReceiver statusEffectReceiver = other.GetComponentInParent<IStatusEffectReceiver>();
+            if (statusEffectReceiver == null)
             {
                 return;
             }
 
-            if (!targetsInside.TryGetValue(timedEffectReceiver, out TargetZoneState targetState))
+            if (!targetsInside.TryGetValue(statusEffectReceiver, out TargetZoneState targetState))
             {
                 return;
             }
@@ -113,7 +113,7 @@ namespace RPGame.Combat.Spells
             targetState.Colliders.Remove(other);
             if (targetState.Colliders.Count == 0)
             {
-                targetsInside.Remove(timedEffectReceiver);
+                targetsInside.Remove(statusEffectReceiver);
             }
         }
 
@@ -135,14 +135,14 @@ namespace RPGame.Combat.Spells
             Destroy(gameObject);
         }
 
-        private void ApplyTimedEffect(ITimedEffectReceiver timedEffectReceiver, ZoneStatusApplication statusApplication)
+        private void ApplyStatusEffect(IStatusEffectReceiver statusEffectReceiver, ZoneStatusApplication statusApplication)
         {
             if (statusApplication.Effect == null)
             {
                 return;
             }
 
-            timedEffectReceiver.ApplyTimedEffect(statusApplication.Effect, statusApplication.Duration);
+            statusEffectReceiver.ApplyStatusEffect(statusApplication.Effect, statusApplication.Duration);
         }
 
         private void ResolveZoneBehaviour()
@@ -184,12 +184,12 @@ namespace RPGame.Combat.Spells
 
         private sealed class TargetZoneState
         {
-            public TargetZoneState(ITimedEffectReceiver timedEffectReceiver)
+            public TargetZoneState(IStatusEffectReceiver statusEffectReceiver)
             {
-                TimedEffectReceiver = timedEffectReceiver;
+                StatusEffectReceiver = statusEffectReceiver;
             }
 
-            public ITimedEffectReceiver TimedEffectReceiver { get; }
+            public IStatusEffectReceiver StatusEffectReceiver { get; }
             public HashSet<Collider> Colliders { get; } = new();
             public float ReapplyTimer { get; set; }
         }
