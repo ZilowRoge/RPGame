@@ -1,4 +1,3 @@
-using RPGame.Core.Effects;
 using RPGame.Core.Movement;
 using RPGame.Core.Statistics;
 using System.Collections.Generic;
@@ -60,7 +59,7 @@ namespace RPGame.Player
         private int movementBlockCount;
         private bool isAirMoveLocked;
         private bool isSprinting;
-        private readonly Dictionary<TimedEffectInstance, float> movementSpeedModifiers = new();
+        private readonly Dictionary<IModifierSource, float> movementSpeedModifiers = new();
 
         public bool IsGrounded { get; private set; }
         public bool IsSprinting => isSprinting;
@@ -480,7 +479,7 @@ namespace RPGame.Player
             movementBlockCount = Mathf.Max(0, movementBlockCount - 1);
         }
 
-        public void AddMovementSpeedModifier(TimedEffectInstance source, float multiplier)
+        public void AddMovementSpeedModifier(IModifierSource source, float multiplier)
         {
             if (source == null)
             {
@@ -490,7 +489,7 @@ namespace RPGame.Player
             movementSpeedModifiers[source] = Mathf.Max(0f, multiplier);
         }
 
-        public void RemoveMovementSpeedModifier(TimedEffectInstance source)
+        public void RemoveMovementSpeedModifier(IModifierSource source)
         {
             if (source == null)
             {

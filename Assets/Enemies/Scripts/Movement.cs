@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using RPGame.Core.Effects;
 using RPGame.Core.Movement;
 using UnityEngine;
 using UnityEngine.AI;
@@ -20,7 +19,7 @@ namespace RPGame.Enemies
         private int movementBlockCount;
         private bool isKnockedBack;
         private readonly RaycastHit[] knockbackHitBuffer = new RaycastHit[16];
-        private readonly Dictionary<TimedEffectInstance, float> movementSpeedModifiers = new();
+        private readonly Dictionary<IModifierSource, float> movementSpeedModifiers = new();
 
         private Vector3 Position => transform.position;
 
@@ -285,7 +284,7 @@ namespace RPGame.Enemies
             movementBlockCount = Mathf.Max(0, movementBlockCount - 1);
         }
 
-        public void AddMovementSpeedModifier(TimedEffectInstance source, float multiplier)
+        public void AddMovementSpeedModifier(IModifierSource source, float multiplier)
         {
             if (source == null)
             {
@@ -296,7 +295,7 @@ namespace RPGame.Enemies
             ConfigureAgent();
         }
 
-        public void RemoveMovementSpeedModifier(TimedEffectInstance source)
+        public void RemoveMovementSpeedModifier(IModifierSource source)
         {
             if (source != null && movementSpeedModifiers.Remove(source))
             {

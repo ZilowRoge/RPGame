@@ -1,10 +1,11 @@
 using System;
+using RPGame.Core.Movement;
 using UnityEngine;
 
 namespace RPGame.Core.Effects
 {
     [Serializable]
-    public sealed class TimedEffectInstance
+    public sealed class TimedEffectInstance : IModifierSource
     {
         [SerializeField] private ActiveEffectDefinition definition;
         [SerializeField] private float duration;
