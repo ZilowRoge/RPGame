@@ -4,6 +4,11 @@ namespace RPGame.Core.Effects
     {
         public virtual ReapplyPolicy ReapplyPolicy => ReapplyPolicy.Stack;
 
+        public virtual bool CanApply(EffectTarget target)
+        {
+            return true;
+        }
+
         public virtual void OnApply(EffectTarget target)
         {
         }

@@ -1,4 +1,3 @@
-using RPGame.Core.Effects;
 using RPGame.Core.Movement;
 using RPGame.Core.Statistics;
 using System.Collections.Generic;
@@ -9,7 +8,6 @@ using UnityEngine.Serialization;
 namespace RPGame.Player
 {
     [RequireComponent(typeof(CharacterController))]
-    [RequireComponent(typeof(StatusController))]
     public sealed class ThirdPersonMovement : MonoBehaviour, IMovement
     {
         [Header("References")]
@@ -17,7 +15,6 @@ namespace RPGame.Player
         [SerializeField] private Transform cameraTransform;
         [SerializeField] private PlayerInput playerInput;
         [SerializeField] private StatisticsController statisticsController;
-        [SerializeField] private StatusController statusController;
 
         [Header("Input")]
         [SerializeField] private InputActionProperty moveAction;
@@ -93,11 +90,6 @@ namespace RPGame.Player
                 statisticsController = GetComponent<StatisticsController>();
             }
 
-            if (statusController == null)
-            {
-                statusController = GetComponent<StatusController>();
-            }
-
             ResolveInputActions();
         }
 
@@ -129,7 +121,7 @@ namespace RPGame.Player
 
         private void Update()
         {
-            if (IsMovementBlocked || (statusController != null && statusController.IsStunned))
+            if (IsMovementBlocked)
             {
                 StopNormalMovement();
                 ApplyVerticalMovement();
@@ -574,11 +566,6 @@ namespace RPGame.Player
             if (statisticsController == null)
             {
                 statisticsController = GetComponent<StatisticsController>();
-            }
-
-            if (statusController == null)
-            {
-                statusController = GetComponent<StatusController>();
             }
 
             walkSpeed = Mathf.Max(0f, walkSpeed);

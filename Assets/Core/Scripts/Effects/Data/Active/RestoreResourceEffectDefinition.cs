@@ -9,6 +9,11 @@ namespace RPGame.Core.Effects
 
         public float Amount => Mathf.Max(0f, amount);
 
+        public override bool CanApply(EffectTarget target)
+        {
+            return target.StatisticsController != null;
+        }
+
         public void Tick(EffectTarget target, float deltaTime, float amount)
         {
             IStatisticsController statisticsController = target.StatisticsController;

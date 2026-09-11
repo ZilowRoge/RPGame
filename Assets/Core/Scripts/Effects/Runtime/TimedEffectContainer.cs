@@ -16,7 +16,7 @@ namespace RPGame.Core.Effects
 
         public bool Add(ActiveEffectDefinition definition, float duration)
         {
-            if (definition == null)
+            if (definition == null || !definition.CanApply(target))
             {
                 return false;
             }
