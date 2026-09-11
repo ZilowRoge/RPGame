@@ -12,13 +12,13 @@ namespace RPGame.Core.Effects
             return target.StatusController != null && target.Movement != null;
         }
 
-        public override void OnApply(EffectTarget target)
+        public override void OnApply(EffectTarget target, TimedEffectInstance instance)
         {
             target.StatusController.BeginStun();
             target.Movement.BlockMovement();
         }
 
-        public override void OnRemove(EffectTarget target)
+        public override void OnRemove(EffectTarget target, TimedEffectInstance instance)
         {
             target.StatusController.EndStun();
             target.Movement.UnblockMovement();

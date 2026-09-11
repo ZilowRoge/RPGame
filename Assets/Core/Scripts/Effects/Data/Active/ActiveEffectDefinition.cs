@@ -9,7 +9,7 @@ namespace RPGame.Core.Effects
             return true;
         }
 
-        public virtual void OnApply(EffectTarget target)
+        public virtual void OnApply(EffectTarget target, TimedEffectInstance instance)
         {
         }
 
@@ -17,7 +17,7 @@ namespace RPGame.Core.Effects
         {
         }
 
-        public virtual void OnRemove(EffectTarget target)
+        public virtual void OnRemove(EffectTarget target, TimedEffectInstance instance)
         {
         }
 

@@ -75,7 +75,7 @@ namespace RPGame.Core.Effects
             }
 
             wasApplied = true;
-            definition.OnApply(target);
+            definition.OnApply(target, this);
         }
 
         public void ApplyInstant(EffectTarget target)
@@ -127,7 +127,7 @@ namespace RPGame.Core.Effects
             }
 
             wasRemoved = true;
-            definition.OnRemove(target);
+            definition.OnRemove(target, this);
         }
 
         private void TickAmountEffect(EffectTarget target, float deltaTime, float amount)

@@ -1,10 +1,12 @@
+using RPGame.Core.Effects;
+
 namespace RPGame.Core.Movement
 {
     public interface IMovement
     {
         void BlockMovement();
         void UnblockMovement();
-        int AddMovementSpeedModifier(float multiplier);
-        void RemoveMovementSpeedModifier(int modifierId);
+        void AddMovementSpeedModifier(TimedEffectInstance source, float multiplier);
+        void RemoveMovementSpeedModifier(TimedEffectInstance source);
     }
 }

@@ -1,3 +1,4 @@
+using RPGame.Core.Effects;
 using RPGame.Core.Movement;
 using RPGame.Core.Statistics;
 using System.Collections.Generic;
@@ -57,10 +58,9 @@ namespace RPGame.Player
         private float coyoteTimer;
         private float jumpBufferTimer;
         private int movementBlockCount;
-        private int nextMovementSpeedModifierId;
         private bool isAirMoveLocked;
         private bool isSprinting;
-        private readonly Dictionary<int, float> movementSpeedModifiers = new();
+        private readonly Dictionary<TimedEffectInstance, float> movementSpeedModifiers = new();
 
         public bool IsGrounded { get; private set; }
         public bool IsSprinting => isSprinting;
@@ -480,16 +480,24 @@ namespace RPGame.Player
             movementBlockCount = Mathf.Max(0, movementBlockCount - 1);
         }
 
-        public int AddMovementSpeedModifier(float multiplier)
+        public void AddMovementSpeedModifier(TimedEffectInstance source, float multiplier)
         {
-            int modifierId = ++nextMovementSpeedModifierId;
-            movementSpeedModifiers.Add(modifierId, Mathf.Max(0f, multiplier));
-            return modifierId;
+            if (source == null)
+            {
+                return;
+            }
+
+            movementSpeedModifiers[source] = Mathf.Max(0f, multiplier);
         }
 
-        public void RemoveMovementSpeedModifier(int modifierId)
+        public void RemoveMovementSpeedModifier(TimedEffectInstance source)
         {
-            movementSpeedModifiers.Remove(modifierId);
+            if (source == null)
+            {
+                return;
+            }
+
+            movementSpeedModifiers.Remove(source);
         }
 
         private void OnJumpPerformed(InputAction.CallbackContext context)
