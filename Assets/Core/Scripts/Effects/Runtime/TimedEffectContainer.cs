@@ -1,23 +1,22 @@
 using System.Collections.Generic;
-using RPGame.Core.Statistics;
 
 namespace RPGame.Core.Effects
 {
     public sealed class TimedEffectContainer
     {
         private readonly List<TimedEffectInstance> effects = new();
-        private IStatisticsController statisticsController;
+        private readonly EffectTarget target;
 
         public IReadOnlyList<TimedEffectInstance> Effects => effects;
 
-        public void SetStatisticsController(IStatisticsController statisticsController)
+        public TimedEffectContainer(EffectTarget target)
         {
-            this.statisticsController = statisticsController;
+            this.target = target;
         }
 
         public bool Add(ActiveEffectDefinition definition, float duration)
         {
-            if (definition == null || statisticsController == null)
+            if (definition == null)
             {
                 return false;
             }
@@ -25,7 +24,7 @@ namespace RPGame.Core.Effects
             TimedEffectInstance instance = new TimedEffectInstance(definition, duration);
             if (instance.IsInstant)
             {
-                instance.Definition.Apply(statisticsController, definition.Amount);
+                instance.ApplyInstant(target);
                 return true;
             }
 
@@ -39,6 +38,7 @@ namespace RPGame.Core.Effects
             if (!instance.IsFinished)
             {
                 effects.Add(instance);
+                instance.Apply(target);
             }
 
             return true;
@@ -48,10 +48,11 @@ namespace RPGame.Core.Effects
         {
             for (int i = effects.Count - 1; i >= 0; i--)
             {
-                effects[i].Tick(deltaTime, statisticsController);
+                effects[i].Tick(deltaTime, target);
 
                 if (effects[i].IsFinished)
                 {
+                    effects[i].Remove(target);
                     effects.RemoveAt(i);
                 }
             }
@@ -59,6 +60,11 @@ namespace RPGame.Core.Effects
 
         public void Clear()
         {
+            for (int i = effects.Count - 1; i >= 0; i--)
+            {
+                effects[i].Remove(target);
+            }
+
             effects.Clear();
         }
 

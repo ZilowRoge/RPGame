@@ -1,14 +1,18 @@
 using System.Collections.Generic;
+using RPGame.Core.Damage;
 using RPGame.Core.Statistics;
 using UnityEngine;
 
 namespace RPGame.Core.Effects
 {
-    public sealed class EffectAggregator : MonoBehaviour
+    public sealed class EffectAggregator : MonoBehaviour, IStatusApplicator
     {
         private readonly PermanentEffectContainer permanentContainer = new();
-        private readonly TimedEffectContainer timedContainer = new();
+        private TimedEffectContainer timedContainer;
         private IStatisticsController statisticsController;
+        private IStatusController statusController;
+        private IDamageable damageable;
+        private EffectTarget effectTarget;
         private IStatisticsController subscribedStatisticsController;
 
         public IReadOnlyList<EffectInstance> Effects => permanentContainer.Effects;
@@ -18,7 +22,8 @@ namespace RPGame.Core.Effects
         private void Awake()
         {
             statisticsController = GetComponent<IStatisticsController>();
-            timedContainer.SetStatisticsController(statisticsController);
+            CacheEffectTarget();
+            timedContainer = new TimedEffectContainer(effectTarget);
         }
 
         private void OnEnable()
@@ -56,6 +61,11 @@ namespace RPGame.Core.Effects
             timedContainer.Add(definition, duration);
         }
 
+        public void ApplyStatus(ActiveEffectDefinition effect, float duration)
+        {
+            AddTimedEffect(effect, duration);
+        }
+
         public void ClearTimedEffects()
         {
             timedContainer.Clear();
@@ -71,11 +81,23 @@ namespace RPGame.Core.Effects
             if (statisticsController == null)
             {
                 statisticsController = GetComponent<IStatisticsController>();
-                timedContainer.SetStatisticsController(statisticsController);
+                CacheEffectTarget();
                 SubscribeToDied(statisticsController);
             }
 
             return statisticsController;
+        }
+
+        private void CacheEffectTarget()
+        {
+            if (statisticsController == null)
+            {
+                statisticsController = GetComponent<IStatisticsController>();
+            }
+
+            statusController ??= GetComponent<IStatusController>();
+            damageable ??= GetComponent<IDamageable>();
+            effectTarget = new EffectTarget(statisticsController, statusController, damageable);
         }
 
         private void SubscribeToDied(IStatisticsController targetStatisticsController)

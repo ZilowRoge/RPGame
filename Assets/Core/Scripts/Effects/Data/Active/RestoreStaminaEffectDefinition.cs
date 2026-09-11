@@ -8,8 +8,9 @@ namespace RPGame.Core.Effects
     {
         protected override string ResourceName => "Stamina";
 
-        public override bool IsFinished(IStatisticsController statisticsController)
+        public override bool IsFinished(EffectTarget target)
         {
+            IStatisticsController statisticsController = target.StatisticsController;
             return statisticsController == null
                 || statisticsController.CurrentStamina >= statisticsController.MaxStamina;
         }
