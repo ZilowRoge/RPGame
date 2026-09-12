@@ -53,24 +53,25 @@ namespace RPGame.Core.Effects
             }
 
             float additionalDuration = Mathf.Max(0f, duration);
+            float incomingAmount = GetAmount(definition);
             switch (definition.ReapplyPolicy)
             {
                 case ReapplyPolicy.Stack:
                     this.duration += additionalDuration;
                     remainingDuration += additionalDuration;
-                    remainingAmount += GetAmount(definition);
+                    remainingAmount += incomingAmount;
                     break;
                 case ReapplyPolicy.Refresh:
                     this.duration = additionalDuration;
                     remainingDuration = additionalDuration;
-                    remainingAmount = GetAmount(definition);
+                    remainingAmount = incomingAmount;
                     break;
                 case ReapplyPolicy.KeepLongest:
                     if (additionalDuration > remainingDuration)
                     {
                         this.duration = additionalDuration;
                         remainingDuration = additionalDuration;
-                        remainingAmount = GetAmount(definition);
+                        remainingAmount = incomingAmount;
                     }
 
                     break;
@@ -151,7 +152,12 @@ namespace RPGame.Core.Effects
 
         private static float GetAmount(StatusEffectDefinition definition)
         {
-            return definition is IAmountStatusEffect amountStatusEffect ? amountStatusEffect.Amount : 0f;
+            if (definition is not IAmountStatusEffect amountStatusEffect)
+            {
+                return 0f;
+            }
+
+            return Mathf.Max(0f, amountStatusEffect.Amount);
         }
 
         private void RunCleanupActions()

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using RPGame.Core.Damage;
 using RPGame.Core.Movement;
 using RPGame.Core.Statistics;
 using UnityEngine;
@@ -10,6 +11,7 @@ namespace RPGame.Core.Effects
         private StatusEffectContainer statusContainer;
         private IStatisticsController statisticsController;
         private IMovement movement;
+        private IDamageable damageable;
         private StatusEffectTarget statusEffectTarget;
         private IStatisticsController subscribedStatisticsController;
 
@@ -72,7 +74,8 @@ namespace RPGame.Core.Effects
             }
 
             movement ??= GetComponent<IMovement>();
-            statusEffectTarget = new StatusEffectTarget(statisticsController, movement);
+            damageable ??= GetComponent<IDamageable>();
+            statusEffectTarget = new StatusEffectTarget(statisticsController, movement, damageable);
         }
 
         private void SubscribeToDied(IStatisticsController targetStatisticsController)
