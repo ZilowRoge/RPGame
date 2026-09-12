@@ -4,31 +4,14 @@ using UnityEngine;
 
 namespace RPGame.Combat.Spells
 {
-    [RequireComponent(typeof(SphereCollider))]
-    [RequireComponent(typeof(Rigidbody))]
     public sealed class ZoneController : MonoBehaviour
     {
-        private SphereCollider zoneCollider;
-        private Rigidbody zoneRigidbody;
         private IZoneBehaviour zoneBehaviour;
         private Coroutine lifecycleRoutine;
 
-        private void Awake()
-        {
-            ResolveComponents();
-        }
-
         public void Initialize(CasterData casterData, float radius, float activationDelay, float activeDuration)
         {
-            ResolveComponents();
             ResolveZoneBehaviour();
-
-            zoneCollider.isTrigger = true;
-            zoneCollider.radius = radius;
-            zoneCollider.enabled = false;
-
-            zoneRigidbody.useGravity = false;
-            zoneRigidbody.isKinematic = true;
 
             if (lifecycleRoutine != null)
             {
@@ -47,7 +30,6 @@ namespace RPGame.Combat.Spells
                 yield return new WaitForSeconds(activationDelay);
             }
 
-            zoneCollider.enabled = true;
             zoneBehaviour?.Activate();
 
             if (activeDuration > 0f)
@@ -56,7 +38,6 @@ namespace RPGame.Combat.Spells
             }
 
             zoneBehaviour?.Deactivate();
-            zoneCollider.enabled = false;
             Destroy(gameObject);
         }
 
@@ -84,17 +65,5 @@ namespace RPGame.Combat.Spells
             }
         }
 
-        private void ResolveComponents()
-        {
-            if (zoneCollider == null)
-            {
-                zoneCollider = GetComponent<SphereCollider>();
-            }
-
-            if (zoneRigidbody == null)
-            {
-                zoneRigidbody = GetComponent<Rigidbody>();
-            }
-        }
     }
 }

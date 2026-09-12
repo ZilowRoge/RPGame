@@ -5,6 +5,8 @@ using UnityEngine;
 
 namespace RPGame.Combat.Spells
 {
+    [RequireComponent(typeof(SphereCollider))]
+    [RequireComponent(typeof(Rigidbody))]
     public sealed class EarthZoneBehaviour : MonoBehaviour, IZoneBehaviour
     {
         [SerializeField] private SlowEffectDefinition slowEffect;
@@ -12,24 +14,46 @@ namespace RPGame.Combat.Spells
         [SerializeField] private float reapplyInterval = 0.5f;
 
         private readonly Dictionary<IStatusEffectReceiver, TargetZoneState> targetsInside = new();
+        private SphereCollider zoneCollider;
+        private Rigidbody zoneRigidbody;
         private CasterData casterData;
         private bool isActive;
+
+        private void Awake()
+        {
+            ResolveComponents();
+        }
 
         public void Initialize(CasterData casterData, float radius)
         {
             this.casterData = casterData;
+            ResolveComponents();
+
+            zoneCollider.isTrigger = true;
+            zoneCollider.radius = Mathf.Max(0f, radius);
+            zoneCollider.enabled = false;
+
+            zoneRigidbody.useGravity = false;
+            zoneRigidbody.isKinematic = true;
+
             isActive = false;
             targetsInside.Clear();
         }
 
         public void Activate()
         {
+            zoneCollider.enabled = true;
             isActive = true;
         }
 
         public void Deactivate()
         {
             isActive = false;
+            if (zoneCollider != null)
+            {
+                zoneCollider.enabled = false;
+            }
+
             targetsInside.Clear();
         }
 
@@ -118,6 +142,19 @@ namespace RPGame.Combat.Spells
         {
             slowDuration = Mathf.Max(0f, slowDuration);
             reapplyInterval = Mathf.Max(0f, reapplyInterval);
+        }
+
+        private void ResolveComponents()
+        {
+            if (zoneCollider == null)
+            {
+                zoneCollider = GetComponent<SphereCollider>();
+            }
+
+            if (zoneRigidbody == null)
+            {
+                zoneRigidbody = GetComponent<Rigidbody>();
+            }
         }
 
         private sealed class TargetZoneState
