@@ -1,7 +1,11 @@
+using RPGame.Core.Spells;
+
 namespace RPGame.Combat.Spells
 {
     public interface IZoneBehaviour
     {
-        ZoneStatusApplication StatusApplication { get; }
+        void Initialize(CasterData casterData, float radius);
+        void Activate();
+        void Deactivate();
     }
 }
