@@ -6,6 +6,9 @@ namespace RPGame.Core.Effects
     {
         private readonly List<StatusEffectInstance> effects = new();
         private readonly StatusEffectTarget target;
+        private bool isTicking;
+        private bool isClearing;
+        private bool clearRequested;
 
         public IReadOnlyList<StatusEffectInstance> Effects => effects;
 
@@ -46,26 +49,64 @@ namespace RPGame.Core.Effects
 
         public void Tick(float deltaTime)
         {
+            isTicking = true;
+
             for (int i = effects.Count - 1; i >= 0; i--)
             {
-                effects[i].Tick(deltaTime, target);
+                StatusEffectInstance effect = effects[i];
+                effect.Tick(deltaTime, target);
 
-                if (effects[i].IsFinished)
+                if (clearRequested)
                 {
-                    effects[i].Remove(target);
+                    break;
+                }
+
+                if (effect.IsFinished)
+                {
+                    effect.Remove(target);
                     effects.RemoveAt(i);
                 }
+            }
+
+            isTicking = false;
+
+            if (clearRequested)
+            {
+                clearRequested = false;
+                ClearImmediately();
             }
         }
 
         public void Clear()
         {
+            if (isTicking || isClearing)
+            {
+                clearRequested = true;
+                return;
+            }
+
+            ClearImmediately();
+        }
+
+        private void ClearImmediately()
+        {
+            if (isClearing)
+            {
+                clearRequested = true;
+                return;
+            }
+
+            isClearing = true;
+            clearRequested = false;
+
             for (int i = effects.Count - 1; i >= 0; i--)
             {
                 effects[i].Remove(target);
             }
 
             effects.Clear();
+            clearRequested = false;
+            isClearing = false;
         }
 
         private StatusEffectInstance FindInstance(StatusEffectDefinition definition)
