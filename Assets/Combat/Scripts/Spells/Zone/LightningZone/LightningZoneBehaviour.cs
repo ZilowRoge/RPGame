@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using RPGame.Core.Effects;
 using RPGame.Core.Spells;
@@ -9,6 +10,9 @@ namespace RPGame.Combat.Spells
     {
         [SerializeField] private StunEffectDefinition stunEffect;
         [SerializeField] private float stunDuration = 2f;
+        [SerializeField] private GameObject lightningVfxPrefab;
+        [SerializeField] private Vector3 lightningVfxOffset;
+        [SerializeField] private Vector2 strikeDelayRange = new(0f, 0.2f);
 
         private readonly HashSet<IStatusEffectReceiver> hitReceivers = new();
         private CasterData casterData;
@@ -23,11 +27,6 @@ namespace RPGame.Combat.Spells
 
         public void Activate()
         {
-            if (stunEffect == null)
-            {
-                return;
-            }
-
             hitReceivers.Clear();
             Collider[] colliders = Physics.OverlapSphere(transform.position, radius);
             for (int i = 0; i < colliders.Length; i++)
@@ -45,7 +44,14 @@ namespace RPGame.Combat.Spells
                     continue;
                 }
 
-                statusEffectReceiver.ApplyStatusEffect(stunEffect, stunDuration);
+                float delay = Random.Range(strikeDelayRange.x, strikeDelayRange.y);
+                DelayedLightningStrike.Run(
+                    statusEffectReceiver,
+                    stunEffect,
+                    stunDuration,
+                    lightningVfxPrefab,
+                    zoneCollider.bounds.center + lightningVfxOffset,
+                    delay);
             }
         }
 
@@ -66,6 +72,56 @@ namespace RPGame.Combat.Spells
         private void OnValidate()
         {
             stunDuration = Mathf.Max(0f, stunDuration);
+            strikeDelayRange.x = Mathf.Max(0f, strikeDelayRange.x);
+            strikeDelayRange.y = Mathf.Max(strikeDelayRange.x, strikeDelayRange.y);
+        }
+    }
+
+    internal sealed class DelayedLightningStrike : MonoBehaviour
+    {
+        private IStatusEffectReceiver statusEffectReceiver;
+        private StunEffectDefinition stunEffect;
+        private float stunDuration;
+        private GameObject lightningVfxPrefab;
+        private Vector3 strikePosition;
+        private float delay;
+
+        public static void Run(
+            IStatusEffectReceiver statusEffectReceiver,
+            StunEffectDefinition stunEffect,
+            float stunDuration,
+            GameObject lightningVfxPrefab,
+            Vector3 strikePosition,
+            float delay)
+        {
+            GameObject runnerObject = new($"{nameof(DelayedLightningStrike)}");
+            DelayedLightningStrike runner = runnerObject.AddComponent<DelayedLightningStrike>();
+            runner.statusEffectReceiver = statusEffectReceiver;
+            runner.stunEffect = stunEffect;
+            runner.stunDuration = stunDuration;
+            runner.lightningVfxPrefab = lightningVfxPrefab;
+            runner.strikePosition = strikePosition;
+            runner.delay = Mathf.Max(0f, delay);
+        }
+
+        private IEnumerator Start()
+        {
+            if (delay > 0f)
+            {
+                yield return new WaitForSeconds(delay);
+            }
+
+            if (stunEffect != null)
+            {
+                statusEffectReceiver?.ApplyStatusEffect(stunEffect, stunDuration);
+            }
+
+            if (lightningVfxPrefab != null)
+            {
+                Instantiate(lightningVfxPrefab, strikePosition, Quaternion.identity);
+            }
+
+            Destroy(gameObject);
         }
     }
 }
