@@ -4,29 +4,33 @@ using UnityEngine;
 namespace RPGame.Core.Effects
 {
     [CreateAssetMenu(fileName = "BurningEffect", menuName = "RPGame/Progression/Effects/Burning Effect")]
-    public sealed class BurningEffectDefinition : StatusEffectDefinition, IAmountStatusEffect
+    public sealed class BurningEffectDefinition : StatusEffectDefinition, IPeriodicStatusEffect
     {
+        private const float MinimumTickInterval = 0.0001f;
+
         [SerializeField] private float amount = 6f;
+        [SerializeField] private float tickInterval = 1f;
 
         public override ReapplyPolicy ReapplyPolicy => ReapplyPolicy.Refresh;
         public float Amount => Mathf.Max(0f, amount);
+        public float TickInterval => Mathf.Max(MinimumTickInterval, tickInterval);
 
         public override bool CanApply(StatusEffectTarget target)
         {
             return target.Damageable != null;
         }
 
-        public void Tick(StatusEffectTarget target, float deltaTime, float amount)
+        public void Tick(StatusEffectTarget target)
         {
             IDamageable damageable = target.Damageable;
-            if (damageable == null || !damageable.CanReceiveDamage || amount <= 0f)
+            if (damageable == null || !damageable.CanReceiveDamage || Amount <= 0f)
             {
                 return;
             }
 
             damageable.ApplyDamage(new DamageData(new[]
             {
-                new PartialDamage(amount, DamageType.Magical, DamageElement.Fire)
+                new PartialDamage(Amount, DamageType.Magical, DamageElement.Fire)
             }));
         }
 
@@ -38,6 +42,7 @@ namespace RPGame.Core.Effects
         private void OnValidate()
         {
             amount = Mathf.Max(0f, amount);
+            tickInterval = Mathf.Max(MinimumTickInterval, tickInterval);
         }
     }
 }

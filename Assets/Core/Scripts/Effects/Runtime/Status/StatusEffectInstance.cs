@@ -11,6 +11,7 @@ namespace RPGame.Core.Effects
         [SerializeField] private float duration;
         [SerializeField] private float remainingDuration;
         [SerializeField] private float remainingAmount;
+        [SerializeField] private float periodicTickTimer;
         private readonly List<Action> cleanupActions = new();
         private bool wasApplied;
         private bool wasRemoved;
@@ -94,6 +95,7 @@ namespace RPGame.Core.Effects
             Apply(target);
             definition?.Tick(target, 0f);
             TickAmountEffect(target, 0f, remainingAmount);
+            TickPeriodicEffect(target, 0f);
             remainingAmount = 0f;
             remainingDuration = 0f;
             Remove(target);
@@ -122,6 +124,7 @@ namespace RPGame.Core.Effects
 
             definition.Tick(target, elapsedDelta);
             TickAmountEffect(target, elapsedDelta, amount);
+            TickPeriodicEffect(target, elapsedDelta);
             remainingAmount = Mathf.Max(0f, remainingAmount - amount);
 
             if (remainingDuration <= 0f || definition.IsFinished(target))
@@ -147,6 +150,27 @@ namespace RPGame.Core.Effects
             if (definition is IAmountStatusEffect amountStatusEffect)
             {
                 amountStatusEffect.Tick(target, deltaTime, amount);
+            }
+        }
+
+        private void TickPeriodicEffect(StatusEffectTarget target, float deltaTime)
+        {
+            if (definition is not IPeriodicStatusEffect periodicStatusEffect || deltaTime <= 0f)
+            {
+                return;
+            }
+
+            float tickInterval = periodicStatusEffect.TickInterval;
+            if (tickInterval <= 0f)
+            {
+                return;
+            }
+
+            periodicTickTimer += deltaTime;
+            while (periodicTickTimer >= tickInterval)
+            {
+                periodicStatusEffect.Tick(target);
+                periodicTickTimer -= tickInterval;
             }
         }
 
