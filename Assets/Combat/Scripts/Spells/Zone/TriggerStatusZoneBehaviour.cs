@@ -150,19 +150,29 @@ namespace RPGame.Combat.Spells
 
         private void ConfigureParticleEffects(float radius)
         {
+            float zoneRadius = Mathf.Max(0f, radius);
             for (int i = 0; i < particleEffects.Count; i++)
             {
                 ZoneParticleEffect effect = particleEffects[i];
                 ParticleSystem particleSystem = effect?.ParticleSystem;
-                if (particleSystem == null || !effect.MatchZoneRadius)
+                if (particleSystem == null)
                 {
                     continue;
                 }
 
-                ParticleSystem.ShapeModule shape = particleSystem.shape;
-                if (shape.enabled)
+                if (effect.MatchEmissionRadius)
                 {
-                    shape.radius = Mathf.Max(0f, radius) * effect.RadiusMultiplier;
+                    ParticleSystem.ShapeModule shape = particleSystem.shape;
+                    if (shape.enabled)
+                    {
+                        shape.radius = zoneRadius * effect.EmissionRadiusMultiplier;
+                    }
+                }
+
+                if (effect.MatchParticleSize)
+                {
+                    ParticleSystem.MainModule main = particleSystem.main;
+                    main.startSize = zoneRadius * 2f * effect.ParticleSizeMultiplier;
                 }
             }
         }
