@@ -7,7 +7,6 @@ namespace RPGame.Player.Spells
     {
         [SerializeField] private Camera placementCamera;
         [SerializeField] private LayerMask placementLayers;
-        [SerializeField] private GameObject indicatorPrefab;
 
         private IIndicatorSpell activeSpell;
         private Transform caster;
@@ -34,14 +33,19 @@ namespace RPGame.Player.Spells
                 placementCamera = Camera.main;
             }
 
-            if (indicatorPrefab != null)
+            GameObject indicatorPrefab = spell.IndicatorPrefab;
+            if (indicatorPrefab == null)
             {
-                indicator = Instantiate(indicatorPrefab);
-                Vector3 scale = indicator.transform.localScale;
-                float diameter = spell.PlacementRadius * 2f;
-                indicator.transform.localScale = new Vector3(diameter, scale.y, diameter);
-                indicator.SetActive(false);
+                Debug.LogWarning($"{spell} cannot begin placement because indicator prefab is missing.", this);
+                Cancel();
+                return;
             }
+
+            indicator = Instantiate(indicatorPrefab);
+            Vector3 scale = indicator.transform.localScale;
+            float diameter = spell.PlacementRadius * 2f;
+            indicator.transform.localScale = new Vector3(diameter, scale.y, diameter);
+            indicator.SetActive(false);
         }
 
         public bool TryGetPlacement(out Vector3 position)

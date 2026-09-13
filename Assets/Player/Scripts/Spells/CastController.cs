@@ -12,10 +12,11 @@ using UnityEngine.InputSystem;
 
 namespace RPGame.Player.Spells
 {
+    [RequireComponent(typeof(SpellActivationController))]
     public sealed class CastController : MonoBehaviour, ILastUsedSpellDamageRangeProvider
     {
         [SerializeField] private SpellSymbolCaster spellSymbolCaster;
-        [SerializeField] private SpellPlacementController spellPlacementController;
+        [SerializeField] private SpellActivationController spellActivationController;
         [SerializeField] private InputActionReference confirmPlacementAction;
         [SerializeField] private InputActionReference cancelPlacementAction;
         [SerializeField] private TargetingController targeting;
@@ -27,7 +28,8 @@ namespace RPGame.Player.Spells
         private readonly SpellCaster spellCaster = new();
         private readonly LastUsedSpellTracker lastUsedSpellTracker = new();
         private IReadOnlyList<PartialDamageRange> lastUsedSpellDamageRanges = Array.Empty<PartialDamageRange>();
-        private Spell pendingPlaceableSpell;
+        private Spell pendingSpell;
+        private ISpellActivationHandle pendingActivationHandle;
 
         public event Action LastUsedSpellDamageRangeChanged;
 
@@ -73,7 +75,7 @@ namespace RPGame.Player.Spells
                 cancelPlacementAction.action.performed -= OnCancelPlacementPerformed;
             }
 
-            CancelPlacement();
+            CancelActivation();
         }
 
         internal void CastSpell(Spell spell)
@@ -117,19 +119,34 @@ namespace RPGame.Player.Spells
 
         private void OnSpellSelected(Spell spell)
         {
-            if (pendingPlaceableSpell != null || (spellPlacementController != null && spellPlacementController.IsActive))
+            if (pendingSpell != null || pendingActivationHandle != null)
             {
-                CancelPlacement();
+                CancelActivation();
             }
 
-            if (spell is IIndicatorSpell placeableSpell)
+            CasterData casterData = CreateCasterData();
+            ISpellActivationHandle activationHandle = spell.OnActivation(casterData);
+            if (activationHandle == null)
             {
-                pendingPlaceableSpell = spell;
-                spellPlacementController?.Begin(placeableSpell, ResolveCasterObject().transform);
+                bool wasCast = spellCaster.TryCast(spell, casterData);
+                if (wasCast)
+                {
+                    UpdateLastUsedSpell(spell, casterData);
+                }
+
                 return;
             }
 
-            CastSpell(spell);
+            if (spellActivationController == null)
+            {
+                Debug.LogWarning($"{name} cannot activate {spell.name} because {nameof(SpellActivationController)} is missing.", this);
+                spell.OnDeactivation(casterData);
+                return;
+            }
+
+            pendingSpell = spell;
+            pendingActivationHandle = activationHandle;
+            spellActivationController.Activate(pendingActivationHandle, casterData);
         }
 
         private void OnConfirmPlacementPerformed(InputAction.CallbackContext context)
@@ -139,37 +156,51 @@ namespace RPGame.Player.Spells
 
         private void OnCancelPlacementPerformed(InputAction.CallbackContext context)
         {
-            CancelPlacement();
+            CancelActivation();
         }
 
         private void ConfirmPlacement()
         {
-            if (pendingPlaceableSpell == null || spellPlacementController == null || !spellPlacementController.HasValidPlacement)
+            if (pendingSpell == null || pendingActivationHandle == null)
             {
                 return;
             }
 
-            if (!spellPlacementController.TryGetPlacement(out Vector3 position))
+            CasterData casterData = CreateCasterData();
+            if (spellActivationController == null ||
+                !spellActivationController.TryCreateCasterData(casterData, out CasterData activatedCasterData))
             {
                 return;
             }
 
-            CasterData casterData = CreateCasterData(position);
-            bool wasCast = spellCaster.TryCast(pendingPlaceableSpell, casterData);
+            bool wasCast = spellCaster.TryCast(pendingSpell, activatedCasterData);
 
             if (!wasCast)
             {
                 return;
             }
 
-            UpdateLastUsedSpell(pendingPlaceableSpell, casterData);
-            CancelPlacement();
+            UpdateLastUsedSpell(pendingSpell, activatedCasterData);
+            FinishActivationCast();
         }
 
-        private void CancelPlacement()
+        private void CancelActivation()
         {
-            spellPlacementController?.Cancel();
-            pendingPlaceableSpell = null;
+            if (pendingSpell != null)
+            {
+                pendingSpell.OnDeactivation(CreateCasterData());
+            }
+
+            spellActivationController?.Deactivate();
+            pendingSpell = null;
+            pendingActivationHandle = null;
+        }
+
+        private void FinishActivationCast()
+        {
+            spellActivationController?.Deactivate();
+            pendingSpell = null;
+            pendingActivationHandle = null;
         }
 
         private void UpdateLastUsedSpell(Spell spell, CasterData casterData)
@@ -225,9 +256,9 @@ namespace RPGame.Player.Spells
                 spellSymbolCaster = GetComponent<SpellSymbolCaster>();
             }
 
-            if (spellPlacementController == null)
+            if (spellActivationController == null)
             {
-                spellPlacementController = GetComponent<SpellPlacementController>();
+                spellActivationController = GetComponent<SpellActivationController>();
             }
 
             if (targeting == null)

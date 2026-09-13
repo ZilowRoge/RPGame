@@ -5,13 +5,20 @@ namespace RPGame.Combat.Spells
 {
     public abstract class ZoneSpell : Spell, IIndicatorSpell
     {
+        [SerializeField] private GameObject indicatorPrefab;
         [SerializeField] private float placementRange;
         [SerializeField] private float radius;
         [SerializeField] private float activationDelay;
         [SerializeField] private float activeDuration;
 
+        public GameObject IndicatorPrefab => indicatorPrefab;
         public float PlacementRange => placementRange;
         public float PlacementRadius => radius;
+
+        public override ISpellActivationHandle OnActivation(CasterData casterData)
+        {
+            return new PlacementActivationHandle(this);
+        }
 
         public override void OnCast(CasterData casterData)
         {

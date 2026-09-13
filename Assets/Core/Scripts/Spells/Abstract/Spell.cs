@@ -15,8 +15,9 @@ namespace RPGame.Core.Spells
         {
         }
 
-        public virtual void OnActivation(CasterData casterData)
+        public virtual ISpellActivationHandle OnActivation(CasterData casterData)
         {
+            return null;
         }
 
         public abstract void OnCast(CasterData casterData);
