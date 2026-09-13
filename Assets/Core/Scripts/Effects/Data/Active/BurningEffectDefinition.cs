@@ -8,11 +8,11 @@ namespace RPGame.Core.Effects
     {
         private const float MinimumTickInterval = 0.0001f;
 
-        [SerializeField] private float amount = 6f;
+        [SerializeField] private float amountPerInterval = 1.5f;
         [SerializeField] private float tickInterval = 1f;
 
         public override ReapplyPolicy ReapplyPolicy => ReapplyPolicy.Refresh;
-        public float Amount => Mathf.Max(0f, amount);
+        public float Amount => Mathf.Max(0f, amountPerInterval);
         public float TickInterval => Mathf.Max(MinimumTickInterval, tickInterval);
 
         public override bool CanApply(StatusEffectTarget target)
@@ -41,7 +41,7 @@ namespace RPGame.Core.Effects
 
         private void OnValidate()
         {
-            amount = Mathf.Max(0f, amount);
+            amountPerInterval = Mathf.Max(0f, amountPerInterval);
             tickInterval = Mathf.Max(MinimumTickInterval, tickInterval);
         }
     }
