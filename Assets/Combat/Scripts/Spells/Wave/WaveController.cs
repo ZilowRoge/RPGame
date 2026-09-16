@@ -3,12 +3,14 @@ using RPGame.Core.Damage;
 using RPGame.Core.Movement;
 using RPGame.Core.Spells;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace RPGame.Combat.Spells
 {
     public sealed class WaveController : MonoBehaviour
     {
-        [SerializeField] private ParticleSystem particleSystem;
+        [FormerlySerializedAs("particleSystem")]
+        [SerializeField] private ParticleSystem waveParticleSystem;
         [SerializeField, Min(1)] private int particleCount = 40;
         [SerializeField] private LayerMask hitLayers = ~0;
         [SerializeField] private QueryTriggerInteraction triggerInteraction = QueryTriggerInteraction.Collide;
@@ -73,12 +75,12 @@ namespace RPGame.Combat.Spells
 
         private void ConfigureParticleSystem()
         {
-            if (particleSystem == null)
+            if (waveParticleSystem == null)
             {
                 return;
             }
 
-            ParticleSystem.MainModule main = particleSystem.main;
+            ParticleSystem.MainModule main = waveParticleSystem.main;
 
             // Kierunek i prędkość ustawiamy ręcznie per particle.
             main.startSpeed = 0f;
@@ -91,18 +93,18 @@ namespace RPGame.Combat.Spells
             main.simulationSpace = ParticleSystemSimulationSpace.World;
 
             // Wyłącz automatyczną emisję i Shape.
-            ParticleSystem.EmissionModule emission = particleSystem.emission;
+            ParticleSystem.EmissionModule emission = waveParticleSystem.emission;
             emission.enabled = false;
 
-            ParticleSystem.ShapeModule shape = particleSystem.shape;
+            ParticleSystem.ShapeModule shape = waveParticleSystem.shape;
             shape.enabled = false;
 
-            particleSystem.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            waveParticleSystem.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
         }
 
         private void EmitWaveParticles()
         {
-            if (particleSystem == null
+            if (waveParticleSystem == null
                 || particleCount <= 0
                 || propagationSpeed <= 0f
                 || range <= 0f)
@@ -131,7 +133,7 @@ namespace RPGame.Combat.Spells
                     startLifetime = lifetime
                 };
 
-                particleSystem.Emit(emitParams, 1);
+                waveParticleSystem.Emit(emitParams, 1);
             }
         }
 
