@@ -8,12 +8,17 @@ using RPGame.Core.Statistics.Attributes;
 using RPGame.Core.Targeting;
 using TargetingController = RPGame.Player.Targeting.TargetingController;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace RPGame.Player.Spells
 {
+    [RequireComponent(typeof(SpellActivationController))]
     public sealed class CastController : MonoBehaviour, ILastUsedSpellDamageRangeProvider
     {
         [SerializeField] private SpellSymbolCaster spellSymbolCaster;
+        [SerializeField] private SpellActivationController spellActivationController;
+        [SerializeField] private InputActionReference confirmPlacementAction;
+        [SerializeField] private InputActionReference cancelPlacementAction;
         [SerializeField] private TargetingController targeting;
         [SerializeField] private StatisticsController statisticsController;
         [SerializeField] private GameObject casterObject;
@@ -23,6 +28,8 @@ namespace RPGame.Player.Spells
         private readonly SpellCaster spellCaster = new();
         private readonly LastUsedSpellTracker lastUsedSpellTracker = new();
         private IReadOnlyList<PartialDamageRange> lastUsedSpellDamageRanges = Array.Empty<PartialDamageRange>();
+        private Spell pendingSpell;
+        private ISpellActivationHandle pendingActivationHandle;
 
         public event Action LastUsedSpellDamageRangeChanged;
 
@@ -39,6 +46,16 @@ namespace RPGame.Player.Spells
             {
                 spellSymbolCaster.SpellSelected += OnSpellSelected;
             }
+
+            if (confirmPlacementAction != null && confirmPlacementAction.action != null)
+            {
+                confirmPlacementAction.action.performed += OnConfirmPlacementPerformed;
+            }
+
+            if (cancelPlacementAction != null && cancelPlacementAction.action != null)
+            {
+                cancelPlacementAction.action.performed += OnCancelPlacementPerformed;
+            }
         }
 
         private void OnDisable()
@@ -47,6 +64,18 @@ namespace RPGame.Player.Spells
             {
                 spellSymbolCaster.SpellSelected -= OnSpellSelected;
             }
+
+            if (confirmPlacementAction != null && confirmPlacementAction.action != null)
+            {
+                confirmPlacementAction.action.performed -= OnConfirmPlacementPerformed;
+            }
+
+            if (cancelPlacementAction != null && cancelPlacementAction.action != null)
+            {
+                cancelPlacementAction.action.performed -= OnCancelPlacementPerformed;
+            }
+
+            CancelActivation();
         }
 
         internal void CastSpell(Spell spell)
@@ -62,13 +91,24 @@ namespace RPGame.Player.Spells
 
         internal CasterData CreateCasterData()
         {
+            return CreateCasterData(null);
+        }
+
+        private CasterData CreateCasterData(Vector3? targetPosition)
+        {
             ITargetable currentTarget = targeting != null ? targeting.CurrentTarget : null;
             Transform target = currentTarget != null ? currentTarget.TargetPoint : null;
 
-            return new CasterDataBuilder(ResolveCasterObject(), castOrigin, target)
+            CasterDataBuilder builder = new CasterDataBuilder(ResolveCasterObject(), castOrigin, target)
                 .WithAttributes(ResolveCharacterAttributes())
-                .WithStatistics(ResolveStatisticsController())
-                .Build();
+                .WithStatistics(ResolveStatisticsController());
+
+            if (targetPosition.HasValue)
+            {
+                builder.WithTargetPosition(targetPosition.Value);
+            }
+
+            return builder.Build();
         }
 
         public bool TryGetLastUsedSpellDamageRanges(out IReadOnlyList<PartialDamageRange> damageRanges)
@@ -79,7 +119,88 @@ namespace RPGame.Player.Spells
 
         private void OnSpellSelected(Spell spell)
         {
-            CastSpell(spell);
+            if (pendingSpell != null || pendingActivationHandle != null)
+            {
+                CancelActivation();
+            }
+
+            CasterData casterData = CreateCasterData();
+            ISpellActivationHandle activationHandle = spell.OnActivation(casterData);
+            if (activationHandle == null)
+            {
+                bool wasCast = spellCaster.TryCast(spell, casterData);
+                if (wasCast)
+                {
+                    UpdateLastUsedSpell(spell, casterData);
+                }
+
+                return;
+            }
+
+            if (spellActivationController == null)
+            {
+                Debug.LogWarning($"{name} cannot activate {spell.name} because {nameof(SpellActivationController)} is missing.", this);
+                spell.OnDeactivation(casterData);
+                return;
+            }
+
+            pendingSpell = spell;
+            pendingActivationHandle = activationHandle;
+            spellActivationController.Activate(pendingActivationHandle, casterData);
+        }
+
+        private void OnConfirmPlacementPerformed(InputAction.CallbackContext context)
+        {
+            ConfirmPlacement();
+        }
+
+        private void OnCancelPlacementPerformed(InputAction.CallbackContext context)
+        {
+            CancelActivation();
+        }
+
+        private void ConfirmPlacement()
+        {
+            if (pendingSpell == null || pendingActivationHandle == null)
+            {
+                return;
+            }
+
+            CasterData casterData = CreateCasterData();
+            if (spellActivationController == null ||
+                !spellActivationController.TryCreateCasterData(casterData, out CasterData activatedCasterData))
+            {
+                return;
+            }
+
+            bool wasCast = spellCaster.TryCast(pendingSpell, activatedCasterData);
+
+            if (!wasCast)
+            {
+                return;
+            }
+
+            UpdateLastUsedSpell(pendingSpell, activatedCasterData);
+            FinishActivationCast();
+        }
+
+        private void CancelActivation()
+        {
+            if (pendingSpell != null)
+            {
+                pendingSpell.OnDeactivation(CreateCasterData());
+            }
+
+            spellActivationController?.Deactivate();
+            pendingSpell = null;
+            pendingActivationHandle = null;
+        }
+
+        private void FinishActivationCast()
+        {
+            spellActivationController?.Deactivate();
+            pendingSpell = null;
+            pendingActivationHandle = null;
         }
 
         private void UpdateLastUsedSpell(Spell spell, CasterData casterData)
@@ -133,6 +254,11 @@ namespace RPGame.Player.Spells
             if (spellSymbolCaster == null)
             {
                 spellSymbolCaster = GetComponent<SpellSymbolCaster>();
+            }
+
+            if (spellActivationController == null)
+            {
+                spellActivationController = GetComponent<SpellActivationController>();
             }
 
             if (targeting == null)

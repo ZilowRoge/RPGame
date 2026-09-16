@@ -1,10 +1,12 @@
+using System.Collections;
+using RPGame.Core.Movement;
 using UnityEngine;
 using UnityEngine.AI;
 
 namespace RPGame.Enemies
 {
     [RequireComponent(typeof(NavMeshAgent))]
-    public sealed class Movement : MonoBehaviour, IEnemyMovement
+    public sealed class Movement : MonoBehaviour, IEnemyMovement, IKnockbackable, IMovement
     {
         [SerializeField] private float moveSpeed = 3.5f;
         [SerializeField] private float destinationChangeThreshold = 0.05f;
@@ -12,6 +14,11 @@ namespace RPGame.Enemies
         private NavMeshAgent agent;
         private Vector3 lastDestination;
         private bool hasDestination;
+        private Coroutine knockbackCoroutine;
+        private int movementBlockCount;
+        private bool isKnockedBack;
+        private readonly RaycastHit[] knockbackHitBuffer = new RaycastHit[16];
+        private readonly MovementSpeedModifiers movementSpeedModifiers = new();
 
         private Vector3 Position => transform.position;
 
@@ -29,7 +36,7 @@ namespace RPGame.Enemies
 
         internal void MoveTo(Vector3 position)
         {
-            if (!CanUseAgent())
+            if (isKnockedBack || IsMovementBlocked || !CanUseAgent())
             {
                 return;
             }
@@ -52,7 +59,7 @@ namespace RPGame.Enemies
 
         internal void Stop()
         {
-            if (!CanUseAgent())
+            if (isKnockedBack || !CanUseAgent())
             {
                 return;
             }
@@ -81,7 +88,7 @@ namespace RPGame.Enemies
         {
             if (agent != null)
             {
-                agent.speed = moveSpeed;
+                agent.speed = GetModifiedSpeed(moveSpeed);
             }
         }
 
@@ -110,6 +117,171 @@ namespace RPGame.Enemies
                 && agent.enabled
                 && agent.gameObject.activeInHierarchy
                 && agent.isOnNavMesh;
+        }
+
+        public void ApplyKnockback(Vector3 direction, float distance, float duration)
+        {
+            if (knockbackCoroutine != null)
+            {
+                StopCoroutine(knockbackCoroutine);
+                knockbackCoroutine = null;
+                EndKnockback();
+            }
+
+            knockbackCoroutine = StartCoroutine(ApplyKnockbackRoutine(direction, distance, duration));
+        }
+
+        private IEnumerator ApplyKnockbackRoutine(Vector3 direction, float distance, float duration)
+        {
+            direction.y = 0f;
+            direction = direction.sqrMagnitude > Mathf.Epsilon ? direction.normalized : Vector3.zero;
+            isKnockedBack = true;
+            if (agent != null && agent.enabled)
+            {
+                agent.isStopped = true;
+                agent.enabled = false;
+            }
+
+            Vector3 startPosition = transform.position;
+            float elapsed = 0f;
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                float progress = duration > Mathf.Epsilon ? Mathf.Clamp01(elapsed / duration) : 1f;
+                float easedProgress = 1f - Mathf.Pow(1f - progress, 3f);
+                Vector3 desiredPosition = startPosition + direction * (distance * easedProgress);
+                Vector3 displacement = desiredPosition - transform.position;
+                if (!TryMoveWithSweep(displacement))
+                {
+                    EndKnockback();
+                    break;
+                }
+
+                yield return null;
+            }
+
+            EndKnockback();
+            knockbackCoroutine = null;
+        }
+
+        private bool TryMoveWithSweep(Vector3 displacement)
+        {
+            float distance = displacement.magnitude;
+            if (distance <= Mathf.Epsilon)
+            {
+                return true;
+            }
+
+            Vector3 center = transform.position + Vector3.up * (agent != null ? agent.height * 0.5f : 0.5f);
+            float radius = agent != null ? agent.radius : 0.25f;
+            float halfHeight = Mathf.Max(radius, (agent != null ? agent.height : 1f) * 0.5f);
+            Vector3 bottom = center + Vector3.down * (halfHeight - radius);
+            Vector3 top = center + Vector3.up * (halfHeight - radius);
+            int hitCount = Physics.CapsuleCastNonAlloc(
+                bottom,
+                top,
+                radius,
+                displacement / distance,
+                knockbackHitBuffer,
+                distance,
+                ~0,
+                QueryTriggerInteraction.Ignore);
+            float closestDistance = float.MaxValue;
+            bool foundObstacle = false;
+            for (int i = 0; i < hitCount; i++)
+            {
+                RaycastHit hit = knockbackHitBuffer[i];
+                if (hit.collider == null
+                    || hit.collider.transform == transform
+                    || hit.collider.transform.IsChildOf(transform)
+                    || IsEnemyCollider(hit.collider)
+                    || hit.distance >= closestDistance)
+                {
+                    continue;
+                }
+
+                closestDistance = hit.distance;
+                foundObstacle = true;
+            }
+
+            if (foundObstacle)
+            {
+                transform.position += displacement.normalized * Mathf.Max(0f, closestDistance - 0.01f);
+                return false;
+            }
+
+            transform.position += displacement;
+            return true;
+        }
+
+        private static bool IsEnemyCollider(Collider collider)
+        {
+            return collider.GetComponentInParent<Movement>() != null;
+        }
+
+        private void EndKnockback()
+        {
+            isKnockedBack = false;
+            hasDestination = false;
+
+            if (agent == null)
+            {
+                return;
+            }
+
+            bool hasValidPosition = NavMesh.SamplePosition(
+                transform.position,
+                out NavMeshHit hit,
+                agent.height,
+                agent.areaMask);
+            if (hasValidPosition)
+            {
+                transform.position = hit.position;
+            }
+
+            if (!agent.enabled && hasValidPosition)
+            {
+                agent.enabled = true;
+                agent.Warp(hit.position);
+            }
+
+            if (agent.enabled && agent.isOnNavMesh)
+            {
+                agent.isStopped = !IsMovementBlocked;
+            }
+        }
+
+        private bool IsMovementBlocked => movementBlockCount > 0;
+
+        private float GetModifiedSpeed(float baseSpeed)
+        {
+            return baseSpeed * movementSpeedModifiers.Multiplier;
+        }
+
+        public void BlockMovement()
+        {
+            movementBlockCount++;
+            Stop();
+        }
+
+        public void UnblockMovement()
+        {
+            movementBlockCount = Mathf.Max(0, movementBlockCount - 1);
+        }
+
+        public int AddMovementSpeedModifier(float multiplier)
+        {
+            int modifierId = movementSpeedModifiers.Add(multiplier);
+            ConfigureAgent();
+            return modifierId;
+        }
+
+        public void RemoveMovementSpeedModifier(int modifierId)
+        {
+            if (movementSpeedModifiers.Remove(modifierId))
+            {
+                ConfigureAgent();
+            }
         }
 
         private bool IsSameDestination(Vector3 position)

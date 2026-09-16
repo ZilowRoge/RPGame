@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5d6001e159be4644594c3027ea99727c, type: 3}
+  m_Name: FireZoneSpell
+  m_EditorClassIdentifier: RPGame.Combat::RPGame.Combat.Spells.FireZoneSpell
+  spellPrefab: {fileID: 7891503961636652376, guid: 997aca49728cd7044821ded853905d56, type: 3}
+  manaCost: 40
+  indicatorPrefab: {fileID: 4868209179822422569, guid: 3290b290bf0f7384b8f93e5013c4147a, type: 3}
+  placementRange: 40
+  radius: 2
+  activationDelay: 0
+  activeDuration: 3

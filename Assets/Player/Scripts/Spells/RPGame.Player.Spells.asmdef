@@ -4,7 +4,8 @@
     "references": [
         "RPGame.Core",
         "RPGame.Combat",
-        "RPGame.Player"
+        "RPGame.Player",
+        "Unity.InputSystem"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

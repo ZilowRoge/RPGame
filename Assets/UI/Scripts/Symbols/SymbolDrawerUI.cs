@@ -63,6 +63,12 @@ namespace RPGame.UI.Symbols
             isDrawing = TryGetPixel(eventData, out previousPixel);
             if (isDrawing)
             {
+                Debug.Log("Symbol drawing started.", this);
+                if (drawingReceiver is SymbolRecognition symbolRecognition)
+                {
+                    symbolRecognition.OnDrawingStarted();
+                }
+
                 ResetDrawingBounds();
                 DrawBrush(previousPixel);
                 drawingTexture.Apply();
@@ -89,6 +95,7 @@ namespace RPGame.UI.Symbols
             }
 
             isDrawing = false;
+            Debug.Log("Symbol drawing ended; submitting drawing.", this);
             SubmitDrawing();
         }
 
@@ -114,6 +121,7 @@ namespace RPGame.UI.Symbols
                 return;
             }
 
+            Debug.Log("Normalized symbol drawing submitted to drawing receiver.", this);
             drawingReceiver.SubmitDrawing(submittedTexture);
             ReleaseSubmittedTextureIfNeeded(submittedTexture);
 

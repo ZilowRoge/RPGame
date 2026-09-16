@@ -17,6 +17,7 @@ namespace RPGame.Core.Spells
         private IReadOnlyList<PartialDamageRange> damageRanges = EmptyDamageRanges;
         private ICharacterAttributes attributes;
         private IStatisticsController statistics;
+        private Vector3? targetPosition;
 
         public CasterDataBuilder(GameObject casterObject, Transform castOrigin, Transform target)
         {
@@ -43,9 +44,15 @@ namespace RPGame.Core.Spells
             return this;
         }
 
+        public CasterDataBuilder WithTargetPosition(Vector3 targetPosition)
+        {
+            this.targetPosition = targetPosition;
+            return this;
+        }
+
         public CasterData Build()
         {
-            return new CasterData(casterObject, castOrigin, target, attributes, statistics, damageRanges);
+            return new CasterData(casterObject, castOrigin, target, attributes, statistics, damageRanges, targetPosition);
         }
     }
 }

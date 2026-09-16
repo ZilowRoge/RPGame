@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d43052d06e7dcc34c868784d44686217, type: 3}
+  m_Name: WaveSpell
+  m_EditorClassIdentifier: RPGame.Combat::RPGame.Combat.Spells.WaveSpell
+  spellPrefab: {fileID: 1798735657913157548, guid: bd24336edfffbd24d8d592522224ded6, type: 3}
+  manaCost: 20
+  baseDamageRange:
+    minDamage: 1
+    maxDamage: 3
+    damageType: 1
+    damageElement: 0
+  powerDamageScaling: 0.1
+  range: 20
+  angle: 45
+  propagationSpeed: 10
+  knockbackDistance: 5
+  knockbackDuration: 0.5

@@ -17,7 +17,8 @@ namespace RPGame.Core.Spells
             Transform target,
             ICharacterAttributes attributes = null,
             IStatisticsController statistics = null,
-            IReadOnlyList<PartialDamageRange> damageRanges = null)
+            IReadOnlyList<PartialDamageRange> damageRanges = null,
+            Vector3? targetPosition = null)
         {
             CasterObject = casterObject;
             CastOrigin = castOrigin;
@@ -25,6 +26,7 @@ namespace RPGame.Core.Spells
             Attributes = attributes;
             Statistics = statistics;
             DamageRanges = CopyDamageRanges(damageRanges);
+            TargetPosition = targetPosition;
         }
 
         public GameObject CasterObject { get; }
@@ -33,6 +35,7 @@ namespace RPGame.Core.Spells
         public ICharacterAttributes Attributes { get; }
         public IStatisticsController Statistics { get; }
         public IReadOnlyList<PartialDamageRange> DamageRanges { get; }
+        public Vector3? TargetPosition { get; }
 
         private static IReadOnlyList<PartialDamageRange> CopyDamageRanges(IReadOnlyList<PartialDamageRange> damageRanges)
         {

@@ -6,10 +6,10 @@ namespace RPGame.Inventory.Data
     [CreateAssetMenu(fileName = "ItemConsumableData", menuName = "RPGame/Inventory/Item Consumable Data")]
     public sealed class ItemConsumableData : ItemTypeData
     {
-        [SerializeField] private ActiveEffectDefinition effect;
+        [SerializeField] private StatusEffectDefinition effect;
         [SerializeField] private float duration;
 
-        public ActiveEffectDefinition Effect => effect;
+        public StatusEffectDefinition Effect => effect;
         public float Duration => duration;
 
         public override string GetTooltip()

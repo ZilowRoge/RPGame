@@ -1,3 +1,4 @@
+using RPGame.Core.Movement;
 using RPGame.Core.Statistics;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -6,7 +7,7 @@ using UnityEngine.Serialization;
 namespace RPGame.Player
 {
     [RequireComponent(typeof(CharacterController))]
-    public sealed class ThirdPersonMovement : MonoBehaviour
+    public sealed class ThirdPersonMovement : MonoBehaviour, IMovement
     {
         [Header("References")]
         [SerializeField] private CharacterController characterController;
@@ -54,8 +55,10 @@ namespace RPGame.Player
         private InputAction resolvedJumpAction;
         private float coyoteTimer;
         private float jumpBufferTimer;
+        private int movementBlockCount;
         private bool isAirMoveLocked;
         private bool isSprinting;
+        private readonly MovementSpeedModifiers movementSpeedModifiers = new();
 
         public bool IsGrounded { get; private set; }
         public bool IsSprinting => isSprinting;
@@ -116,6 +119,13 @@ namespace RPGame.Player
 
         private void Update()
         {
+            if (IsMovementBlocked)
+            {
+                StopNormalMovement();
+                ApplyVerticalMovement();
+                return;
+            }
+
             if (resolvedJumpAction == null && WasFallbackJumpPressed())
             {
                 BufferJump();
@@ -189,7 +199,7 @@ namespace RPGame.Player
             }
 
             Vector3 moveDirection = cameraForward * moveInput.y + cameraRight * moveInput.x;
-            float speed = isSprinting ? sprintSpeed : walkSpeed;
+            float speed = GetModifiedSpeed(isSprinting ? sprintSpeed : walkSpeed);
 
             return moveDirection.sqrMagnitude > 1f ? moveDirection.normalized * speed : moveDirection * speed;
         }
@@ -412,6 +422,56 @@ namespace RPGame.Player
             Quaternion targetRotation = Quaternion.LookRotation(direction.normalized);
             float rotationStep = Mathf.Clamp01(rotationSpeed * Time.deltaTime);
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationStep);
+        }
+
+        private void StopNormalMovement()
+        {
+            MoveInput = Vector2.zero;
+            isSprinting = false;
+            isAirMoveLocked = false;
+            jumpBufferTimer = 0f;
+            groundedMoveVelocity = Vector3.zero;
+            lockedAirMoveVelocity = Vector3.zero;
+        }
+
+        private void ApplyVerticalMovement()
+        {
+            IsGrounded = characterController.isGrounded;
+            if (IsGrounded && verticalVelocity.y < 0f)
+            {
+                verticalVelocity.y = groundedVerticalVelocity;
+            }
+
+            verticalVelocity.y += gravity * Time.deltaTime;
+            characterController.Move(verticalVelocity * Time.deltaTime);
+        }
+
+        private bool IsMovementBlocked => movementBlockCount > 0;
+
+        private float GetModifiedSpeed(float baseSpeed)
+        {
+            return baseSpeed * movementSpeedModifiers.Multiplier;
+        }
+
+        public void BlockMovement()
+        {
+            movementBlockCount++;
+            StopNormalMovement();
+        }
+
+        public void UnblockMovement()
+        {
+            movementBlockCount = Mathf.Max(0, movementBlockCount - 1);
+        }
+
+        public int AddMovementSpeedModifier(float multiplier)
+        {
+            return movementSpeedModifiers.Add(multiplier);
+        }
+
+        public void RemoveMovementSpeedModifier(int modifierId)
+        {
+            movementSpeedModifiers.Remove(modifierId);
         }
 
         private void OnJumpPerformed(InputAction.CallbackContext context)

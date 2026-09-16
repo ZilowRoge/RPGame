@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 2076565859437898434}
   - component: {fileID: 5169862832552584455}
   - component: {fileID: 8106967523904418090}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: Capsule
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -100,7 +100,7 @@ GameObject:
   m_Component:
   - component: {fileID: 6623092092692575068}
   - component: {fileID: 6161705544167588123}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: CameraTarget
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -132,14 +132,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 80d452e9ec2b4f3d9f2d7b05925c76b3, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: RPGame.Player::RPGame.Player.ThirdPersonCameraAim
   aimTarget: {fileID: 6623092092692575068}
   playerInput: {fileID: 7061440437411484178}
   lookAction:
     m_UseReference: 0
     m_Action:
-      m_Name:
+      m_Name: 
       m_Type: 0
       m_ExpectedControlType: 
       m_Id: 248751a1-f05d-4280-b2af-7c10096d78ea
@@ -152,7 +152,7 @@ MonoBehaviour:
   alternativeUseAction:
     m_UseReference: 0
     m_Action:
-      m_Name:
+      m_Name: 
       m_Type: 0
       m_ExpectedControlType: 
       m_Id: 97046a47-a43b-44ee-baed-616db890dc0b
@@ -180,7 +180,7 @@ GameObject:
   - component: {fileID: 2558891260446537314}
   - component: {fileID: 6682435615962876352}
   - component: {fileID: 1786263210591717104}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: CinemachineCamera
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -263,7 +263,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f9dfa5b682dcd46bda6128250e975f58, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineCamera
   Priority:
     Enabled: 0
@@ -306,7 +306,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 625c14eee3ad46c99df7c7c891ef668a, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineThirdPersonFollow
   Damping: {x: 0.1, y: 0.5, z: 0.3}
   ShoulderOffset: {x: 0, y: 0, z: 0}
@@ -332,7 +332,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a79441f348de89743a2939f4d699eac1, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.UniversalAdditionalCameraData
   m_RenderShadows: 1
   m_RequiresDepthTextureOption: 2
@@ -375,7 +375,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 70242763662629742}
-  m_Layer: 0
+  m_Layer: 3
   m_Name: CastOrigin
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -412,14 +412,21 @@ GameObject:
   - component: {fileID: 8541911369478375139}
   - component: {fileID: 6403399481275357045}
   - component: {fileID: 4581996241443596218}
-  - component: {fileID: 1416622787065215315}
   - component: {fileID: 5501000000000000001}
-  - component: {fileID: 5501000000000000002}
   - component: {fileID: 6738148486840793266}
   - component: {fileID: 8632052528601023458}
   - component: {fileID: 7254131839462751042}
   - component: {fileID: 5501000000000000003}
-  m_Layer: 0
+  - component: {fileID: 7704111723200341487}
+  - component: {fileID: 9106253214432637820}
+  - component: {fileID: 1105072201663407447}
+  - component: {fileID: 9104286350229094230}
+  - component: {fileID: 5887479847380067334}
+  - component: {fileID: 5501000000000000002}
+  - component: {fileID: 1416622787065215315}
+  - component: {fileID: 7231772625765286961}
+  - component: {fileID: 4818460419928554609}
+  m_Layer: 3
   m_Name: Player
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -480,7 +487,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 62899f850307741f2a39c98a8b639597, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: Unity.InputSystem::UnityEngine.InputSystem.PlayerInput
   m_Actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_NotificationBehavior: 0
@@ -510,7 +517,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0e5d19aad30f41a0859cff4204458110, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: RPGame.Player::RPGame.Player.ThirdPersonMovement
   characterController: {fileID: 7798429564494110509}
   cameraTransform: {fileID: 8895899010277896616}
@@ -582,12 +589,14 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8a228d74ae0d45788e3d884cac2b0c3d, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: RPGame.Core::RPGame.Core.Statistics.StatisticsController
   config: {fileID: 11400000, guid: 3c39e3e4fd6baeb4ca47a334178730ca, type: 2}
+  attributes: {fileID: 9106253214432637820}
   initializeOnAwake: 1
   regenerateHealth: 0
   regenerateStamina: 1
+  regenerateMana: 1
 --- !u!114 &6403399481275357045
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -598,7 +607,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: cbccdc8f4b27455daff49c84b15b1fc4, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: RPGame.Combat::RPGame.Combat.Damage.DamageReceiver
   statisticsController: {fileID: 8541911369478375139}
   loggingEnabled: 1
@@ -612,7 +621,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f11bc2df38d04c2aab4f77c5a3852598, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: RPGame.Core::RPGame.Core.Interaction.Interactor
   interactionOrigin: {fileID: 3136456713520390550}
   playerInput: {fileID: 7061440437411484178}
@@ -632,21 +641,6 @@ MonoBehaviour:
   minimumForwardDot: 0.25
   forwardWeight: 2
   distanceWeight: 1
---- !u!114 &1416622787065215315
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8024470455656626075}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 154ea095009a488d83accb17de8cad1f, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: RPGame.Combat::RPGame.Combat.Spells.SpellSymbolCaster
-  spellsBySymbol:
-  - symbolId: 9
-    spell: {fileID: 11400000, guid: 09cb0f84a3d64db4aaada786edbc000a, type: 2}
 --- !u!114 &5501000000000000001
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -657,42 +651,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 64d67216a67c4d86a01e4672d6398d5f, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: RPGame.Player::RPGame.Player.Targeting.TargetingController
   playerCamera: {fileID: 5288368037219562554}
-  maxTargetDistance: 25
-  targetingRadius: 0.2
---- !u!114 &5501000000000000003
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8024470455656626075}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7de9cf695fb8416fa115ea1fbfad89b6, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: RPGame.Core::RPGame.Core.Targeting.PlayerTargetable
-  targetPoint: {fileID: 0}
---- !u!114 &5501000000000000002
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8024470455656626075}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 456c4b42c4594329a5838515a4e08844, type: 3}
-  m_Name:
-  m_EditorClassIdentifier: RPGame.Player.Spells::RPGame.Player.Spells.CastController
-  spellSymbolCaster: {fileID: 1416622787065215315}
-  targeting: {fileID: 5501000000000000001}
-  statisticsController: {fileID: 8541911369478375139}
-  casterObject: {fileID: 8024470455656626075}
-  castOrigin: {fileID: 70242763662629742}
-  characterAttributes: {fileID: 0}
+  maxTargetDistance: 50
+  targetingRadius: 0.349
+  targetSwitchThreshold: 0.03
+  targetRetentionTime: 0.35
 --- !u!114 &6738148486840793266
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -703,11 +668,27 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ec778541c80bb824288fb388840dc088, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: RPGame.Inventory::RPGame.Inventory.ItemManagementController
   inventorySize: 20
   startingItems:
   - {fileID: 11400000, guid: 79331882a27426b4da0f8cbea5bbde46, type: 2}
+  - {fileID: 11400000, guid: f21e49bfa84d39645a497dceca528462, type: 2}
+  - {fileID: 11400000, guid: f21e49bfa84d39645a497dceca528462, type: 2}
+  - {fileID: 11400000, guid: f21e49bfa84d39645a497dceca528462, type: 2}
+  - {fileID: 11400000, guid: f21e49bfa84d39645a497dceca528462, type: 2}
+  - {fileID: 11400000, guid: f21e49bfa84d39645a497dceca528462, type: 2}
+  - {fileID: 11400000, guid: f21e49bfa84d39645a497dceca528462, type: 2}
+  - {fileID: 11400000, guid: f21e49bfa84d39645a497dceca528462, type: 2}
+  - {fileID: 11400000, guid: f21e49bfa84d39645a497dceca528462, type: 2}
+  - {fileID: 11400000, guid: f21e49bfa84d39645a497dceca528462, type: 2}
+  - {fileID: 11400000, guid: f21e49bfa84d39645a497dceca528462, type: 2}
+  - {fileID: 11400000, guid: f21e49bfa84d39645a497dceca528462, type: 2}
+  - {fileID: 11400000, guid: f21e49bfa84d39645a497dceca528462, type: 2}
+  - {fileID: 11400000, guid: f21e49bfa84d39645a497dceca528462, type: 2}
+  - {fileID: 11400000, guid: f21e49bfa84d39645a497dceca528462, type: 2}
+  - {fileID: 11400000, guid: f21e49bfa84d39645a497dceca528462, type: 2}
+  - {fileID: 11400000, guid: f21e49bfa84d39645a497dceca528462, type: 2}
   inventory:
     slots: []
   equipment:
@@ -717,6 +698,29 @@ MonoBehaviour:
         definition: {fileID: 0}
         instanceId: 
         stackSize: 0
+  consumableSlots:
+    slots:
+    - slotType: 0
+      item:
+        definition: {fileID: 0}
+        instanceId: 
+        stackSize: 0
+    - slotType: 1
+      item:
+        definition: {fileID: 0}
+        instanceId: 
+        stackSize: 0
+    - slotType: 2
+      item:
+        definition: {fileID: 0}
+        instanceId: 
+        stackSize: 0
+    - slotType: 3
+      item:
+        definition: {fileID: 0}
+        instanceId: 
+        stackSize: 0
+  statusEffectAggregator: {fileID: 0}
 --- !u!114 &8632052528601023458
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -727,7 +731,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9eb56bf0691347c8aab231ecbf50ef5d, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: RPGame.Inventory::RPGame.Inventory.Providers.EquipmentCombatStatsProvider
   itemManagementController: {fileID: 6738148486840793266}
 --- !u!114 &7254131839462751042
@@ -740,8 +744,161 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a150d575b2ba47deaae2a7fac79768a1, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: RPGame.Core::RPGame.Core.Statistics.CharacterStatisticsDataProvider
   statisticsController: {fileID: 8541911369478375139}
-  characterAttributes: {fileID: 0}
+  characterAttributes: {fileID: 9106253214432637820}
   weaponDamageProvider: {fileID: 8632052528601023458}
+--- !u!114 &5501000000000000003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8024470455656626075}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7de9cf695fb8416fa115ea1fbfad89b6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: RPGame.Core::RPGame.Core.Targeting.PlayerTargetable
+  targetPoint: {fileID: 0}
+--- !u!114 &7704111723200341487
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8024470455656626075}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2523cb91149b4a14975f4cdd0c50808a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: RPGame.Progression::RPGame.Progression.CharacterProgression
+  startingJobs:
+  - {fileID: 11400000, guid: fc3b41ff177dd964bbb5989d306e8440, type: 2}
+  - {fileID: 11400000, guid: 60ad5cdcae3b46349027ba31b56306ec, type: 2}
+  availableXP: 3000
+  effectAggregator: {fileID: 1105072201663407447}
+  attributes: {fileID: 9106253214432637820}
+--- !u!114 &9106253214432637820
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8024470455656626075}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 27a188d1f34f4bf39235cc9bc47ac765, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: RPGame.Core::RPGame.Core.Statistics.Attributes.CharacterAttributes
+  config: {fileID: 11400000, guid: 10e26523d52402442a39c18df802aaf2, type: 2}
+  effectAggregator: {fileID: 1105072201663407447}
+--- !u!114 &1105072201663407447
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8024470455656626075}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 36be2e3701de45868109648c25507ada, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: RPGame.Core::RPGame.Core.Effects.EffectAggregator
+--- !u!114 &9104286350229094230
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8024470455656626075}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a2dbfd3740605de4faf2c301c5ad9c81, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: RPGame.Core::RPGame.Core.Effects.StatusEffectAggregator
+--- !u!114 &5887479847380067334
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8024470455656626075}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fb36eff6a51a489ab54b3d72afe93dc7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: RPGame.Inventory::RPGame.Inventory.ConsumableQuickUseController
+  itemManagementController: {fileID: 6738148486840793266}
+  useConsumable1Action: {fileID: 8013490339154428590, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+  useConsumable2Action: {fileID: 592556507038501651, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+  useConsumable3Action: {fileID: 6080199500199042029, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+  useConsumable4Action: {fileID: 7082954424428698044, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+--- !u!114 &5501000000000000002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8024470455656626075}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 456c4b42c4594329a5838515a4e08844, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: RPGame.Player.Spells::RPGame.Player.Spells.CastController
+  spellSymbolCaster: {fileID: 1416622787065215315}
+  spellActivationController: {fileID: 0}
+  confirmPlacementAction: {fileID: 0}
+  cancelPlacementAction: {fileID: 0}
+  targeting: {fileID: 5501000000000000001}
+  statisticsController: {fileID: 8541911369478375139}
+  casterObject: {fileID: 8024470455656626075}
+  castOrigin: {fileID: 70242763662629742}
+  characterAttributes: {fileID: 9106253214432637820}
+--- !u!114 &1416622787065215315
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8024470455656626075}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 154ea095009a488d83accb17de8cad1f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: RPGame.Combat::RPGame.Combat.Spells.SpellSymbolCaster
+  spellsBySymbol:
+  - symbolIds: 09000000
+    spell: {fileID: 11400000, guid: 1e056ff09263b4849886ab2c9dfb992f, type: 2}
+  terminatorSymbolIds: 09000000
+  sequenceTimeout: 1
+--- !u!114 &7231772625765286961
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8024470455656626075}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0ceda60f8092f264fae437a9dcc73b4c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: RPGame.Player.Spells::RPGame.Player.Spells.SpellActivationController
+  spellPlacementController: {fileID: 4818460419928554609}
+--- !u!114 &4818460419928554609
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8024470455656626075}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dc43d02ae566ad846af464894700b3af, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: RPGame.Player.Spells::RPGame.Player.Spells.SpellPlacementController
+  placementCamera: {fileID: 5288368037219562554}
+  placementLayers:
+    serializedVersion: 2
+    m_Bits: 1
