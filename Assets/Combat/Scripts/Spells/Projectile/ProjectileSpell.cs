@@ -8,7 +8,7 @@ using UnityEngine;
 namespace RPGame.Combat.Spells
 {
     [CreateAssetMenu(fileName = "ProjectileSpell", menuName = "RPGame/Spells/Projectile Spell")]
-    public sealed class ProjectileSpell : Spell, ICasterDamageRangeProvider
+    public sealed class ProjectileSpell : Spell, ICasterDamageRangeProvider, IProjectileCapability
     {
         [SerializeField] private PartialDamageRange baseDamageRange = new(10f, 10f, DamageType.Magical, DamageElement.None);
         [SerializeField] private float powerDamageScaling;

@@ -7,17 +7,20 @@ using UnityEngine;
 namespace RPGame.Combat.Spells
 {
     [CreateAssetMenu(fileName = "OrbitSpell", menuName = "RPGame/Spells/Orbit Spell")]
-    public sealed class OrbitSpell : Spell, ICasterDamageRangeProvider
+    public sealed class OrbitSpell : Spell, ICasterDamageRangeProvider, IOrbCapability, IDurationCapability
     {
         [SerializeField] private PartialDamageRange baseDamageRange = new(1f, 3f, DamageType.Magical, DamageElement.None);
         [SerializeField] private float powerDamageScaling;
+        [SerializeField] private GameObject orbPrefab;
         [SerializeField] private int projectileCount = 3;
         [SerializeField] private float orbitRadius = 2f;
         [SerializeField] private float angularSpeed = 90f;
         [SerializeField] private float lifetime = 5f;
         [SerializeField] private float damageCapacity = 10f;
 
-        public override SpellTags Tags => SpellTags.Projectile | SpellTags.Duration;
+        public override SpellTags Tags => SpellTags.Orb | SpellTags.Duration;
+        public int OrbCount => projectileCount;
+        public float Duration => lifetime;
 
         public override void OnCast(CasterData casterData)
         {
@@ -46,6 +49,7 @@ namespace RPGame.Combat.Spells
 
             orbitController.Initialize(
                 casterData.CasterObject.transform,
+                orbPrefab,
                 projectileCount,
                 orbitRadius,
                 angularSpeed,

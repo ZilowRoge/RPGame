@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace RPGame.Combat.Spells
 {
-    public abstract class ZoneSpell : Spell, IIndicatorSpell
+    public abstract class ZoneSpell : Spell, IIndicatorSpell, IAoECapability
     {
         [SerializeField] private GameObject indicatorPrefab;
         [SerializeField] private float placementRange;
@@ -14,6 +14,8 @@ namespace RPGame.Combat.Spells
         public GameObject IndicatorPrefab => indicatorPrefab;
         public float PlacementRange => placementRange;
         public float PlacementRadius => radius;
+        public float Radius => radius;
+        protected float ActiveDuration => activeDuration;
 
         public override ISpellActivationHandle OnActivation(CasterData casterData)
         {

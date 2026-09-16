@@ -10,6 +10,7 @@ namespace RPGame.Core.Spells
         AoE = 1 << 1,
         Duration = 1 << 2,
         Control = 1 << 3,
-        DamageOverTime = 1 << 4
+        DamageOverTime = 1 << 4,
+        Orb = 1 << 5
     }
 }
