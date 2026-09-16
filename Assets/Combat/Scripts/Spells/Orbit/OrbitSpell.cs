@@ -18,7 +18,6 @@ namespace RPGame.Combat.Spells
         [SerializeField] private float lifetime = 5f;
         [SerializeField] private float damageCapacity = 10f;
 
-        public override SpellTags Tags => SpellTags.Orb | SpellTags.Duration;
         public int OrbCount => projectileCount;
         public float Duration => lifetime;
 
@@ -78,6 +77,7 @@ namespace RPGame.Combat.Spells
                 .WithAttributes(casterData.Attributes)
                 .WithStatistics(casterData.Statistics)
                 .WithDamageRanges(GetDamageRanges(casterData))
+                .WithRuntimeBehaviors(casterData.RuntimeBehaviors)
                 .Build();
         }
 

@@ -13,8 +13,6 @@ namespace RPGame.Combat.Tests
         {
             public int CastCount { get; private set; }
 
-            public override SpellTags Tags => SpellTags.None;
-
             public override void OnCast(CasterData casterData)
             {
                 CastCount++;

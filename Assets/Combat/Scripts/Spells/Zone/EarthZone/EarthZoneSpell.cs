@@ -6,7 +6,6 @@ namespace RPGame.Combat.Spells
     [CreateAssetMenu(fileName = "EarthZoneSpell", menuName = "RPGame/Spells/Earth Zone")]
     public sealed class EarthZoneSpell : ZoneSpell, IDurationCapability
     {
-        public override SpellTags Tags => SpellTags.AoE | SpellTags.Duration | SpellTags.Control;
         public float Duration => ActiveDuration;
     }
 }

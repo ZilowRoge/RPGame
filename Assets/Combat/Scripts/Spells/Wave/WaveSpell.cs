@@ -17,7 +17,6 @@ namespace RPGame.Combat.Spells
         [SerializeField] private float knockbackDistance = 2f;
         [SerializeField] private float knockbackDuration = 0.25f;
 
-        public override SpellTags Tags => SpellTags.AoE | SpellTags.Control;
         public float Radius => range;
         public float ControlPower => knockbackDistance;
 
@@ -72,6 +71,7 @@ namespace RPGame.Combat.Spells
                 .WithAttributes(casterData.Attributes)
                 .WithStatistics(casterData.Statistics)
                 .WithDamageRanges(GetDamageRanges(casterData))
+                .WithRuntimeBehaviors(casterData.RuntimeBehaviors)
                 .Build();
         }
 

@@ -10,6 +10,7 @@ namespace RPGame.Core.Spells
     public readonly struct CasterData
     {
         private static readonly IReadOnlyList<PartialDamageRange> EmptyDamageRanges = Array.Empty<PartialDamageRange>();
+        private static readonly IReadOnlyList<IRuntimeSpellBehavior> EmptyRuntimeBehaviors = Array.Empty<IRuntimeSpellBehavior>();
 
         public CasterData(
             GameObject casterObject,
@@ -18,7 +19,8 @@ namespace RPGame.Core.Spells
             ICharacterAttributes attributes = null,
             IStatisticsController statistics = null,
             IReadOnlyList<PartialDamageRange> damageRanges = null,
-            Vector3? targetPosition = null)
+            Vector3? targetPosition = null,
+            IReadOnlyList<IRuntimeSpellBehavior> runtimeBehaviors = null)
         {
             CasterObject = casterObject;
             CastOrigin = castOrigin;
@@ -27,6 +29,7 @@ namespace RPGame.Core.Spells
             Statistics = statistics;
             DamageRanges = CopyDamageRanges(damageRanges);
             TargetPosition = targetPosition;
+            RuntimeBehaviors = CopyRuntimeBehaviors(runtimeBehaviors);
         }
 
         public GameObject CasterObject { get; }
@@ -36,6 +39,7 @@ namespace RPGame.Core.Spells
         public IStatisticsController Statistics { get; }
         public IReadOnlyList<PartialDamageRange> DamageRanges { get; }
         public Vector3? TargetPosition { get; }
+        public IReadOnlyList<IRuntimeSpellBehavior> RuntimeBehaviors { get; }
 
         private static IReadOnlyList<PartialDamageRange> CopyDamageRanges(IReadOnlyList<PartialDamageRange> damageRanges)
         {
@@ -54,6 +58,26 @@ namespace RPGame.Core.Spells
             }
 
             return copiedDamageRanges.Count > 0 ? copiedDamageRanges : EmptyDamageRanges;
+        }
+
+        private static IReadOnlyList<IRuntimeSpellBehavior> CopyRuntimeBehaviors(
+            IReadOnlyList<IRuntimeSpellBehavior> runtimeBehaviors)
+        {
+            if (runtimeBehaviors == null || runtimeBehaviors.Count == 0)
+            {
+                return EmptyRuntimeBehaviors;
+            }
+
+            List<IRuntimeSpellBehavior> copiedRuntimeBehaviors = new(runtimeBehaviors.Count);
+            for (int i = 0; i < runtimeBehaviors.Count; i++)
+            {
+                if (runtimeBehaviors[i] != null)
+                {
+                    copiedRuntimeBehaviors.Add(runtimeBehaviors[i]);
+                }
+            }
+
+            return copiedRuntimeBehaviors.Count > 0 ? copiedRuntimeBehaviors : EmptyRuntimeBehaviors;
         }
     }
 }

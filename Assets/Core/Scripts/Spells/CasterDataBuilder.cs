@@ -10,11 +10,13 @@ namespace RPGame.Core.Spells
     public sealed class CasterDataBuilder
     {
         private static readonly IReadOnlyList<PartialDamageRange> EmptyDamageRanges = Array.Empty<PartialDamageRange>();
+        private static readonly IReadOnlyList<IRuntimeSpellBehavior> EmptyRuntimeBehaviors = Array.Empty<IRuntimeSpellBehavior>();
 
         private readonly GameObject casterObject;
         private readonly Transform castOrigin;
         private readonly Transform target;
         private IReadOnlyList<PartialDamageRange> damageRanges = EmptyDamageRanges;
+        private IReadOnlyList<IRuntimeSpellBehavior> runtimeBehaviors = EmptyRuntimeBehaviors;
         private ICharacterAttributes attributes;
         private IStatisticsController statistics;
         private Vector3? targetPosition;
@@ -44,6 +46,12 @@ namespace RPGame.Core.Spells
             return this;
         }
 
+        public CasterDataBuilder WithRuntimeBehaviors(IReadOnlyList<IRuntimeSpellBehavior> runtimeBehaviors)
+        {
+            this.runtimeBehaviors = runtimeBehaviors ?? EmptyRuntimeBehaviors;
+            return this;
+        }
+
         public CasterDataBuilder WithTargetPosition(Vector3 targetPosition)
         {
             this.targetPosition = targetPosition;
@@ -52,7 +60,15 @@ namespace RPGame.Core.Spells
 
         public CasterData Build()
         {
-            return new CasterData(casterObject, castOrigin, target, attributes, statistics, damageRanges, targetPosition);
+            return new CasterData(
+                casterObject,
+                castOrigin,
+                target,
+                attributes,
+                statistics,
+                damageRanges,
+                targetPosition,
+                runtimeBehaviors);
         }
     }
 }
