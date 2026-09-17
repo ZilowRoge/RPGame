@@ -28,6 +28,7 @@ namespace RPGame.Player.Spells
         private readonly SpellCaster spellCaster = new();
         private readonly LastUsedSpellTracker lastUsedSpellTracker = new();
         private IReadOnlyList<PartialDamageRange> lastUsedSpellDamageRanges = Array.Empty<PartialDamageRange>();
+        private IRuntimeSpellBehaviorProvider runtimeSpellBehaviorProvider;
         private Spell pendingSpell;
         private ISpellActivationHandle pendingActivationHandle;
 
@@ -80,7 +81,7 @@ namespace RPGame.Player.Spells
 
         internal void CastSpell(Spell spell)
         {
-            CasterData casterData = CreateCasterData();
+            CasterData casterData = CreateCasterData(spell, null);
             bool wasCast = spellCaster.TryCast(spell, casterData);
 
             if (wasCast)
@@ -91,10 +92,10 @@ namespace RPGame.Player.Spells
 
         internal CasterData CreateCasterData()
         {
-            return CreateCasterData(null);
+            return CreateCasterData(null, null);
         }
 
-        private CasterData CreateCasterData(Vector3? targetPosition)
+        private CasterData CreateCasterData(Spell spell, Vector3? targetPosition)
         {
             ITargetable currentTarget = targeting != null ? targeting.CurrentTarget : null;
             Transform target = currentTarget != null ? currentTarget.TargetPoint : null;
@@ -102,6 +103,12 @@ namespace RPGame.Player.Spells
             CasterDataBuilder builder = new CasterDataBuilder(ResolveCasterObject(), castOrigin, target)
                 .WithAttributes(ResolveCharacterAttributes())
                 .WithStatistics(ResolveStatisticsController());
+
+            if (spell != null && runtimeSpellBehaviorProvider != null)
+            {
+                builder.WithRuntimeBehaviors(
+                    runtimeSpellBehaviorProvider.CreateRuntimeBehaviors(spell, ResolveCasterObject()));
+            }
 
             if (targetPosition.HasValue)
             {
@@ -128,6 +135,7 @@ namespace RPGame.Player.Spells
             ISpellActivationHandle activationHandle = spell.OnActivation(casterData);
             if (activationHandle == null)
             {
+                casterData = CreateCasterData(spell, null);
                 bool wasCast = spellCaster.TryCast(spell, casterData);
                 if (wasCast)
                 {
@@ -166,7 +174,7 @@ namespace RPGame.Player.Spells
                 return;
             }
 
-            CasterData casterData = CreateCasterData();
+            CasterData casterData = CreateCasterData(pendingSpell, null);
             if (spellActivationController == null ||
                 !spellActivationController.TryCreateCasterData(casterData, out CasterData activatedCasterData))
             {
@@ -269,6 +277,11 @@ namespace RPGame.Player.Spells
             if (casterObject == null)
             {
                 casterObject = gameObject;
+            }
+
+            if (runtimeSpellBehaviorProvider == null)
+            {
+                TryGetComponent(out runtimeSpellBehaviorProvider);
             }
         }
     }

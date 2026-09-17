@@ -2,6 +2,8 @@ using System.Collections.Generic;
 using NUnit.Framework;
 using RPGame.Combat.Spells;
 using RPGame.Core.Damage;
+using RPGame.Core.Spells;
+using UnityEditor;
 using UnityEngine;
 
 namespace RPGame.Combat.Tests
@@ -45,6 +47,45 @@ namespace RPGame.Combat.Tests
             Assert.DoesNotThrow(() => behavior.OnKnockbackCollision(target, null, Vector3.zero));
         }
 
+        [Test]
+        public void WaveImpactDefinition_ForWaveSpell_CreatesBehaviorWithCaster()
+        {
+            WaveImpactBehaviorDefinition definition =
+                ScriptableObject.CreateInstance<WaveImpactBehaviorDefinition>();
+            WaveSpell spell = ScriptableObject.CreateInstance<WaveSpell>();
+            GameObject source = CreateObject("Source");
+            GameObject target = CreateObject("Target");
+            TestDamageable damageable = target.AddComponent<TestDamageable>();
+            SerializedObject serializedDefinition = new(definition);
+            serializedDefinition.FindProperty("impactDamage").floatValue = 23f;
+            serializedDefinition.ApplyModifiedPropertiesWithoutUndo();
+
+            bool created = definition.TryCreate(spell, source, out IRuntimeSpellBehavior behavior);
+            ((IKnockbackCollisionHandler)behavior).OnKnockbackCollision(target, null, Vector3.zero);
+
+            Assert.IsTrue(created);
+            Assert.IsInstanceOf<KnockbackDamageOnImpactCollisionBehavior>(behavior);
+            Assert.AreEqual(23f, damageable.LastData.Amount);
+            Assert.AreSame(source, damageable.LastData.Source);
+            Object.DestroyImmediate(definition);
+            Object.DestroyImmediate(spell);
+        }
+
+        [Test]
+        public void WaveImpactDefinition_ForOtherSpell_DoesNotCreateBehavior()
+        {
+            WaveImpactBehaviorDefinition definition =
+                ScriptableObject.CreateInstance<WaveImpactBehaviorDefinition>();
+            Spell otherSpell = ScriptableObject.CreateInstance<TestSpell>();
+
+            bool created = definition.TryCreate(otherSpell, null, out IRuntimeSpellBehavior behavior);
+
+            Assert.IsFalse(created);
+            Assert.IsNull(behavior);
+            Object.DestroyImmediate(definition);
+            Object.DestroyImmediate(otherSpell);
+        }
+
         private GameObject CreateObject(string objectName)
         {
             GameObject gameObject = new(objectName);
@@ -63,6 +104,13 @@ namespace RPGame.Combat.Tests
                 CallCount++;
                 LastData = data;
                 return DamageResult.Applied(data, data.Amount, 100f, 100f - data.Amount, false);
+            }
+        }
+
+        private sealed class TestSpell : Spell
+        {
+            public override void OnCast(CasterData casterData)
+            {
             }
         }
     }

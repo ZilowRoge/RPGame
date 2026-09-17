@@ -167,6 +167,18 @@ namespace RPGame.Player.Tests
             Assert.AreEqual(1, changedCount);
         }
 
+        [Test]
+        public void CastSpell_IncludesRuntimeBehaviorsFromProvider()
+        {
+            TestRuntimeBehaviorProvider provider = playerObject.AddComponent<TestRuntimeBehaviorProvider>();
+            SetField(controller, "runtimeSpellBehaviorProvider", provider);
+
+            InvokeCastSpell(spell);
+
+            Assert.AreEqual(1, spell.LastCasterData.RuntimeBehaviors.Count);
+            Assert.AreSame(provider.Behavior, spell.LastCasterData.RuntimeBehaviors[0]);
+        }
+
         private void InvokeCastSpell(Spell selectedSpell)
         {
             MethodInfo method = typeof(CastController).GetMethod("CastSpell", BindingFlags.Instance | BindingFlags.NonPublic);
@@ -244,6 +256,22 @@ namespace RPGame.Player.Tests
             {
                 return DamageRanges;
             }
+        }
+
+        private sealed class TestRuntimeBehaviorProvider : MonoBehaviour, IRuntimeSpellBehaviorProvider
+        {
+            public IRuntimeSpellBehavior Behavior { get; } = new TestRuntimeBehavior();
+
+            public IReadOnlyList<IRuntimeSpellBehavior> CreateRuntimeBehaviors(
+                Spell spell,
+                GameObject casterObject)
+            {
+                return new[] { Behavior };
+            }
+        }
+
+        private sealed class TestRuntimeBehavior : IRuntimeSpellBehavior
+        {
         }
     }
 }
