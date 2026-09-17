@@ -252,7 +252,12 @@ namespace RPGame.Combat.Spells
             knockbackable?.ApplyKnockback(
                 direction,
                 knockbackDistance,
-                knockbackDuration);
+                knockbackDuration,
+                (obstacle, point) => KnockbackCollisionDispatcher.Dispatch(
+                    casterData.RuntimeBehaviors,
+                    targetCollider.transform.root.gameObject,
+                    obstacle,
+                    point));
         }
 
         private bool ShouldIgnore(Collider targetCollider)
