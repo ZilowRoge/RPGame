@@ -255,7 +255,7 @@ namespace RPGame.Combat.Spells
                 knockbackDuration,
                 (obstacle, point) => KnockbackCollisionDispatcher.Dispatch(
                     casterData.RuntimeBehaviors,
-                    targetCollider.transform.root.gameObject,
+                    targetCollider.gameObject,
                     obstacle,
                     point));
         }
