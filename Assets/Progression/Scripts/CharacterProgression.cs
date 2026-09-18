@@ -1,15 +1,13 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using RPGame.Core.Effects;
 using RPGame.Core.Progression;
-using RPGame.Core.Spells;
 using RPGame.Core.Statistics.Attributes;
 using UnityEngine;
 
 namespace RPGame.Progression
 {
-    public sealed class CharacterProgression : MonoBehaviour, IExperienceReceiver, IExperienceProvider, IRuntimeSpellBehaviorProvider
+    public sealed class CharacterProgression : MonoBehaviour, IExperienceReceiver, IExperienceProvider
     {
         [SerializeField] private List<JobDefinition> startingJobs = new();
         [SerializeField] private int availableXP;
@@ -56,40 +54,6 @@ namespace RPGame.Progression
         public int GetAvailableXP()
         {
             return AvailableExperience;
-        }
-
-        public IReadOnlyList<IRuntimeSpellBehavior> CreateRuntimeBehaviors(
-            Spell spell,
-            GameObject casterObject)
-        {
-            List<IRuntimeSpellBehavior> behaviors = new();
-            foreach (JobInstance job in jobContainer.GetAllJobs())
-            {
-                if (job?.Definition == null)
-                {
-                    continue;
-                }
-
-                foreach (PerkDefinition perk in job.Definition.JobPerks)
-                {
-                    if (perk == null || !job.UnlockedPerkIds.Contains(perk.PerkId))
-                    {
-                        continue;
-                    }
-
-                    foreach (RuntimeSpellBehaviorDefinition definition in perk.RuntimeBehaviorDefinitions)
-                    {
-                        if (definition != null
-                            && definition.TryCreate(spell, casterObject, out IRuntimeSpellBehavior behavior)
-                            && behavior != null)
-                        {
-                            behaviors.Add(behavior);
-                        }
-                    }
-                }
-            }
-
-            return behaviors;
         }
 
         public PerkUnlockState GetPerkUnlockState(JobInstance job, PerkDefinition perk)

@@ -1,12 +1,12 @@
 using RPGame.Core.Spells;
 using UnityEngine;
+using UnityEngine.Scripting.APIUpdating;
 
 namespace RPGame.Combat.Spells
 {
-    [CreateAssetMenu(
-        fileName = "WaveImpactBehaviorDefinition",
-        menuName = "RPGame/Progression/Runtime Behaviors/Wave Impact")]
-    public sealed class WaveImpactBehaviorDefinition : RuntimeSpellBehaviorDefinition
+    [System.Serializable]
+    [MovedFrom(true, "RPGame.Combat.Spells", "RPGame.Combat", "WaveImpactBehaviorDefinition")]
+    public sealed class WaveDamageOnImpactDefinition : RuntimeSpellBehaviorDefinition
     {
         [SerializeField, Min(0f)] private float impactDamage = 1f;
 
@@ -25,9 +25,5 @@ namespace RPGame.Combat.Spells
             return true;
         }
 
-        private void OnValidate()
-        {
-            impactDamage = Mathf.Max(0f, impactDamage);
-        }
     }
 }

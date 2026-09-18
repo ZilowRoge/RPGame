@@ -1,8 +1,10 @@
+using System;
 using UnityEngine;
 
 namespace RPGame.Core.Spells
 {
-    public abstract class RuntimeSpellBehaviorDefinition : ScriptableObject
+    [Serializable]
+    public abstract class RuntimeSpellBehaviorDefinition
     {
         public abstract bool TryCreate(
             Spell spell,

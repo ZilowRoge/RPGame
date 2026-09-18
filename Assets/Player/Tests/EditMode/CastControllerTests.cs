@@ -171,7 +171,6 @@ namespace RPGame.Player.Tests
         public void CastSpell_IncludesRuntimeBehaviorsFromProvider()
         {
             TestRuntimeBehaviorProvider provider = playerObject.AddComponent<TestRuntimeBehaviorProvider>();
-            SetField(controller, "runtimeSpellBehaviorProvider", provider);
 
             InvokeCastSpell(spell);
 

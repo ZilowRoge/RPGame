@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using RPGame.Core.Spells;
 
 namespace RPGame.Core.Effects
 {
@@ -47,6 +48,28 @@ namespace RPGame.Core.Effects
             return value;
         }
 
+        public IReadOnlyList<IRuntimeSpellBehavior> CreateRuntimeBehaviors(
+            Spell spell,
+            UnityEngine.GameObject casterObject)
+        {
+            List<IRuntimeSpellBehavior> behaviors = new();
+            foreach (EffectInstance effect in effects)
+            {
+                if (effect.Definition is not IRuntimeSpellBehaviorFactory factory)
+                {
+                    continue;
+                }
+
+                if (factory.TryCreateRuntimeBehavior(spell, casterObject, out IRuntimeSpellBehavior behavior)
+                    && behavior != null)
+                {
+                    behaviors.Add(behavior);
+                }
+            }
+
+            return behaviors;
+        }
+
         private IEnumerable<EffectInstance> GetEffects(
             EffectStat stat,
             EffectModifierType modifierType)
@@ -71,7 +94,7 @@ namespace RPGame.Core.Effects
                     statEffect.Value);
             }
 
-            return null;
+            return new EffectInstance(definition);
         }
     }
 }

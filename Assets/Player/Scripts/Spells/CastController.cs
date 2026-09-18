@@ -104,10 +104,11 @@ namespace RPGame.Player.Spells
                 .WithAttributes(ResolveCharacterAttributes())
                 .WithStatistics(ResolveStatisticsController());
 
-            if (spell != null && runtimeSpellBehaviorProvider != null)
+            IRuntimeSpellBehaviorProvider provider = ResolveRuntimeSpellBehaviorProvider();
+            if (spell != null && provider != null)
             {
                 builder.WithRuntimeBehaviors(
-                    runtimeSpellBehaviorProvider.CreateRuntimeBehaviors(spell, ResolveCasterObject()));
+                    provider.CreateRuntimeBehaviors(spell, ResolveCasterObject()));
             }
 
             if (targetPosition.HasValue)
@@ -279,10 +280,16 @@ namespace RPGame.Player.Spells
                 casterObject = gameObject;
             }
 
+        }
+
+        private IRuntimeSpellBehaviorProvider ResolveRuntimeSpellBehaviorProvider()
+        {
             if (runtimeSpellBehaviorProvider == null)
             {
                 TryGetComponent(out runtimeSpellBehaviorProvider);
             }
+
+            return runtimeSpellBehaviorProvider;
         }
     }
 }
