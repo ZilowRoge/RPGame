@@ -35,6 +35,75 @@ namespace RPGame.Core.Tests.Effects
 
             Assert.AreEqual(SpellProperty.Radius, effect.Property);
             Assert.AreEqual(1.5f, effect.Value);
+            Assert.IsNull(effect.TargetSpell);
+            Object.DestroyImmediate(effect);
+        }
+
+        [Test]
+        public void GenericModifier_AppliesToDifferentSpellsWithCapability()
+        {
+            SpellPropertyModifierEffectDefinition effect = CreateModifier(SpellProperty.Radius, 2f);
+            aggregator.Add(effect);
+            TestSpell otherSpell = ScriptableObject.CreateInstance<TestSpell>();
+
+            Assert.AreEqual(2f, aggregator.CreateSpellPropertyModifiers(spell).GetValue(SpellProperty.Radius));
+            Assert.AreEqual(2f, aggregator.CreateSpellPropertyModifiers(otherSpell).GetValue(SpellProperty.Radius));
+            Object.DestroyImmediate(effect);
+            Object.DestroyImmediate(otherSpell);
+        }
+
+        [Test]
+        public void SpecificModifier_AppliesOnlyToTargetSpell()
+        {
+            TestSpell otherSpell = ScriptableObject.CreateInstance<TestSpell>();
+            SpellPropertyModifierEffectDefinition effect =
+                CreateModifier(SpellProperty.Radius, 2f, spell);
+            aggregator.Add(effect);
+
+            Assert.AreEqual(2f, aggregator.CreateSpellPropertyModifiers(spell).GetValue(SpellProperty.Radius));
+            Assert.AreEqual(0f, aggregator.CreateSpellPropertyModifiers(otherSpell).GetValue(SpellProperty.Radius));
+            Object.DestroyImmediate(effect);
+            Object.DestroyImmediate(otherSpell);
+        }
+
+        [Test]
+        public void GenericAndSpecificModifiers_StackForTargetSpellOnly()
+        {
+            TestSpell otherSpell = ScriptableObject.CreateInstance<TestSpell>();
+            SpellPropertyModifierEffectDefinition generic = CreateModifier(SpellProperty.Radius, 1f);
+            SpellPropertyModifierEffectDefinition specific = CreateModifier(SpellProperty.Radius, 2f, spell);
+            aggregator.AddRange(new[] { generic, specific });
+
+            Assert.AreEqual(3f, aggregator.CreateSpellPropertyModifiers(spell).GetValue(SpellProperty.Radius));
+            Assert.AreEqual(1f, aggregator.CreateSpellPropertyModifiers(otherSpell).GetValue(SpellProperty.Radius));
+            Object.DestroyImmediate(generic);
+            Object.DestroyImmediate(specific);
+            Object.DestroyImmediate(otherSpell);
+        }
+
+        [Test]
+        public void SpecificModifier_StillRequiresCapability()
+        {
+            NoCapabilitySpell noCapabilitySpell = ScriptableObject.CreateInstance<NoCapabilitySpell>();
+            SpellPropertyModifierEffectDefinition effect =
+                CreateModifier(SpellProperty.Duration, 2f, noCapabilitySpell);
+            aggregator.Add(effect);
+
+            SpellPropertyModifiers modifiers = aggregator.CreateSpellPropertyModifiers(noCapabilitySpell);
+
+            Assert.AreSame(SpellPropertyModifiers.Empty, modifiers);
+            Object.DestroyImmediate(effect);
+            Object.DestroyImmediate(noCapabilitySpell);
+        }
+
+        [Test]
+        public void ModifierEffect_ToStringIncludesTargetSpellWhenScoped()
+        {
+            SpellPropertyModifierEffectDefinition effect =
+                CreateModifier(SpellProperty.Radius, 2f, spell);
+
+            StringAssert.Contains("TestSpell", effect.ToString());
+            StringAssert.Contains("Radius +2", effect.ToString());
             Object.DestroyImmediate(effect);
         }
 
@@ -138,13 +207,15 @@ namespace RPGame.Core.Tests.Effects
 
         private static SpellPropertyModifierEffectDefinition CreateModifier(
             SpellProperty property,
-            float value)
+            float value,
+            Spell targetSpell = null)
         {
             SpellPropertyModifierEffectDefinition effect =
                 ScriptableObject.CreateInstance<SpellPropertyModifierEffectDefinition>();
             SerializedObject serializedEffect = new(effect);
             serializedEffect.FindProperty("property").enumValueIndex = (int)property;
             serializedEffect.FindProperty("value").floatValue = value;
+            serializedEffect.FindProperty("targetSpell").objectReferenceValue = targetSpell;
             serializedEffect.ApplyModifiedPropertiesWithoutUndo();
             return effect;
         }
