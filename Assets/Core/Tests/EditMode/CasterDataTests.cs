@@ -105,7 +105,8 @@ namespace RPGame.Core.Tests
             serializedEffect.ApplyModifiedPropertiesWithoutUndo();
             EffectAggregator aggregator = gameObject.AddComponent<EffectAggregator>();
             aggregator.Add(effect);
-            SpellPropertyModifiers modifiers = aggregator.CreateSpellPropertyModifiers(null);
+            TestAoESpell spell = ScriptableObject.CreateInstance<TestAoESpell>();
+            SpellPropertyModifiers modifiers = aggregator.CreateSpellPropertyModifiers(spell);
 
             try
             {
@@ -118,12 +119,22 @@ namespace RPGame.Core.Tests
             finally
             {
                 Object.DestroyImmediate(effect);
+                Object.DestroyImmediate(spell);
                 Object.DestroyImmediate(gameObject);
             }
         }
 
         private sealed class TestRuntimeSpellBehavior : IRuntimeSpellBehavior
         {
+        }
+
+        private sealed class TestAoESpell : Spell, IAoECapability
+        {
+            public float Radius => 1f;
+
+            public override void OnCast(CasterData casterData)
+            {
+            }
         }
 
         private sealed class TestStatisticsController : IStatisticsController

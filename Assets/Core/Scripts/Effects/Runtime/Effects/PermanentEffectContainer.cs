@@ -62,6 +62,11 @@ namespace RPGame.Core.Effects
                     continue;
                 }
 
+                if (!SpellPropertyModifierResolver.Supports(spell, modifier.Property))
+                {
+                    continue;
+                }
+
                 switch (modifier.Property)
                 {
                     case SpellProperty.Radius:

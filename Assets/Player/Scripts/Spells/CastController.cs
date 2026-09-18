@@ -98,12 +98,7 @@ namespace RPGame.Player.Spells
 
         private CasterData CreateCasterData(Spell spell, Vector3? targetPosition)
         {
-            ITargetable currentTarget = targeting != null ? targeting.CurrentTarget : null;
-            Transform target = currentTarget != null ? currentTarget.TargetPoint : null;
-
-            CasterDataBuilder builder = new CasterDataBuilder(ResolveCasterObject(), castOrigin, target)
-                .WithAttributes(ResolveCharacterAttributes())
-                .WithStatistics(ResolveStatisticsController());
+            CasterDataBuilder builder = CreateCasterDataBuilder();
 
             IRuntimeSpellBehaviorProvider provider = ResolveRuntimeSpellBehaviorProvider();
             if (spell != null && provider != null)
@@ -112,11 +107,7 @@ namespace RPGame.Player.Spells
                     provider.CreateRuntimeBehaviors(spell, ResolveCasterObject()));
             }
 
-            ISpellPropertyModifierProvider propertyModifierProvider = ResolveSpellPropertyModifierProvider();
-            if (spell != null && propertyModifierProvider != null)
-            {
-                builder.WithPropertyModifiers(propertyModifierProvider.CreateSpellPropertyModifiers(spell));
-            }
+            builder.WithPropertyModifiers(CreateSpellPropertyModifiers(spell));
 
             if (targetPosition.HasValue)
             {
@@ -124,6 +115,31 @@ namespace RPGame.Player.Spells
             }
 
             return builder.Build();
+        }
+
+        private CasterData CreateActivationCasterData(Spell spell)
+        {
+            return CreateCasterDataBuilder()
+                .WithPropertyModifiers(CreateSpellPropertyModifiers(spell))
+                .Build();
+        }
+
+        private CasterDataBuilder CreateCasterDataBuilder()
+        {
+            ITargetable currentTarget = targeting != null ? targeting.CurrentTarget : null;
+            Transform target = currentTarget != null ? currentTarget.TargetPoint : null;
+
+            return new CasterDataBuilder(ResolveCasterObject(), castOrigin, target)
+                .WithAttributes(ResolveCharacterAttributes())
+                .WithStatistics(ResolveStatisticsController());
+        }
+
+        private SpellPropertyModifiers CreateSpellPropertyModifiers(Spell spell)
+        {
+            ISpellPropertyModifierProvider provider = ResolveSpellPropertyModifierProvider();
+            return spell != null && provider != null
+                ? provider.CreateSpellPropertyModifiers(spell)
+                : SpellPropertyModifiers.Empty;
         }
 
         public bool TryGetLastUsedSpellDamageRanges(out IReadOnlyList<PartialDamageRange> damageRanges)
@@ -139,7 +155,7 @@ namespace RPGame.Player.Spells
                 CancelActivation();
             }
 
-            CasterData casterData = CreateCasterData();
+            CasterData casterData = CreateActivationCasterData(spell);
             ISpellActivationHandle activationHandle = spell.OnActivation(casterData);
             if (activationHandle == null)
             {

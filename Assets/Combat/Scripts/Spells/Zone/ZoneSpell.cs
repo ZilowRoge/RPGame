@@ -44,7 +44,16 @@ namespace RPGame.Combat.Spells
                 return;
             }
 
-            zoneController.Initialize(casterData, radius, activationDelay, activeDuration);
+            float effectiveRadius = SpellPropertyModifierResolver.ResolveRadius(this, casterData.PropertyModifiers);
+            float effectiveDuration = activeDuration;
+            if (this is IDurationCapability durationCapability)
+            {
+                effectiveDuration = SpellPropertyModifierResolver.ResolveDuration(
+                    durationCapability,
+                    casterData.PropertyModifiers);
+            }
+
+            zoneController.Initialize(casterData, effectiveRadius, activationDelay, effectiveDuration);
         }
 
         private void OnValidate()

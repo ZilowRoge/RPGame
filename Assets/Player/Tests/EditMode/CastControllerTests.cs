@@ -198,9 +198,37 @@ namespace RPGame.Player.Tests
             Object.DestroyImmediate(effect);
         }
 
+        [Test]
+        public void ActivationPreview_IncludesPropertyModifiersWithoutRuntimeBehaviors()
+        {
+            EffectAggregator aggregator = playerObject.AddComponent<EffectAggregator>();
+            playerObject.AddComponent<TestRuntimeBehaviorProvider>();
+            SpellPropertyModifierEffectDefinition effect =
+                ScriptableObject.CreateInstance<SpellPropertyModifierEffectDefinition>();
+            SerializedObject serializedEffect = new(effect);
+            serializedEffect.FindProperty("property").enumValueIndex = (int)SpellProperty.Radius;
+            serializedEffect.FindProperty("value").floatValue = 2f;
+            serializedEffect.ApplyModifiedPropertiesWithoutUndo();
+            aggregator.Add(effect);
+            ActivationCaptureSpell activationSpell = ScriptableObject.CreateInstance<ActivationCaptureSpell>();
+
+            InvokeSpellSelected(activationSpell);
+
+            Assert.AreEqual(2f, activationSpell.ActivationCasterData.PropertyModifiers.GetValue(SpellProperty.Radius));
+            Assert.AreEqual(0, activationSpell.ActivationCasterData.RuntimeBehaviors.Count);
+            Object.DestroyImmediate(effect);
+            Object.DestroyImmediate(activationSpell);
+        }
+
         private void InvokeCastSpell(Spell selectedSpell)
         {
             MethodInfo method = typeof(CastController).GetMethod("CastSpell", BindingFlags.Instance | BindingFlags.NonPublic);
+            method.Invoke(controller, new object[] { selectedSpell });
+        }
+
+        private void InvokeSpellSelected(Spell selectedSpell)
+        {
+            MethodInfo method = typeof(CastController).GetMethod("OnSpellSelected", BindingFlags.Instance | BindingFlags.NonPublic);
             method.Invoke(controller, new object[] { selectedSpell });
         }
 
@@ -250,9 +278,11 @@ namespace RPGame.Player.Tests
             public Transform TargetPoint { get; }
         }
 
-        private sealed class CaptureCasterDataSpell : Spell
+        private sealed class CaptureCasterDataSpell : Spell, IAoECapability
         {
             public CasterData LastCasterData { get; private set; }
+
+            public float Radius => 1f;
 
             public override void OnCast(CasterData casterData)
             {
@@ -274,6 +304,40 @@ namespace RPGame.Player.Tests
             public IReadOnlyList<PartialDamageRange> GetDamageRanges(CasterData casterData)
             {
                 return DamageRanges;
+            }
+        }
+
+        private sealed class ActivationCaptureSpell : Spell, IAoECapability
+        {
+            public CasterData ActivationCasterData { get; private set; }
+
+            public float Radius => 1f;
+
+            public override ISpellActivationHandle OnActivation(CasterData casterData)
+            {
+                ActivationCasterData = casterData;
+                return new TestActivationHandle();
+            }
+
+            public override void OnCast(CasterData casterData)
+            {
+            }
+        }
+
+        private sealed class TestActivationHandle : ISpellActivationHandle
+        {
+            public void Activate(ISpellActivationService service, CasterData casterData)
+            {
+            }
+
+            public void Deactivate(ISpellActivationService service)
+            {
+            }
+
+            public bool TryCreateCasterData(CasterData casterData, out CasterData activatedCasterData)
+            {
+                activatedCasterData = casterData;
+                return true;
             }
         }
 

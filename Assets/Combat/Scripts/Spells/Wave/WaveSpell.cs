@@ -40,13 +40,17 @@ namespace RPGame.Combat.Spells
             }
 
             Vector3 forward = castOrigin != null ? castOrigin.forward : Vector3.forward;
+            float effectiveRange = SpellPropertyModifierResolver.ResolveRadius(this, casterData.PropertyModifiers);
+            float effectiveKnockbackDistance = SpellPropertyModifierResolver.ResolveControlPower(
+                this,
+                casterData.PropertyModifiers);
             waveController.Initialize(
                 position,
                 forward,
-                range,
+                effectiveRange,
                 angle,
                 propagationSpeed,
-                knockbackDistance,
+                effectiveKnockbackDistance,
                 knockbackDuration,
                 CreateWaveCasterData(casterData));
         }

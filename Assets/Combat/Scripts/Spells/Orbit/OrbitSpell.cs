@@ -46,13 +46,19 @@ namespace RPGame.Combat.Spells
                 return;
             }
 
+            int effectiveProjectileCount = SpellPropertyModifierResolver.ResolveOrbCount(
+                this,
+                casterData.PropertyModifiers);
+            float effectiveLifetime = SpellPropertyModifierResolver.ResolveDuration(
+                this,
+                casterData.PropertyModifiers);
             orbitController.Initialize(
                 casterData.CasterObject.transform,
                 orbPrefab,
-                projectileCount,
+                effectiveProjectileCount,
                 orbitRadius,
                 angularSpeed,
-                lifetime,
+                effectiveLifetime,
                 damageCapacity,
                 CreateOrbitCasterData(casterData));
         }
