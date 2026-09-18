@@ -49,7 +49,8 @@ namespace RPGame.Core.Spells
                 casterData.Statistics,
                 casterData.DamageRanges,
                 position,
-                casterData.RuntimeBehaviors);
+                casterData.RuntimeBehaviors,
+                casterData.PropertyModifiers);
             return true;
         }
     }

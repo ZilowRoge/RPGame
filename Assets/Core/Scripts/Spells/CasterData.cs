@@ -20,7 +20,8 @@ namespace RPGame.Core.Spells
             IStatisticsController statistics = null,
             IReadOnlyList<PartialDamageRange> damageRanges = null,
             Vector3? targetPosition = null,
-            IReadOnlyList<IRuntimeSpellBehavior> runtimeBehaviors = null)
+            IReadOnlyList<IRuntimeSpellBehavior> runtimeBehaviors = null,
+            SpellPropertyModifiers propertyModifiers = null)
         {
             CasterObject = casterObject;
             CastOrigin = castOrigin;
@@ -30,6 +31,7 @@ namespace RPGame.Core.Spells
             DamageRanges = CopyDamageRanges(damageRanges);
             TargetPosition = targetPosition;
             RuntimeBehaviors = CopyRuntimeBehaviors(runtimeBehaviors);
+            PropertyModifiers = propertyModifiers ?? SpellPropertyModifiers.Empty;
         }
 
         public GameObject CasterObject { get; }
@@ -40,6 +42,7 @@ namespace RPGame.Core.Spells
         public IReadOnlyList<PartialDamageRange> DamageRanges { get; }
         public Vector3? TargetPosition { get; }
         public IReadOnlyList<IRuntimeSpellBehavior> RuntimeBehaviors { get; }
+        public SpellPropertyModifiers PropertyModifiers { get; }
 
         private static IReadOnlyList<PartialDamageRange> CopyDamageRanges(IReadOnlyList<PartialDamageRange> damageRanges)
         {

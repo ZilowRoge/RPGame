@@ -78,6 +78,7 @@ namespace RPGame.Combat.Spells
                 .WithStatistics(casterData.Statistics)
                 .WithDamageRanges(GetDamageRanges(casterData))
                 .WithRuntimeBehaviors(casterData.RuntimeBehaviors)
+                .WithPropertyModifiers(casterData.PropertyModifiers)
                 .Build();
         }
 

@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace RPGame.Core.Effects
 {
-    public sealed class EffectAggregator : MonoBehaviour, IRuntimeSpellBehaviorProvider
+    public sealed class EffectAggregator : MonoBehaviour, IRuntimeSpellBehaviorProvider, ISpellPropertyModifierProvider
     {
         private readonly PermanentEffectContainer permanentContainer = new();
         private IStatisticsController statisticsController;
@@ -38,6 +38,11 @@ namespace RPGame.Core.Effects
             GameObject casterObject)
         {
             return permanentContainer.CreateRuntimeBehaviors(spell, casterObject);
+        }
+
+        public SpellPropertyModifiers CreateSpellPropertyModifiers(Spell spell)
+        {
+            return permanentContainer.CreateSpellPropertyModifiers(spell);
         }
 
         private IStatisticsController GetStatisticsController()

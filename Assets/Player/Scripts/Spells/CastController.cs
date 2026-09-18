@@ -29,6 +29,7 @@ namespace RPGame.Player.Spells
         private readonly LastUsedSpellTracker lastUsedSpellTracker = new();
         private IReadOnlyList<PartialDamageRange> lastUsedSpellDamageRanges = Array.Empty<PartialDamageRange>();
         private IRuntimeSpellBehaviorProvider runtimeSpellBehaviorProvider;
+        private ISpellPropertyModifierProvider spellPropertyModifierProvider;
         private Spell pendingSpell;
         private ISpellActivationHandle pendingActivationHandle;
 
@@ -109,6 +110,12 @@ namespace RPGame.Player.Spells
             {
                 builder.WithRuntimeBehaviors(
                     provider.CreateRuntimeBehaviors(spell, ResolveCasterObject()));
+            }
+
+            ISpellPropertyModifierProvider propertyModifierProvider = ResolveSpellPropertyModifierProvider();
+            if (spell != null && propertyModifierProvider != null)
+            {
+                builder.WithPropertyModifiers(propertyModifierProvider.CreateSpellPropertyModifiers(spell));
             }
 
             if (targetPosition.HasValue)
@@ -290,6 +297,16 @@ namespace RPGame.Player.Spells
             }
 
             return runtimeSpellBehaviorProvider;
+        }
+
+        private ISpellPropertyModifierProvider ResolveSpellPropertyModifierProvider()
+        {
+            if (spellPropertyModifierProvider == null)
+            {
+                TryGetComponent(out spellPropertyModifierProvider);
+            }
+
+            return spellPropertyModifierProvider;
         }
     }
 }

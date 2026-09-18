@@ -17,6 +17,7 @@ namespace RPGame.Core.Spells
         private readonly Transform target;
         private IReadOnlyList<PartialDamageRange> damageRanges = EmptyDamageRanges;
         private IReadOnlyList<IRuntimeSpellBehavior> runtimeBehaviors = EmptyRuntimeBehaviors;
+        private SpellPropertyModifiers propertyModifiers = SpellPropertyModifiers.Empty;
         private ICharacterAttributes attributes;
         private IStatisticsController statistics;
         private Vector3? targetPosition;
@@ -52,6 +53,12 @@ namespace RPGame.Core.Spells
             return this;
         }
 
+        public CasterDataBuilder WithPropertyModifiers(SpellPropertyModifiers propertyModifiers)
+        {
+            this.propertyModifiers = propertyModifiers ?? SpellPropertyModifiers.Empty;
+            return this;
+        }
+
         public CasterDataBuilder WithTargetPosition(Vector3 targetPosition)
         {
             this.targetPosition = targetPosition;
@@ -68,7 +75,8 @@ namespace RPGame.Core.Spells
                 statistics,
                 damageRanges,
                 targetPosition,
-                runtimeBehaviors);
+                runtimeBehaviors,
+                propertyModifiers);
         }
     }
 }

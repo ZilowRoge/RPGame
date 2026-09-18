@@ -3,12 +3,14 @@ using System.Reflection;
 using NUnit.Framework;
 using RPGame.Combat.Spells;
 using RPGame.Core.Damage;
+using RPGame.Core.Effects;
 using RPGame.Core.Spells;
 using RPGame.Core.Spells.Symbols;
 using RPGame.Core.Statistics;
 using RPGame.Core.Targeting;
 using RPGame.Player.Spells;
 using TargetingController = RPGame.Player.Targeting.TargetingController;
+using UnityEditor;
 using UnityEngine;
 
 namespace RPGame.Player.Tests
@@ -176,6 +178,24 @@ namespace RPGame.Player.Tests
 
             Assert.AreEqual(1, spell.LastCasterData.RuntimeBehaviors.Count);
             Assert.AreSame(provider.Behavior, spell.LastCasterData.RuntimeBehaviors[0]);
+        }
+
+        [Test]
+        public void CastSpell_IncludesPropertyModifiersFromEffectAggregator()
+        {
+            EffectAggregator aggregator = playerObject.AddComponent<EffectAggregator>();
+            SpellPropertyModifierEffectDefinition effect =
+                ScriptableObject.CreateInstance<SpellPropertyModifierEffectDefinition>();
+            SerializedObject serializedEffect = new(effect);
+            serializedEffect.FindProperty("property").enumValueIndex = (int)SpellProperty.Radius;
+            serializedEffect.FindProperty("value").floatValue = 2f;
+            serializedEffect.ApplyModifiedPropertiesWithoutUndo();
+            aggregator.Add(effect);
+
+            InvokeCastSpell(spell);
+
+            Assert.AreEqual(2f, spell.LastCasterData.PropertyModifiers.GetValue(SpellProperty.Radius));
+            Object.DestroyImmediate(effect);
         }
 
         private void InvokeCastSpell(Spell selectedSpell)

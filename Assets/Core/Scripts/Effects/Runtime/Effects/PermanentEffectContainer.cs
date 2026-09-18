@@ -48,6 +48,45 @@ namespace RPGame.Core.Effects
             return value;
         }
 
+        public SpellPropertyModifiers CreateSpellPropertyModifiers(Spell spell)
+        {
+            float radius = 0f;
+            float duration = 0f;
+            float controlPower = 0f;
+            float orbCount = 0f;
+
+            foreach (EffectInstance effect in effects)
+            {
+                if (effect.Definition is not SpellPropertyModifierEffectDefinition modifier)
+                {
+                    continue;
+                }
+
+                switch (modifier.Property)
+                {
+                    case SpellProperty.Radius:
+                        radius += modifier.Value;
+                        break;
+                    case SpellProperty.Duration:
+                        duration += modifier.Value;
+                        break;
+                    case SpellProperty.ControlPower:
+                        controlPower += modifier.Value;
+                        break;
+                    case SpellProperty.OrbCount:
+                        orbCount += modifier.Value;
+                        break;
+                }
+            }
+
+            return radius == 0f
+                && duration == 0f
+                && controlPower == 0f
+                && orbCount == 0f
+                ? SpellPropertyModifiers.Empty
+                : new SpellPropertyModifiers(radius, duration, controlPower, orbCount);
+        }
+
         public IReadOnlyList<IRuntimeSpellBehavior> CreateRuntimeBehaviors(
             Spell spell,
             UnityEngine.GameObject casterObject)
