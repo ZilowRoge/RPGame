@@ -61,6 +61,7 @@ namespace RPGame.Progression.Tests
             SerializedProperty effects = serializedDefinition.FindProperty("effects");
             effects.arraySize = 1;
             effects.GetArrayElementAtIndex(0).objectReferenceValue = effect;
+            serializedDefinition.FindProperty("isStartingPerk").boolValue = true;
             serializedDefinition.ApplyModifiedPropertiesWithoutUndo();
             return definition;
         }

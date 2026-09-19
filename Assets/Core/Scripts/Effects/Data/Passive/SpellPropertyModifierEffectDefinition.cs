@@ -22,7 +22,14 @@ namespace RPGame.Core.Effects
             string displayValue = value.ToString("+0.##;-0.##;0", CultureInfo.InvariantCulture);
             return targetSpell == null
                 ? $"{property} {displayValue}"
-                : $"{targetSpell.name}: {property} {displayValue}";
+                : $"{GetTargetSpellName()}: {property} {displayValue}";
+        }
+
+        private string GetTargetSpellName()
+        {
+            return string.IsNullOrEmpty(targetSpell.name)
+                ? targetSpell.GetType().Name
+                : targetSpell.name;
         }
     }
 }

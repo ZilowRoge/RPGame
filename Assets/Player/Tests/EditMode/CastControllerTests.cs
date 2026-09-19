@@ -234,7 +234,12 @@ namespace RPGame.Player.Tests
 
         private CasterData InvokeCreateCasterData()
         {
-            MethodInfo method = typeof(CastController).GetMethod("CreateCasterData", BindingFlags.Instance | BindingFlags.NonPublic);
+            MethodInfo method = typeof(CastController).GetMethod(
+                "CreateCasterData",
+                BindingFlags.Instance | BindingFlags.NonPublic,
+                binder: null,
+                types: System.Type.EmptyTypes,
+                modifiers: null);
             return (CasterData)method.Invoke(controller, null);
         }
 
@@ -258,14 +263,20 @@ namespace RPGame.Player.Tests
 
         private static void SetSpellSymbolEntries(SpellSymbolCaster symbolCaster, int symbolId, Spell configuredSpell)
         {
-            System.Type entryType = typeof(SpellSymbolCaster).GetNestedType("SpellSymbolEntry", BindingFlags.NonPublic);
+            System.Type entryType = typeof(SpellSymbolEntry);
             object entry = System.Activator.CreateInstance(entryType, nonPublic: true);
-            SetField(entry, "symbolId", symbolId);
+            SetField(entry, "symbolIds", new[] { symbolId });
             SetField(entry, "spell", configuredSpell);
 
             System.Array entries = System.Array.CreateInstance(entryType, 1);
             entries.SetValue(entry, 0);
             SetField(symbolCaster, "spellsBySymbol", entries);
+            SetField(symbolCaster, "terminatorSymbolIds", new[] { symbolId });
+
+            MethodInfo awake = typeof(SpellSymbolCaster).GetMethod(
+                "Awake",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            awake.Invoke(symbolCaster, null);
         }
 
         private sealed class TestTargetable : ITargetable

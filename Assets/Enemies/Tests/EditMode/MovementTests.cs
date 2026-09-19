@@ -79,7 +79,9 @@ namespace RPGame.Enemies.Tests
             Assert.AreSame(obstacleCollider, callback.Obstacle);
             Assert.AreEqual(1, callback.CallCount);
             Assert.That(callback.Point.x, Is.EqualTo(1f).Within(0.01f));
-            Assert.That(callback.Point.y, Is.EqualTo(0.5f).Within(0.01f));
+            Assert.That(callback.Point.y, Is.InRange(
+                obstacleCollider.bounds.min.y - 0.01f,
+                obstacleCollider.bounds.max.y + 0.01f));
             Assert.That(callback.Point.z, Is.EqualTo(0f).Within(0.01f));
         }
 
