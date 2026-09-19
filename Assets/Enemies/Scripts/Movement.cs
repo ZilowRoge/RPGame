@@ -1,4 +1,5 @@
 using System.Collections;
+using System;
 using RPGame.Core.Movement;
 using UnityEngine;
 using UnityEngine.AI;
@@ -119,7 +120,11 @@ namespace RPGame.Enemies
                 && agent.isOnNavMesh;
         }
 
-        public void ApplyKnockback(Vector3 direction, float distance, float duration)
+        public void ApplyKnockback(
+            Vector3 direction,
+            float distance,
+            float duration,
+            Action<Collider, Vector3> onCollision = null)
         {
             if (knockbackCoroutine != null)
             {
@@ -128,10 +133,18 @@ namespace RPGame.Enemies
                 EndKnockback();
             }
 
-            knockbackCoroutine = StartCoroutine(ApplyKnockbackRoutine(direction, distance, duration));
+            knockbackCoroutine = StartCoroutine(ApplyKnockbackRoutine(
+                direction,
+                distance,
+                duration,
+                onCollision));
         }
 
-        private IEnumerator ApplyKnockbackRoutine(Vector3 direction, float distance, float duration)
+        private IEnumerator ApplyKnockbackRoutine(
+            Vector3 direction,
+            float distance,
+            float duration,
+            Action<Collider, Vector3> onCollision)
         {
             direction.y = 0f;
             direction = direction.sqrMagnitude > Mathf.Epsilon ? direction.normalized : Vector3.zero;
@@ -151,9 +164,8 @@ namespace RPGame.Enemies
                 float easedProgress = 1f - Mathf.Pow(1f - progress, 3f);
                 Vector3 desiredPosition = startPosition + direction * (distance * easedProgress);
                 Vector3 displacement = desiredPosition - transform.position;
-                if (!TryMoveWithSweep(displacement))
+                if (!TryApplyKnockbackStep(displacement, onCollision))
                 {
-                    EndKnockback();
                     break;
                 }
 
@@ -164,7 +176,9 @@ namespace RPGame.Enemies
             knockbackCoroutine = null;
         }
 
-        private bool TryMoveWithSweep(Vector3 displacement)
+        private bool TryApplyKnockbackStep(
+            Vector3 displacement,
+            Action<Collider, Vector3> onCollision)
         {
             float distance = displacement.magnitude;
             if (distance <= Mathf.Epsilon)
@@ -188,6 +202,7 @@ namespace RPGame.Enemies
                 QueryTriggerInteraction.Ignore);
             float closestDistance = float.MaxValue;
             bool foundObstacle = false;
+            RaycastHit closestHit = default;
             for (int i = 0; i < hitCount; i++)
             {
                 RaycastHit hit = knockbackHitBuffer[i];
@@ -201,12 +216,14 @@ namespace RPGame.Enemies
                 }
 
                 closestDistance = hit.distance;
+                closestHit = hit;
                 foundObstacle = true;
             }
 
             if (foundObstacle)
             {
                 transform.position += displacement.normalized * Mathf.Max(0f, closestDistance - 0.01f);
+                onCollision?.Invoke(closestHit.collider, closestHit.point);
                 return false;
             }
 

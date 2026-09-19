@@ -7,7 +7,7 @@ using UnityEngine;
 namespace RPGame.Combat.Spells
 {
     [CreateAssetMenu(fileName = "WaveSpell", menuName = "RPGame/Spells/Wave Spell")]
-    public sealed class WaveSpell : Spell, ICasterDamageRangeProvider
+    public sealed class WaveSpell : Spell, ICasterDamageRangeProvider, IAoECapability, IControlCapability
     {
         [SerializeField] private PartialDamageRange baseDamageRange = new(1f, 3f, DamageType.Magical, DamageElement.None);
         [SerializeField] private float powerDamageScaling;
@@ -17,7 +17,8 @@ namespace RPGame.Combat.Spells
         [SerializeField] private float knockbackDistance = 2f;
         [SerializeField] private float knockbackDuration = 0.25f;
 
-        public override SpellTags Tags => SpellTags.AoE | SpellTags.Control;
+        public float Radius => range;
+        public float ControlPower => knockbackDistance;
 
         public override void OnCast(CasterData casterData)
         {
@@ -39,13 +40,17 @@ namespace RPGame.Combat.Spells
             }
 
             Vector3 forward = castOrigin != null ? castOrigin.forward : Vector3.forward;
+            float effectiveRange = SpellPropertyModifierResolver.ResolveRadius(this, casterData.PropertyModifiers);
+            float effectiveKnockbackDistance = SpellPropertyModifierResolver.ResolveControlPower(
+                this,
+                casterData.PropertyModifiers);
             waveController.Initialize(
                 position,
                 forward,
-                range,
+                effectiveRange,
                 angle,
                 propagationSpeed,
-                knockbackDistance,
+                effectiveKnockbackDistance,
                 knockbackDuration,
                 CreateWaveCasterData(casterData));
         }
@@ -70,6 +75,8 @@ namespace RPGame.Combat.Spells
                 .WithAttributes(casterData.Attributes)
                 .WithStatistics(casterData.Statistics)
                 .WithDamageRanges(GetDamageRanges(casterData))
+                .WithRuntimeBehaviors(casterData.RuntimeBehaviors)
+                .WithPropertyModifiers(casterData.PropertyModifiers)
                 .Build();
         }
 

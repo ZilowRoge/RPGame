@@ -8,12 +8,10 @@ using UnityEngine;
 namespace RPGame.Combat.Spells
 {
     [CreateAssetMenu(fileName = "ProjectileSpell", menuName = "RPGame/Spells/Projectile Spell")]
-    public sealed class ProjectileSpell : Spell, ICasterDamageRangeProvider
+    public sealed class ProjectileSpell : Spell, ICasterDamageRangeProvider, IProjectileCapability
     {
         [SerializeField] private PartialDamageRange baseDamageRange = new(10f, 10f, DamageType.Magical, DamageElement.None);
         [SerializeField] private float powerDamageScaling;
-
-        public override SpellTags Tags => SpellTags.Projectile;
 
         public override void OnCast(CasterData casterData)
         {
@@ -44,6 +42,8 @@ namespace RPGame.Combat.Spells
                 .WithAttributes(casterData.Attributes)
                 .WithStatistics(casterData.Statistics)
                 .WithDamageRanges(GetDamageRanges(casterData))
+                .WithRuntimeBehaviors(casterData.RuntimeBehaviors)
+                .WithPropertyModifiers(casterData.PropertyModifiers)
                 .Build();
         }
 

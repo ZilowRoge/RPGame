@@ -7,17 +7,19 @@ using UnityEngine;
 namespace RPGame.Combat.Spells
 {
     [CreateAssetMenu(fileName = "OrbitSpell", menuName = "RPGame/Spells/Orbit Spell")]
-    public sealed class OrbitSpell : Spell, ICasterDamageRangeProvider
+    public sealed class OrbitSpell : Spell, ICasterDamageRangeProvider, IOrbCapability, IDurationCapability
     {
         [SerializeField] private PartialDamageRange baseDamageRange = new(1f, 3f, DamageType.Magical, DamageElement.None);
         [SerializeField] private float powerDamageScaling;
+        [SerializeField] private GameObject orbPrefab;
         [SerializeField] private int projectileCount = 3;
         [SerializeField] private float orbitRadius = 2f;
         [SerializeField] private float angularSpeed = 90f;
         [SerializeField] private float lifetime = 5f;
         [SerializeField] private float damageCapacity = 10f;
 
-        public override SpellTags Tags => SpellTags.Projectile | SpellTags.Duration;
+        public int OrbCount => projectileCount;
+        public float Duration => lifetime;
 
         public override void OnCast(CasterData casterData)
         {
@@ -44,12 +46,19 @@ namespace RPGame.Combat.Spells
                 return;
             }
 
+            int effectiveProjectileCount = SpellPropertyModifierResolver.ResolveOrbCount(
+                this,
+                casterData.PropertyModifiers);
+            float effectiveLifetime = SpellPropertyModifierResolver.ResolveDuration(
+                this,
+                casterData.PropertyModifiers);
             orbitController.Initialize(
                 casterData.CasterObject.transform,
-                projectileCount,
+                orbPrefab,
+                effectiveProjectileCount,
                 orbitRadius,
                 angularSpeed,
-                lifetime,
+                effectiveLifetime,
                 damageCapacity,
                 CreateOrbitCasterData(casterData));
         }
@@ -74,6 +83,8 @@ namespace RPGame.Combat.Spells
                 .WithAttributes(casterData.Attributes)
                 .WithStatistics(casterData.Statistics)
                 .WithDamageRanges(GetDamageRanges(casterData))
+                .WithRuntimeBehaviors(casterData.RuntimeBehaviors)
+                .WithPropertyModifiers(casterData.PropertyModifiers)
                 .Build();
         }
 

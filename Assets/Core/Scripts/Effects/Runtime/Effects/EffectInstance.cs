@@ -23,6 +23,11 @@ namespace RPGame.Core.Effects
             this.value = value;
         }
 
+        public EffectInstance(PassiveEffectDefinition definition)
+        {
+            this.definition = definition;
+        }
+
         public PassiveEffectDefinition Definition => definition;
         public EffectStat Stat => stat;
         public EffectModifierType ModifierType => modifierType;

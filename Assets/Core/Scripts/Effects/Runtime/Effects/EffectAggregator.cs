@@ -1,10 +1,11 @@
 using System.Collections.Generic;
+using RPGame.Core.Spells;
 using RPGame.Core.Statistics;
 using UnityEngine;
 
 namespace RPGame.Core.Effects
 {
-    public sealed class EffectAggregator : MonoBehaviour
+    public sealed class EffectAggregator : MonoBehaviour, IRuntimeSpellBehaviorProvider, ISpellPropertyModifierProvider
     {
         private readonly PermanentEffectContainer permanentContainer = new();
         private IStatisticsController statisticsController;
@@ -30,6 +31,18 @@ namespace RPGame.Core.Effects
         public float GetEffectValue(EffectStat stat, EffectModifierType modifierType)
         {
             return permanentContainer.GetEffectValue(stat, modifierType);
+        }
+
+        public IReadOnlyList<IRuntimeSpellBehavior> CreateRuntimeBehaviors(
+            Spell spell,
+            GameObject casterObject)
+        {
+            return permanentContainer.CreateRuntimeBehaviors(spell, casterObject);
+        }
+
+        public SpellPropertyModifiers CreateSpellPropertyModifiers(Spell spell)
+        {
+            return permanentContainer.CreateSpellPropertyModifiers(spell);
         }
 
         private IStatisticsController GetStatisticsController()

@@ -142,8 +142,6 @@ namespace RPGame.Combat.Tests
         {
             public CasterData LastCasterData { get; private set; }
 
-            public override SpellTags Tags => SpellTags.None;
-
             public override void OnCast(CasterData casterData)
             {
                 LastCasterData = casterData;

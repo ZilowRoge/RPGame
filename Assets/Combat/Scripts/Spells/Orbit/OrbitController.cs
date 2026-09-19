@@ -19,6 +19,7 @@ namespace RPGame.Combat.Spells
 
         public void Initialize(
             Transform center,
+            GameObject orbPrefab,
             int projectileCount,
             float orbitRadius,
             float angularSpeed,
@@ -26,6 +27,11 @@ namespace RPGame.Combat.Spells
             float damageCapacity,
             CasterData casterData)
         {
+            if (orbPrefab != null)
+            {
+                projectilePrefab = orbPrefab.GetComponent<OrbitProjectileController>();
+            }
+
             this.center = center;
             this.projectileCount = Mathf.Max(1, projectileCount);
             this.orbitRadius = Mathf.Max(0f, orbitRadius);

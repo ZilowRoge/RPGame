@@ -9,7 +9,6 @@ namespace RPGame.Core.Spells
 
         public GameObject SpellPrefab => spellPrefab;
         public float ManaCost => manaCost;
-        public abstract SpellTags Tags { get; }
 
         public virtual void OnDeactivation(CasterData casterData)
         {

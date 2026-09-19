@@ -3,12 +3,14 @@ using System.Reflection;
 using NUnit.Framework;
 using RPGame.Combat.Spells;
 using RPGame.Core.Damage;
+using RPGame.Core.Effects;
 using RPGame.Core.Spells;
 using RPGame.Core.Spells.Symbols;
 using RPGame.Core.Statistics;
 using RPGame.Core.Targeting;
 using RPGame.Player.Spells;
 using TargetingController = RPGame.Player.Targeting.TargetingController;
+using UnityEditor;
 using UnityEngine;
 
 namespace RPGame.Player.Tests
@@ -167,9 +169,66 @@ namespace RPGame.Player.Tests
             Assert.AreEqual(1, changedCount);
         }
 
+        [Test]
+        public void CastSpell_IncludesRuntimeBehaviorsFromProvider()
+        {
+            TestRuntimeBehaviorProvider provider = playerObject.AddComponent<TestRuntimeBehaviorProvider>();
+
+            InvokeCastSpell(spell);
+
+            Assert.AreEqual(1, spell.LastCasterData.RuntimeBehaviors.Count);
+            Assert.AreSame(provider.Behavior, spell.LastCasterData.RuntimeBehaviors[0]);
+        }
+
+        [Test]
+        public void CastSpell_IncludesPropertyModifiersFromEffectAggregator()
+        {
+            EffectAggregator aggregator = playerObject.AddComponent<EffectAggregator>();
+            SpellPropertyModifierEffectDefinition effect =
+                ScriptableObject.CreateInstance<SpellPropertyModifierEffectDefinition>();
+            SerializedObject serializedEffect = new(effect);
+            serializedEffect.FindProperty("property").enumValueIndex = (int)SpellProperty.Radius;
+            serializedEffect.FindProperty("value").floatValue = 2f;
+            serializedEffect.ApplyModifiedPropertiesWithoutUndo();
+            aggregator.Add(effect);
+
+            InvokeCastSpell(spell);
+
+            Assert.AreEqual(2f, spell.LastCasterData.PropertyModifiers.GetValue(SpellProperty.Radius));
+            Object.DestroyImmediate(effect);
+        }
+
+        [Test]
+        public void ActivationPreview_IncludesPropertyModifiersWithoutRuntimeBehaviors()
+        {
+            EffectAggregator aggregator = playerObject.AddComponent<EffectAggregator>();
+            playerObject.AddComponent<TestRuntimeBehaviorProvider>();
+            SpellPropertyModifierEffectDefinition effect =
+                ScriptableObject.CreateInstance<SpellPropertyModifierEffectDefinition>();
+            SerializedObject serializedEffect = new(effect);
+            serializedEffect.FindProperty("property").enumValueIndex = (int)SpellProperty.Radius;
+            serializedEffect.FindProperty("value").floatValue = 2f;
+            serializedEffect.ApplyModifiedPropertiesWithoutUndo();
+            aggregator.Add(effect);
+            ActivationCaptureSpell activationSpell = ScriptableObject.CreateInstance<ActivationCaptureSpell>();
+
+            InvokeSpellSelected(activationSpell);
+
+            Assert.AreEqual(2f, activationSpell.ActivationCasterData.PropertyModifiers.GetValue(SpellProperty.Radius));
+            Assert.AreEqual(0, activationSpell.ActivationCasterData.RuntimeBehaviors.Count);
+            Object.DestroyImmediate(effect);
+            Object.DestroyImmediate(activationSpell);
+        }
+
         private void InvokeCastSpell(Spell selectedSpell)
         {
             MethodInfo method = typeof(CastController).GetMethod("CastSpell", BindingFlags.Instance | BindingFlags.NonPublic);
+            method.Invoke(controller, new object[] { selectedSpell });
+        }
+
+        private void InvokeSpellSelected(Spell selectedSpell)
+        {
+            MethodInfo method = typeof(CastController).GetMethod("OnSpellSelected", BindingFlags.Instance | BindingFlags.NonPublic);
             method.Invoke(controller, new object[] { selectedSpell });
         }
 
@@ -219,11 +278,11 @@ namespace RPGame.Player.Tests
             public Transform TargetPoint { get; }
         }
 
-        private sealed class CaptureCasterDataSpell : Spell
+        private sealed class CaptureCasterDataSpell : Spell, IAoECapability
         {
             public CasterData LastCasterData { get; private set; }
 
-            public override SpellTags Tags => SpellTags.None;
+            public float Radius => 1f;
 
             public override void OnCast(CasterData casterData)
             {
@@ -238,8 +297,6 @@ namespace RPGame.Player.Tests
                 new PartialDamageRange(3f, 7f, DamageType.Magical, DamageElement.Fire)
             };
 
-            public override SpellTags Tags => SpellTags.None;
-
             public override void OnCast(CasterData casterData)
             {
             }
@@ -248,6 +305,56 @@ namespace RPGame.Player.Tests
             {
                 return DamageRanges;
             }
+        }
+
+        private sealed class ActivationCaptureSpell : Spell, IAoECapability
+        {
+            public CasterData ActivationCasterData { get; private set; }
+
+            public float Radius => 1f;
+
+            public override ISpellActivationHandle OnActivation(CasterData casterData)
+            {
+                ActivationCasterData = casterData;
+                return new TestActivationHandle();
+            }
+
+            public override void OnCast(CasterData casterData)
+            {
+            }
+        }
+
+        private sealed class TestActivationHandle : ISpellActivationHandle
+        {
+            public void Activate(ISpellActivationService service, CasterData casterData)
+            {
+            }
+
+            public void Deactivate(ISpellActivationService service)
+            {
+            }
+
+            public bool TryCreateCasterData(CasterData casterData, out CasterData activatedCasterData)
+            {
+                activatedCasterData = casterData;
+                return true;
+            }
+        }
+
+        private sealed class TestRuntimeBehaviorProvider : MonoBehaviour, IRuntimeSpellBehaviorProvider
+        {
+            public IRuntimeSpellBehavior Behavior { get; } = new TestRuntimeBehavior();
+
+            public IReadOnlyList<IRuntimeSpellBehavior> CreateRuntimeBehaviors(
+                Spell spell,
+                GameObject casterObject)
+            {
+                return new[] { Behavior };
+            }
+        }
+
+        private sealed class TestRuntimeBehavior : IRuntimeSpellBehavior
+        {
         }
     }
 }

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using RPGame.Core.Spells;
 
 namespace RPGame.Core.Effects
 {
@@ -47,6 +48,77 @@ namespace RPGame.Core.Effects
             return value;
         }
 
+        public SpellPropertyModifiers CreateSpellPropertyModifiers(Spell spell)
+        {
+            float radius = 0f;
+            float duration = 0f;
+            float controlPower = 0f;
+            float orbCount = 0f;
+
+            foreach (EffectInstance effect in effects)
+            {
+                if (effect.Definition is not SpellPropertyModifierEffectDefinition modifier)
+                {
+                    continue;
+                }
+
+                if (!SpellPropertyModifierResolver.Supports(spell, modifier.Property))
+                {
+                    continue;
+                }
+
+                if (modifier.TargetSpell != null && modifier.TargetSpell != spell)
+                {
+                    continue;
+                }
+
+                switch (modifier.Property)
+                {
+                    case SpellProperty.Radius:
+                        radius += modifier.Value;
+                        break;
+                    case SpellProperty.Duration:
+                        duration += modifier.Value;
+                        break;
+                    case SpellProperty.ControlPower:
+                        controlPower += modifier.Value;
+                        break;
+                    case SpellProperty.OrbCount:
+                        orbCount += modifier.Value;
+                        break;
+                }
+            }
+
+            return radius == 0f
+                && duration == 0f
+                && controlPower == 0f
+                && orbCount == 0f
+                ? SpellPropertyModifiers.Empty
+                : new SpellPropertyModifiers(radius, duration, controlPower, orbCount);
+        }
+
+        public IReadOnlyList<IRuntimeSpellBehavior> CreateRuntimeBehaviors(
+            Spell spell,
+            UnityEngine.GameObject casterObject)
+        {
+            List<IRuntimeSpellBehavior> behaviors = new();
+            foreach (EffectInstance effect in effects)
+            {
+                if (effect.Definition is not IRuntimeSpellBehaviorFactory factory)
+                {
+                    continue;
+                }
+
+                if (factory.TryCreateRuntimeBehavior(spell, casterObject, out IRuntimeSpellBehavior behavior)
+                    && behavior != null)
+                {
+                    behaviors.Add(behavior);
+                }
+            }
+
+            return behaviors;
+        }
+
         private IEnumerable<EffectInstance> GetEffects(
             EffectStat stat,
             EffectModifierType modifierType)
@@ -71,7 +143,7 @@ namespace RPGame.Core.Effects
                     statEffect.Value);
             }
 
-            return null;
+            return new EffectInstance(definition);
         }
     }
 }
