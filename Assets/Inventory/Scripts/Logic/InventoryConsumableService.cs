@@ -1,4 +1,4 @@
-using RPGame.Core.Effects;
+using RPGame.Core.Statuses;
 using RPGame.Inventory.Data;
 
 namespace RPGame.Inventory.Logic
@@ -7,16 +7,16 @@ namespace RPGame.Inventory.Logic
     {
         private readonly Inventory inventory;
         private readonly ConsumableSlots consumableSlots;
-        private readonly StatusEffectAggregator statusEffectAggregator;
+        private readonly StatusAggregator statusAggregator;
 
         public InventoryConsumableService(
             Inventory inventory,
             ConsumableSlots consumableSlots,
-            StatusEffectAggregator statusEffectAggregator)
+            StatusAggregator statusAggregator)
         {
             this.inventory = inventory;
             this.consumableSlots = consumableSlots;
-            this.statusEffectAggregator = statusEffectAggregator;
+            this.statusAggregator = statusAggregator;
         }
 
         public bool UseFromInventory(int inventoryIndex)
@@ -59,12 +59,15 @@ namespace RPGame.Inventory.Logic
                 || definition.ItemType != ItemType.Consumable
                 || consumableData == null
                 || consumableData.Effect == null
-                || statusEffectAggregator == null)
+                || statusAggregator == null)
             {
                 return false;
             }
 
-            statusEffectAggregator.ApplyStatusEffect(consumableData.Effect, consumableData.Duration);
+            StatusContext context = new(
+                new StatusSourceId(nameof(InventoryConsumableService)),
+                statusAggregator.gameObject);
+            statusAggregator.ApplyStatus(consumableData.Effect, consumableData.Duration, context);
             return true;
         }
     }

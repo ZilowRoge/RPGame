@@ -1,20 +1,22 @@
 using System.Collections;
 using System.Collections.Generic;
-using RPGame.Core.Effects;
+using RPGame.Core.Statuses;
 using RPGame.Core.Spells;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace RPGame.Combat.Spells
 {
     public sealed class LightningZoneBehaviour : MonoBehaviour, IZoneBehaviour
     {
-        [SerializeField] private StunEffectDefinition stunEffect;
+        [FormerlySerializedAs("stunEffect")]
+        [SerializeField] private StunStatusDefinition stunStatus;
         [SerializeField] private float stunDuration = 2f;
         [SerializeField] private GameObject lightningVfxPrefab;
         [SerializeField] private Vector3 lightningVfxOffset;
         [SerializeField] private Vector2 strikeDelayRange = new(0f, 0.2f);
 
-        private readonly HashSet<IStatusEffectReceiver> hitReceivers = new();
+        private readonly HashSet<IStatusReceiver> hitReceivers = new();
         private CasterData casterData;
         private float radius;
 
@@ -37,18 +39,19 @@ namespace RPGame.Combat.Spells
                     continue;
                 }
 
-                IStatusEffectReceiver statusEffectReceiver =
-                    zoneCollider.GetComponentInParent<IStatusEffectReceiver>();
-                if (statusEffectReceiver == null || !hitReceivers.Add(statusEffectReceiver))
+                IStatusReceiver statusReceiver =
+                    zoneCollider.GetComponentInParent<IStatusReceiver>();
+                if (statusReceiver == null || !hitReceivers.Add(statusReceiver))
                 {
                     continue;
                 }
 
                 float delay = Random.Range(strikeDelayRange.x, strikeDelayRange.y);
                 DelayedLightningStrike.Run(
-                    statusEffectReceiver,
-                    stunEffect,
+                    statusReceiver,
+                    stunStatus,
                     stunDuration,
+                    casterData.CasterObject,
                     lightningVfxPrefab,
                     zoneCollider.bounds.center + lightningVfxOffset,
                     delay);
@@ -79,26 +82,29 @@ namespace RPGame.Combat.Spells
 
     internal sealed class DelayedLightningStrike : MonoBehaviour
     {
-        private IStatusEffectReceiver statusEffectReceiver;
-        private StunEffectDefinition stunEffect;
+        private IStatusReceiver statusReceiver;
+        private StunStatusDefinition stunStatus;
         private float stunDuration;
+        private GameObject statusSource;
         private GameObject lightningVfxPrefab;
         private Vector3 strikePosition;
         private float delay;
 
         public static void Run(
-            IStatusEffectReceiver statusEffectReceiver,
-            StunEffectDefinition stunEffect,
+            IStatusReceiver statusReceiver,
+            StunStatusDefinition stunStatus,
             float stunDuration,
+            GameObject statusSource,
             GameObject lightningVfxPrefab,
             Vector3 strikePosition,
             float delay)
         {
             GameObject runnerObject = new($"{nameof(DelayedLightningStrike)}");
             DelayedLightningStrike runner = runnerObject.AddComponent<DelayedLightningStrike>();
-            runner.statusEffectReceiver = statusEffectReceiver;
-            runner.stunEffect = stunEffect;
+            runner.statusReceiver = statusReceiver;
+            runner.stunStatus = stunStatus;
             runner.stunDuration = stunDuration;
+            runner.statusSource = statusSource;
             runner.lightningVfxPrefab = lightningVfxPrefab;
             runner.strikePosition = strikePosition;
             runner.delay = Mathf.Max(0f, delay);
@@ -111,9 +117,14 @@ namespace RPGame.Combat.Spells
                 yield return new WaitForSeconds(delay);
             }
 
-            if (stunEffect != null)
+            if (stunStatus != null)
             {
-                statusEffectReceiver?.ApplyStatusEffect(stunEffect, stunDuration);
+                statusReceiver?.ApplyStatus(
+                    stunStatus,
+                    stunDuration,
+                    new StatusContext(
+                        new StatusSourceId(nameof(LightningZoneBehaviour)),
+                        statusSource));
             }
 
             if (lightningVfxPrefab != null)

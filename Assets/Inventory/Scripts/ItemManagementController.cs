@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using RPGame.Core.Effects;
+using RPGame.Core.Statuses;
 using RPGame.Inventory.Data;
 using RPGame.Inventory.Logic;
 using UnityEngine;
@@ -17,7 +17,8 @@ namespace RPGame.Inventory
         [SerializeField] private Equipment equipment = new();
         [SerializeField] private ConsumableSlots consumableSlots = new();
         [FormerlySerializedAs("effectAggregator")]
-        [SerializeField] private StatusEffectAggregator statusEffectAggregator;
+        [FormerlySerializedAs("statusEffectAggregator")]
+        [SerializeField] private StatusAggregator statusAggregator;
 
         private InventoryEquipmentService itemTransferService;
         private InventoryConsumableService consumableService;
@@ -158,9 +159,9 @@ namespace RPGame.Inventory
             equipment.Initialize();
             consumableSlots ??= new ConsumableSlots();
             consumableSlots.Initialize();
-            statusEffectAggregator ??= GetComponent<StatusEffectAggregator>();
+            statusAggregator ??= GetComponent<StatusAggregator>();
             itemTransferService = new InventoryEquipmentService(inventory, equipment, consumableSlots);
-            consumableService = new InventoryConsumableService(inventory, consumableSlots, statusEffectAggregator);
+            consumableService = new InventoryConsumableService(inventory, consumableSlots, statusAggregator);
             AddStartingItems();
             initialized = true;
         }

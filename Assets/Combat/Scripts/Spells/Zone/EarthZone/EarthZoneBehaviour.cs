@@ -1,21 +1,28 @@
-using RPGame.Core.Effects;
+using RPGame.Core.Statuses;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace RPGame.Combat.Spells
 {
     public sealed class EarthZoneBehaviour : TriggerStatusZoneBehaviour
     {
-        [SerializeField] private SlowEffectDefinition slowEffect;
+        [FormerlySerializedAs("slowEffect")]
+        [SerializeField] private SlowStatusDefinition slowStatus;
         [SerializeField] private float slowDuration = 2.5f;
         [SerializeField] private float reapplyInterval = 0.5f;
 
         protected override float ReapplyInterval => reapplyInterval;
 
-        protected override void ApplyTo(IStatusEffectReceiver target)
+        protected override void ApplyTo(IStatusReceiver target)
         {
-            if (slowEffect != null)
+            if (slowStatus != null)
             {
-                target.ApplyStatusEffect(slowEffect, slowDuration);
+                target.ApplyStatus(
+                    slowStatus,
+                    slowDuration,
+                    new StatusContext(
+                        new StatusSourceId(nameof(EarthZoneBehaviour)),
+                        StatusSource));
             }
         }
 

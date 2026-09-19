@@ -1,20 +1,23 @@
 using RPGame.Core.Statistics;
 using UnityEngine;
+using UnityEngine.Scripting.APIUpdating;
 
-namespace RPGame.Core.Effects
+namespace RPGame.Core.Statuses
 {
-    public abstract class RestoreResourceEffectDefinition : StatusEffectDefinition, IAmountStatusEffect
+    [MovedFrom(true, null, null, "RestoreResourceEffectDefinition")]
+    public abstract class RestoreResourceStatusDefinition : StatusDefinition, IAmountStatus
     {
         [SerializeField] private float amount = 25f;
 
         public float Amount => Mathf.Max(0f, amount);
+        public override ReapplyPolicy ReapplyPolicy => ReapplyPolicy.Stack;
 
-        public override bool CanApply(StatusEffectTarget target)
+        public override bool CanApply(StatusTarget target)
         {
             return target.StatisticsController != null;
         }
 
-        public void Tick(StatusEffectTarget target, float deltaTime, float amount)
+        public void Tick(StatusTarget target, float deltaTime, float amount)
         {
             IStatisticsController statisticsController = target.StatisticsController;
             if (statisticsController == null || amount <= 0f)

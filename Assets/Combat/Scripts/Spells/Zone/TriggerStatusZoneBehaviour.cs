@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using RPGame.Core.Effects;
+using RPGame.Core.Statuses;
 using RPGame.Core.Spells;
 using UnityEngine;
 
@@ -11,7 +11,7 @@ namespace RPGame.Combat.Spells
     {
         [SerializeField] private List<ZoneParticleEffect> particleEffects = new();
 
-        private readonly Dictionary<IStatusEffectReceiver, TargetZoneState> targetsInside = new();
+        private readonly Dictionary<IStatusReceiver, TargetZoneState> targetsInside = new();
         private SphereCollider zoneCollider;
         private Rigidbody zoneRigidbody;
         private CasterData casterData;
@@ -19,7 +19,9 @@ namespace RPGame.Combat.Spells
 
         protected abstract float ReapplyInterval { get; }
 
-        protected abstract void ApplyTo(IStatusEffectReceiver target);
+        protected GameObject StatusSource => casterData.CasterObject;
+
+        protected abstract void ApplyTo(IStatusReceiver target);
 
         private void Awake()
         {
@@ -78,7 +80,7 @@ namespace RPGame.Combat.Spells
                 }
 
                 targetState.ReapplyTimer = 0f;
-                ApplyTo(targetState.StatusEffectReceiver);
+                ApplyTo(targetState.StatusReceiver);
             }
         }
 
@@ -89,33 +91,33 @@ namespace RPGame.Combat.Spells
                 return;
             }
 
-            IStatusEffectReceiver statusEffectReceiver = other.GetComponentInParent<IStatusEffectReceiver>();
-            if (statusEffectReceiver == null)
+            IStatusReceiver statusReceiver = other.GetComponentInParent<IStatusReceiver>();
+            if (statusReceiver == null)
             {
                 return;
             }
 
-            if (targetsInside.TryGetValue(statusEffectReceiver, out TargetZoneState targetState))
+            if (targetsInside.TryGetValue(statusReceiver, out TargetZoneState targetState))
             {
                 targetState.Colliders.Add(other);
                 return;
             }
 
-            targetState = new TargetZoneState(statusEffectReceiver);
+            targetState = new TargetZoneState(statusReceiver);
             targetState.Colliders.Add(other);
-            targetsInside.Add(statusEffectReceiver, targetState);
-            ApplyTo(statusEffectReceiver);
+            targetsInside.Add(statusReceiver, targetState);
+            ApplyTo(statusReceiver);
         }
 
         private void OnTriggerExit(Collider other)
         {
-            IStatusEffectReceiver statusEffectReceiver = other.GetComponentInParent<IStatusEffectReceiver>();
-            if (statusEffectReceiver == null)
+            IStatusReceiver statusReceiver = other.GetComponentInParent<IStatusReceiver>();
+            if (statusReceiver == null)
             {
                 return;
             }
 
-            if (!targetsInside.TryGetValue(statusEffectReceiver, out TargetZoneState targetState))
+            if (!targetsInside.TryGetValue(statusReceiver, out TargetZoneState targetState))
             {
                 return;
             }
@@ -123,7 +125,7 @@ namespace RPGame.Combat.Spells
             targetState.Colliders.Remove(other);
             if (targetState.Colliders.Count == 0)
             {
-                targetsInside.Remove(statusEffectReceiver);
+                targetsInside.Remove(statusReceiver);
             }
         }
 
@@ -203,12 +205,12 @@ namespace RPGame.Combat.Spells
 
         private sealed class TargetZoneState
         {
-            public TargetZoneState(IStatusEffectReceiver statusEffectReceiver)
+            public TargetZoneState(IStatusReceiver statusReceiver)
             {
-                StatusEffectReceiver = statusEffectReceiver;
+                StatusReceiver = statusReceiver;
             }
 
-            public IStatusEffectReceiver StatusEffectReceiver { get; }
+            public IStatusReceiver StatusReceiver { get; }
             public HashSet<Collider> Colliders { get; } = new();
             public float ReapplyTimer { get; set; }
         }

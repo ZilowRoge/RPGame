@@ -1,14 +1,16 @@
 using RPGame.Core.Statistics;
 using UnityEngine;
+using UnityEngine.Scripting.APIUpdating;
 
-namespace RPGame.Core.Effects
+namespace RPGame.Core.Statuses
 {
-    [CreateAssetMenu(fileName = "RestoreManaEffect", menuName = "RPGame/Progression/Effects/Restore Mana Effect")]
-    public sealed class RestoreManaEffectDefinition : RestoreResourceEffectDefinition
+    [CreateAssetMenu(fileName = "RestoreManaEffect", menuName = "RPGame/Progression/Statuses/Restore Mana")]
+    [MovedFrom(true, null, null, "RestoreManaEffectDefinition")]
+    public sealed class RestoreManaStatusDefinition : RestoreResourceStatusDefinition
     {
         protected override string ResourceName => "Mana";
 
-        public override bool IsFinished(StatusEffectTarget target)
+        public override bool IsFinished(StatusTarget target)
         {
             IStatisticsController statisticsController = target.StatisticsController;
             return statisticsController == null

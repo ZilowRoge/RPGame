@@ -2,11 +2,11 @@ using RPGame.Core.Damage;
 using RPGame.Core.Movement;
 using RPGame.Core.Statistics;
 
-namespace RPGame.Core.Effects
+namespace RPGame.Core.Statuses
 {
-    public readonly struct StatusEffectTarget
+    public readonly struct StatusTarget
     {
-        public StatusEffectTarget(
+        public StatusTarget(
             IStatisticsController statisticsController,
             IMovement movement,
             IDamageable damageable)

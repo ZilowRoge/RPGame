@@ -1,21 +1,28 @@
-using RPGame.Core.Effects;
+using RPGame.Core.Statuses;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace RPGame.Combat.Spells
 {
     public sealed class FireZoneBehaviour : TriggerStatusZoneBehaviour
     {
-        [SerializeField] private BurningEffectDefinition burningEffect;
+        [FormerlySerializedAs("burningEffect")]
+        [SerializeField] private BurningStatusDefinition burningStatus;
         [SerializeField] private float burningDuration = 3f;
         [SerializeField] private float reapplyInterval = 0.5f;
 
         protected override float ReapplyInterval => reapplyInterval;
 
-        protected override void ApplyTo(IStatusEffectReceiver target)
+        protected override void ApplyTo(IStatusReceiver target)
         {
-            if (burningEffect != null)
+            if (burningStatus != null)
             {
-                target.ApplyStatusEffect(burningEffect, burningDuration);
+                target.ApplyStatus(
+                    burningStatus,
+                    burningDuration,
+                    new StatusContext(
+                        new StatusSourceId(nameof(FireZoneBehaviour)),
+                        StatusSource));
             }
         }
 

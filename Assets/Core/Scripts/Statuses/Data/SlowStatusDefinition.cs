@@ -1,20 +1,23 @@
 using UnityEngine;
+using UnityEngine.Scripting.APIUpdating;
 
-namespace RPGame.Core.Effects
+namespace RPGame.Core.Statuses
 {
-    [CreateAssetMenu(fileName = "SlowEffect", menuName = "RPGame/Progression/Effects/Slow Effect")]
-    public sealed class SlowEffectDefinition : StatusEffectDefinition
+    [CreateAssetMenu(fileName = "SlowEffect", menuName = "RPGame/Progression/Statuses/Slow")]
+    [MovedFrom(true, null, null, "SlowEffectDefinition")]
+    public sealed class SlowStatusDefinition : StatusDefinition
     {
         [SerializeField] private float movementSpeedMultiplier = 0.7f;
 
         public override ReapplyPolicy ReapplyPolicy => ReapplyPolicy.Refresh;
+        public override ConcurrentStatusPolicy ConcurrentStatusPolicy => ConcurrentStatusPolicy.Independent;
 
-        public override bool CanApply(StatusEffectTarget target)
+        public override bool CanApply(StatusTarget target)
         {
             return target.Movement != null;
         }
 
-        public override void OnApply(StatusEffectTarget target, StatusEffectInstance instance)
+        public override void OnApply(StatusTarget target, StatusInstance instance)
         {
             int modifierId = target.Movement.AddMovementSpeedModifier(MovementSpeedMultiplier);
             instance.RegisterCleanup(() => target.Movement.RemoveMovementSpeedModifier(modifierId));

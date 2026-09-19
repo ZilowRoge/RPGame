@@ -3,25 +3,27 @@ using RPGame.Core.Damage;
 using RPGame.Core.Movement;
 using RPGame.Core.Statistics;
 using UnityEngine;
+using UnityEngine.Scripting.APIUpdating;
 
-namespace RPGame.Core.Effects
+namespace RPGame.Core.Statuses
 {
-    public sealed class StatusEffectAggregator : MonoBehaviour, IStatusEffectReceiver
+    [MovedFrom(true, null, null, "StatusEffectAggregator")]
+    public sealed class StatusAggregator : MonoBehaviour, IStatusReceiver
     {
-        private StatusEffectContainer statusContainer;
+        private StatusContainer statusContainer;
         private IStatisticsController statisticsController;
         private IMovement movement;
         private IDamageable damageable;
-        private StatusEffectTarget statusEffectTarget;
+        private StatusTarget statusTarget;
         private IStatisticsController subscribedStatisticsController;
 
-        public IReadOnlyList<StatusEffectInstance> StatusEffects => statusContainer.Effects;
+        public IReadOnlyList<StatusInstance> Statuses => statusContainer.Statuses;
 
         private void Awake()
         {
             statisticsController = GetComponent<IStatisticsController>();
-            CacheStatusEffectTarget();
-            statusContainer = new StatusEffectContainer(statusEffectTarget);
+            CacheStatusTarget();
+            statusContainer = new StatusContainer(statusTarget);
         }
 
         private void OnEnable()
@@ -44,12 +46,22 @@ namespace RPGame.Core.Effects
             statusContainer.Tick(Time.deltaTime);
         }
 
-        public void ApplyStatusEffect(StatusEffectDefinition effect, float duration)
+        public void ApplyStatus(StatusDefinition status, float duration, StatusContext context)
         {
-            statusContainer.Add(effect, duration);
+            statusContainer.Add(status, duration, context);
         }
 
-        public void ClearStatusEffects()
+        public bool HasStatus(StatusDefinition status)
+        {
+            return statusContainer.HasStatus(status);
+        }
+
+        public bool TryConsumeStatus(StatusDefinition status)
+        {
+            return statusContainer.TryConsumeStatus(status);
+        }
+
+        public void ClearStatuses()
         {
             statusContainer.Clear();
         }
@@ -59,14 +71,14 @@ namespace RPGame.Core.Effects
             if (statisticsController == null)
             {
                 statisticsController = GetComponent<IStatisticsController>();
-                CacheStatusEffectTarget();
+                CacheStatusTarget();
                 SubscribeToDied(statisticsController);
             }
 
             return statisticsController;
         }
 
-        private void CacheStatusEffectTarget()
+        private void CacheStatusTarget()
         {
             if (statisticsController == null)
             {
@@ -75,7 +87,7 @@ namespace RPGame.Core.Effects
 
             movement ??= GetComponent<IMovement>();
             damageable ??= GetComponent<IDamageable>();
-            statusEffectTarget = new StatusEffectTarget(statisticsController, movement, damageable);
+            statusTarget = new StatusTarget(statisticsController, movement, damageable);
         }
 
         private void SubscribeToDied(IStatisticsController targetStatisticsController)
@@ -103,7 +115,7 @@ namespace RPGame.Core.Effects
 
         private void HandleDied()
         {
-            ClearStatusEffects();
+            ClearStatuses();
         }
     }
 }

@@ -1,5 +1,5 @@
 using RPGame.Combat.Damage;
-using RPGame.Core.Effects;
+using RPGame.Core.Statuses;
 using RPGame.Core.Statistics;
 using RPGame.Core.Targeting;
 using UnityEngine;
@@ -13,7 +13,7 @@ namespace RPGame.Enemies
     [RequireComponent(typeof(EnemyTargetable))]
     [RequireComponent(typeof(DamageReceiver))]
     [RequireComponent(typeof(Death))]
-    [RequireComponent(typeof(StatusEffectAggregator))]
+    [RequireComponent(typeof(StatusAggregator))]
     public sealed class Controller : MonoBehaviour
     {
         [SerializeField] private Detection detection;

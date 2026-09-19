@@ -1,14 +1,16 @@
 using RPGame.Core.Statistics;
 using UnityEngine;
+using UnityEngine.Scripting.APIUpdating;
 
-namespace RPGame.Core.Effects
+namespace RPGame.Core.Statuses
 {
-    [CreateAssetMenu(fileName = "RestoreHealthEffect", menuName = "RPGame/Progression/Effects/Restore Health Effect")]
-    public sealed class RestoreHealthEffectDefinition : RestoreResourceEffectDefinition
+    [CreateAssetMenu(fileName = "RestoreHealthEffect", menuName = "RPGame/Progression/Statuses/Restore Health")]
+    [MovedFrom(true, null, null, "RestoreHealthEffectDefinition")]
+    public sealed class RestoreHealthStatusDefinition : RestoreResourceStatusDefinition
     {
         protected override string ResourceName => "Health";
 
-        public override bool IsFinished(StatusEffectTarget target)
+        public override bool IsFinished(StatusTarget target)
         {
             IStatisticsController statisticsController = target.StatisticsController;
             return statisticsController == null

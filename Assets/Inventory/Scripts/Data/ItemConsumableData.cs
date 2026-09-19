@@ -1,4 +1,4 @@
-using RPGame.Core.Effects;
+using RPGame.Core.Statuses;
 using UnityEngine;
 
 namespace RPGame.Inventory.Data
@@ -6,10 +6,10 @@ namespace RPGame.Inventory.Data
     [CreateAssetMenu(fileName = "ItemConsumableData", menuName = "RPGame/Inventory/Item Consumable Data")]
     public sealed class ItemConsumableData : ItemTypeData
     {
-        [SerializeField] private StatusEffectDefinition effect;
+        [SerializeField] private StatusDefinition effect;
         [SerializeField] private float duration;
 
-        public StatusEffectDefinition Effect => effect;
+        public StatusDefinition Effect => effect;
         public float Duration => duration;
 
         public override string GetTooltip()

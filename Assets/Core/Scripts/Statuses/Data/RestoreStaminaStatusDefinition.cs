@@ -1,14 +1,16 @@
 using RPGame.Core.Statistics;
 using UnityEngine;
+using UnityEngine.Scripting.APIUpdating;
 
-namespace RPGame.Core.Effects
+namespace RPGame.Core.Statuses
 {
-    [CreateAssetMenu(fileName = "RestoreStaminaEffect", menuName = "RPGame/Progression/Effects/Restore Stamina Effect")]
-    public sealed class RestoreStaminaEffectDefinition : RestoreResourceEffectDefinition
+    [CreateAssetMenu(fileName = "RestoreStaminaEffect", menuName = "RPGame/Progression/Statuses/Restore Stamina")]
+    [MovedFrom(true, null, null, "RestoreStaminaEffectDefinition")]
+    public sealed class RestoreStaminaStatusDefinition : RestoreResourceStatusDefinition
     {
         protected override string ResourceName => "Stamina";
 
-        public override bool IsFinished(StatusEffectTarget target)
+        public override bool IsFinished(StatusTarget target)
         {
             IStatisticsController statisticsController = target.StatisticsController;
             return statisticsController == null
