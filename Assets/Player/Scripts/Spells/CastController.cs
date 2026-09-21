@@ -99,6 +99,10 @@ namespace RPGame.Player.Spells
         private CasterData CreateCasterData(Spell spell, Vector3? targetPosition)
         {
             CasterDataBuilder builder = CreateCasterDataBuilder();
+            if (spell != null)
+            {
+                builder.WithSpellId(spell.Id);
+            }
 
             IRuntimeSpellBehaviorProvider provider = ResolveRuntimeSpellBehaviorProvider();
             if (spell != null && provider != null)
@@ -119,9 +123,14 @@ namespace RPGame.Player.Spells
 
         private CasterData CreateActivationCasterData(Spell spell)
         {
-            return CreateCasterDataBuilder()
-                .WithPropertyModifiers(CreateSpellPropertyModifiers(spell))
-                .Build();
+            CasterDataBuilder builder = CreateCasterDataBuilder()
+                .WithPropertyModifiers(CreateSpellPropertyModifiers(spell));
+            if (spell != null)
+            {
+                builder.WithSpellId(spell.Id);
+            }
+
+            return builder.Build();
         }
 
         private CasterDataBuilder CreateCasterDataBuilder()
