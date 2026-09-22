@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using NUnit.Framework;
@@ -148,6 +149,95 @@ namespace RPGame.Combat.Tests
             Assert.IsTrue(capture.HasResult);
             Assert.AreEqual(10f, capture.Result.AppliedAmount);
             Assert.IsTrue(capture.Result.WasFatal);
+        }
+
+        [Test]
+        public void Resolve_WhenBehaviorsSharePhase_ExecutesLowerPriorityFirst()
+        {
+            List<string> executed = new();
+            IRuntimeSpellBehavior[] behaviors =
+            {
+                new RecordingBehavior("Priority 1", SpellBehaviorPhase.PostResolve, executed, 1),
+                new RecordingBehavior("Priority 0", SpellBehaviorPhase.PostResolve, executed, 0)
+            };
+
+            ExecuteSpell(new SpellId("wave"), behaviors);
+
+            CollectionAssert.AreEqual(new[] { "Priority 0", "Priority 1" }, executed);
+        }
+
+        [Test]
+        public void Resolve_WhenPhaseHasPriorityGap_ExecutesActivePriority()
+        {
+            List<string> executed = new();
+            IRuntimeSpellBehavior[] behaviors =
+            {
+                new RecordingBehavior("Priority 1", SpellBehaviorPhase.PostResolve, executed, 1)
+            };
+
+            ExecuteSpell(new SpellId("wave"), behaviors);
+
+            CollectionAssert.AreEqual(new[] { "Priority 1" }, executed);
+        }
+
+        [Test]
+        public void Resolve_WhenBehaviorsSharePhaseAndPriority_Throws()
+        {
+            List<string> executed = new();
+            IRuntimeSpellBehavior[] behaviors =
+            {
+                new RecordingBehavior("First", SpellBehaviorPhase.PostResolve, executed, 0),
+                new RecordingBehavior("Second", SpellBehaviorPhase.PostResolve, executed, 0)
+            };
+
+            Assert.Throws<InvalidOperationException>(
+                () => ExecuteSpell(new SpellId("wave"), behaviors));
+        }
+
+        [Test]
+        public void Resolve_WhenBehaviorsSharePriorityInDifferentPhases_ExecutesBoth()
+        {
+            List<string> executed = new();
+            IRuntimeSpellBehavior[] behaviors =
+            {
+                new RecordingBehavior("PreResolve", SpellBehaviorPhase.PreResolve, executed, 0),
+                new RecordingBehavior("Effect", SpellBehaviorPhase.Effect, executed, 0)
+            };
+
+            ExecuteSpell(new SpellId("wave"), behaviors);
+
+            CollectionAssert.AreEqual(new[] { "PreResolve", "Effect" }, executed);
+        }
+
+        [Test]
+        public void Resolve_WhenPhaseHasMultiplePriorities_ExecutesEachBehaviorOnce()
+        {
+            List<string> executed = new();
+            IRuntimeSpellBehavior[] behaviors =
+            {
+                new RecordingBehavior("Priority 2", SpellBehaviorPhase.PostResolve, executed, 2),
+                new RecordingBehavior("Priority 0", SpellBehaviorPhase.PostResolve, executed, 0),
+                new RecordingBehavior("Priority 1", SpellBehaviorPhase.PostResolve, executed, 1)
+            };
+
+            ExecuteSpell(new SpellId("wave"), behaviors);
+
+            CollectionAssert.AreEqual(
+                new[] { "Priority 0", "Priority 1", "Priority 2" },
+                executed);
+        }
+
+        [Test]
+        public void Resolve_WhenBehaviorPriorityIsNegative_Throws()
+        {
+            List<string> executed = new();
+            IRuntimeSpellBehavior[] behaviors =
+            {
+                new RecordingBehavior("Negative", SpellBehaviorPhase.PostResolve, executed, -1)
+            };
+
+            Assert.Throws<InvalidOperationException>(
+                () => ExecuteSpell(new SpellId("wave"), behaviors));
         }
 
         [Test]
@@ -402,14 +492,17 @@ namespace RPGame.Combat.Tests
             public RecordingBehavior(
                 string name,
                 SpellBehaviorPhase phase,
-                List<string> executed)
+                List<string> executed,
+                int priority = 0)
             {
                 this.name = name;
                 Phase = phase;
+                Priority = priority;
                 this.executed = executed;
             }
 
             public SpellBehaviorPhase Phase { get; }
+            public int Priority { get; }
 
             public void Execute(SpellBehaviorContext context)
             {
@@ -427,6 +520,7 @@ namespace RPGame.Combat.Tests
             }
 
             public SpellBehaviorPhase Phase => SpellBehaviorPhase.PreResolve;
+            public int Priority => 0;
 
             public void Execute(SpellBehaviorContext context)
             {
@@ -556,6 +650,7 @@ namespace RPGame.Combat.Tests
             }
 
             public SpellBehaviorPhase Phase => phase;
+            public int Priority => 0;
 
             public void Execute(SpellBehaviorContext context)
             {
@@ -587,6 +682,7 @@ namespace RPGame.Combat.Tests
         private sealed class DamageResultCaptureBehavior : ISpellBehavior
         {
             public SpellBehaviorPhase Phase => SpellBehaviorPhase.Effect;
+            public int Priority => 0;
             public bool HasResult { get; private set; }
             public DamageResult Result { get; private set; }
 

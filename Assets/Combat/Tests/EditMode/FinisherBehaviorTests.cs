@@ -329,6 +329,7 @@ namespace RPGame.Combat.Tests
         private sealed class DamageResultCaptureBehavior : ISpellBehavior
         {
             public SpellBehaviorPhase Phase => SpellBehaviorPhase.Effect;
+            public int Priority => 0;
             public List<DamageResult> Results { get; } = new();
 
             public void Execute(SpellBehaviorContext context)
@@ -345,6 +346,7 @@ namespace RPGame.Combat.Tests
         private sealed class MarkConsumedFlagCaptureBehavior : ISpellBehavior
         {
             public SpellBehaviorPhase Phase => SpellBehaviorPhase.Effect;
+            public int Priority => 1;
             public bool HasFlag { get; private set; }
 
             public void Execute(SpellBehaviorContext context)

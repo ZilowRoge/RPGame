@@ -23,6 +23,7 @@ namespace RPGame.Combat.Spells
         }
 
         public SpellBehaviorPhase Phase => SpellBehaviorPhase.PostResolve;
+        public int Priority => 1;
 
         public bool TryConsumeMark(SpellBehaviorContext context)
         {
