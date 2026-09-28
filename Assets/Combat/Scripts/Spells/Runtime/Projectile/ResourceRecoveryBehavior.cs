@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using RPGame.Core.Damage;
 using RPGame.Core.Spells;
 using RPGame.Core.Statistics;
@@ -8,31 +9,31 @@ using UnityEngine;
 namespace RPGame.Combat.Spells
 {
     [Serializable]
-    public sealed class FinisherBehavior :
+    public sealed class ResourceRecoveryBehavior :
         ISpellBehavior,
         IInitializableRuntimeSpellBehavior,
         IMarkConsumer
     {
         [SerializeField] private MarkStatusDefinition markDefinition;
-        [SerializeField, Range(0f, 1f)] private float healthThreshold = 0.2f;
+        [SerializeField, Range(0f, 1f)] private float healthRecoveryPercent;
 
-        [NonSerialized] private GameObject caster;
+        [NonSerialized] private IStatisticsController casterStatistics;
 
-        public FinisherBehavior()
+        public ResourceRecoveryBehavior()
         {
         }
 
-        public FinisherBehavior(
+        public ResourceRecoveryBehavior(
             MarkStatusDefinition markDefinition,
-            float healthThreshold,
+            float healthRecoveryPercent,
             GameObject caster)
         {
             this.markDefinition = markDefinition;
-            this.healthThreshold = Mathf.Clamp01(healthThreshold);
+            this.healthRecoveryPercent = Mathf.Clamp01(healthRecoveryPercent);
             Initialize(caster);
         }
 
-        public SpellBehaviorPhase Phase => SpellBehaviorPhase.PostResolve;
+        public SpellBehaviorPhase Phase => SpellBehaviorPhase.Effect;
 
         public bool Supports(Spell spell)
         {
@@ -41,8 +42,10 @@ namespace RPGame.Combat.Spells
 
         public void Initialize(GameObject caster)
         {
-            this.caster = caster;
-            healthThreshold = Mathf.Clamp01(healthThreshold);
+            casterStatistics = caster != null
+                ? caster.GetComponentInParent<IStatisticsController>()
+                : null;
+            healthRecoveryPercent = Mathf.Clamp01(healthRecoveryPercent);
         }
 
         public bool TryConsumeMark(SpellBehaviorContext context)
@@ -65,38 +68,27 @@ namespace RPGame.Combat.Spells
 
         public void Execute(SpellBehaviorContext context)
         {
-            if (!context.HasExecutionFlag(SpellExecutionFlag.MarkConsumed)
-                || context.Target == null)
+            if (casterStatistics == null
+                || healthRecoveryPercent <= 0f
+                || !context.HasExecutionFlag(SpellExecutionFlag.MarkConsumed)
+                || !context.TryGetResolveResults(out IReadOnlyList<DamageResult> results))
             {
                 return;
             }
 
-            IStatisticsController statistics =
-                context.Target.GetComponentInParent<IStatisticsController>();
-            if (statistics == null
-                || statistics.CurrentHealth <= 0f
-                || statistics.MaxHealth <= 0f
-                || statistics.CurrentHealth / statistics.MaxHealth > healthThreshold)
+            float totalAppliedDamage = 0f;
+            for (int resultIndex = 0; resultIndex < results.Count; resultIndex++)
+            {
+                totalAppliedDamage += results[resultIndex].AppliedAmount;
+            }
+
+            float recoveredHealth = totalAppliedDamage * healthRecoveryPercent;
+            if (recoveredHealth <= 0f)
             {
                 return;
             }
 
-            IDamageable damageable = context.Target.GetComponentInParent<IDamageable>();
-            if (damageable == null)
-            {
-                return;
-            }
-
-            DamageResult result = damageable.ApplyDamage(new DamageData(
-                new[]
-                {
-                    new PartialDamage(
-                        statistics.CurrentHealth,
-                        DamageType.Magical,
-                        DamageElement.None)
-                },
-                caster));
-            context.AddResolveResult(result);
+            casterStatistics.Heal(recoveredHealth);
         }
     }
 }
