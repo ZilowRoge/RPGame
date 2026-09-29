@@ -124,39 +124,62 @@ namespace RPGame.Enemies
             Vector3 direction,
             float distance,
             float duration,
-            Action<Collider, Vector3> onCollision = null)
+            Action<KnockbackEndContext> onEnded = null)
         {
             if (knockbackCoroutine != null)
             {
-                StopCoroutine(knockbackCoroutine);
-                knockbackCoroutine = null;
-                EndKnockback();
+                return;
+            }
+
+            if (duration <= Mathf.Epsilon)
+            {
+                ApplyInstantKnockback(direction, distance, onEnded);
+                return;
             }
 
             knockbackCoroutine = StartCoroutine(ApplyKnockbackRoutine(
                 direction,
                 distance,
                 duration,
-                onCollision));
+                onEnded));
+        }
+
+        private void ApplyInstantKnockback(
+            Vector3 direction,
+            float distance,
+            Action<KnockbackEndContext> onEnded)
+        {
+            direction = PrepareKnockbackDirection(direction);
+            BeginKnockback();
+
+            KnockbackEndContext endContext = new(KnockbackEndReason.Completed);
+            Vector3 displacement = direction * Mathf.Max(0f, distance);
+            if (!TryApplyKnockbackStep(displacement, out endContext))
+            {
+                endContext = new KnockbackEndContext(
+                    KnockbackEndReason.Collision,
+                    endContext.Obstacle,
+                    endContext.CollisionPoint);
+            }
+
+            EndKnockback();
+            onEnded?.Invoke(endContext);
         }
 
         private IEnumerator ApplyKnockbackRoutine(
             Vector3 direction,
             float distance,
             float duration,
-            Action<Collider, Vector3> onCollision)
+            Action<KnockbackEndContext> onEnded)
         {
-            direction.y = 0f;
-            direction = direction.sqrMagnitude > Mathf.Epsilon ? direction.normalized : Vector3.zero;
-            isKnockedBack = true;
-            if (agent != null && agent.enabled)
-            {
-                agent.isStopped = true;
-                agent.enabled = false;
-            }
+            direction = PrepareKnockbackDirection(direction);
+            BeginKnockback();
 
             Vector3 startPosition = transform.position;
             float elapsed = 0f;
+            KnockbackEndContext endContext =
+                new(KnockbackEndReason.Completed);
+
             while (elapsed < duration)
             {
                 elapsed += Time.deltaTime;
@@ -164,8 +187,12 @@ namespace RPGame.Enemies
                 float easedProgress = 1f - Mathf.Pow(1f - progress, 3f);
                 Vector3 desiredPosition = startPosition + direction * (distance * easedProgress);
                 Vector3 displacement = desiredPosition - transform.position;
-                if (!TryApplyKnockbackStep(displacement, onCollision))
+                if (!TryApplyKnockbackStep(displacement, out endContext))
                 {
+                    endContext = new KnockbackEndContext(
+                        KnockbackEndReason.Collision,
+                        endContext.Obstacle,
+                        endContext.CollisionPoint);
                     break;
                 }
 
@@ -174,12 +201,32 @@ namespace RPGame.Enemies
 
             EndKnockback();
             knockbackCoroutine = null;
+            onEnded?.Invoke(endContext);
+        }
+
+        private Vector3 PrepareKnockbackDirection(Vector3 direction)
+        {
+            direction.y = 0f;
+            return direction.sqrMagnitude > Mathf.Epsilon
+                ? direction.normalized
+                : Vector3.zero;
+        }
+
+        private void BeginKnockback()
+        {
+            isKnockedBack = true;
+            if (agent != null && agent.enabled)
+            {
+                agent.isStopped = true;
+                agent.enabled = false;
+            }
         }
 
         private bool TryApplyKnockbackStep(
             Vector3 displacement,
-            Action<Collider, Vector3> onCollision)
+            out KnockbackEndContext collisionContext)
         {
+            collisionContext = default;
             float distance = displacement.magnitude;
             if (distance <= Mathf.Epsilon)
             {
@@ -223,7 +270,10 @@ namespace RPGame.Enemies
             if (foundObstacle)
             {
                 transform.position += displacement.normalized * Mathf.Max(0f, closestDistance - 0.01f);
-                onCollision?.Invoke(closestHit.collider, closestHit.point);
+                collisionContext = new KnockbackEndContext(
+                    KnockbackEndReason.Collision,
+                    closestHit.collider,
+                    closestHit.point);
                 return false;
             }
 
