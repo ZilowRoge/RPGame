@@ -68,6 +68,17 @@ namespace RPGame.Encounter
             LastWavePerformanceBonus = CalculatePerformanceBonus();
         }
 
+        public void ResetRun()
+        {
+            CurrentScore = 0f;
+            CurrentWaveBaseScore = 0f;
+            CurrentWaveActualScore = 0f;
+            FinalizedWaveBaseScore = 0f;
+            FinalizedWaveActualScore = 0f;
+            LastWavePerformanceBonus = 0f;
+            ResetCombo();
+        }
+
         public void RegisterKill(int enemyCost)
         {
             if (enemyCost <= 0)

@@ -439,6 +439,154 @@ namespace RPGame.Encounter.Tests
             Object.DestroyImmediate(config);
         }
 
+        [Test]
+        public void ResetRun_WhenCalled_ClearsTotalScore()
+        {
+            ScoreSystem scoreSystem = new();
+            scoreSystem.RegisterKill(10);
+
+            scoreSystem.ResetRun();
+
+            Assert.AreEqual(0f, scoreSystem.CurrentScore, ScoreTolerance);
+        }
+
+        [Test]
+        public void ResetRun_WhenCalled_ResetsComboStateTimerAndMultiplier()
+        {
+            ScoreSystem scoreSystem = new();
+            scoreSystem.RegisterKill(10);
+            scoreSystem.Tick(ComboWindowSeconds - 0.1f);
+
+            scoreSystem.ResetRun();
+            scoreSystem.Tick(0.2f);
+            scoreSystem.RegisterKill(10);
+
+            Assert.AreEqual(1.1f, scoreSystem.CurrentMultiplier, MultiplierTolerance);
+            Assert.AreEqual(10f, scoreSystem.CurrentScore, ScoreTolerance);
+        }
+
+        [Test]
+        public void ResetRun_WhenCalled_ClearsCurrentWaveCounters()
+        {
+            ScoreSystem scoreSystem = new();
+            scoreSystem.BeginWave();
+            scoreSystem.RegisterKill(10);
+            scoreSystem.RegisterKill(10);
+
+            scoreSystem.ResetRun();
+
+            Assert.AreEqual(0f, scoreSystem.CurrentWaveBaseScore, ScoreTolerance);
+            Assert.AreEqual(0f, scoreSystem.CurrentWaveActualScore, ScoreTolerance);
+        }
+
+        [Test]
+        public void ResetRun_WhenCalled_ClearsFinalizedWaveCounters()
+        {
+            ScoreSystem scoreSystem = new();
+            scoreSystem.BeginWave();
+            scoreSystem.RegisterKill(10);
+            scoreSystem.RegisterKill(10);
+            scoreSystem.EndWave();
+
+            scoreSystem.ResetRun();
+
+            Assert.AreEqual(0f, scoreSystem.FinalizedWaveBaseScore, ScoreTolerance);
+            Assert.AreEqual(0f, scoreSystem.FinalizedWaveActualScore, ScoreTolerance);
+        }
+
+        [Test]
+        public void ResetRun_WhenCalled_RestoresPerformanceRatioToOne()
+        {
+            ScoreSystem scoreSystem = new();
+            scoreSystem.BeginWave();
+            scoreSystem.RegisterKill(10);
+            scoreSystem.RegisterKill(10);
+            scoreSystem.EndWave();
+
+            scoreSystem.ResetRun();
+
+            Assert.AreEqual(1f, scoreSystem.LastWavePerformanceRatio, ScoreTolerance);
+        }
+
+        [Test]
+        public void ResetRun_WhenCalled_RestoresPerformanceBonusToZero()
+        {
+            WaveScalingConfig config = CreateWaveScalingConfig(
+                AnimationCurve.Linear(1f, 0f, 2f, 10f),
+                10f);
+            ScoreSystem scoreSystem = new(null, config);
+            scoreSystem.BeginWave();
+            scoreSystem.RegisterKill(10);
+            scoreSystem.RegisterKill(10);
+            scoreSystem.EndWave();
+
+            scoreSystem.ResetRun();
+
+            Assert.AreEqual(0f, scoreSystem.LastWavePerformanceBonus, ScoreTolerance);
+            Object.DestroyImmediate(config);
+        }
+
+        [Test]
+        public void ResetRun_WhenCalledMultipleTimes_RemainsInResetState()
+        {
+            ScoreSystem scoreSystem = new();
+            scoreSystem.BeginWave();
+            scoreSystem.RegisterKill(10);
+            scoreSystem.EndWave();
+
+            scoreSystem.ResetRun();
+            scoreSystem.ResetRun();
+
+            Assert.AreEqual(0f, scoreSystem.CurrentScore, ScoreTolerance);
+            Assert.AreEqual(1f, scoreSystem.CurrentMultiplier, MultiplierTolerance);
+            Assert.AreEqual(0f, scoreSystem.CurrentWaveBaseScore, ScoreTolerance);
+            Assert.AreEqual(0f, scoreSystem.CurrentWaveActualScore, ScoreTolerance);
+            Assert.AreEqual(0f, scoreSystem.FinalizedWaveBaseScore, ScoreTolerance);
+            Assert.AreEqual(0f, scoreSystem.FinalizedWaveActualScore, ScoreTolerance);
+            Assert.AreEqual(1f, scoreSystem.LastWavePerformanceRatio, ScoreTolerance);
+            Assert.AreEqual(0f, scoreSystem.LastWavePerformanceBonus, ScoreTolerance);
+        }
+
+        [Test]
+        public void RegisterKill_WhenCalledAfterReset_ScoresAndCombosFromInitialState()
+        {
+            ScoreSystem scoreSystem = new();
+            scoreSystem.RegisterKill(10);
+            scoreSystem.RegisterKill(10);
+
+            scoreSystem.ResetRun();
+            scoreSystem.RegisterKill(10);
+            scoreSystem.RegisterKill(10);
+
+            Assert.AreEqual(21f, scoreSystem.CurrentScore, ScoreTolerance);
+            Assert.AreEqual(1.2f, scoreSystem.CurrentMultiplier, MultiplierTolerance);
+        }
+
+        [Test]
+        public void WaveLifecycle_WhenUsedAfterReset_WorksNormally()
+        {
+            WaveScalingConfig config = CreateWaveScalingConfig(
+                AnimationCurve.Linear(1f, 0f, 2f, 10f),
+                10f);
+            ScoreSystem scoreSystem = new(null, config);
+            scoreSystem.BeginWave();
+            scoreSystem.RegisterKill(10);
+            scoreSystem.RegisterKill(10);
+            scoreSystem.EndWave();
+
+            scoreSystem.ResetRun();
+            scoreSystem.BeginWave();
+            scoreSystem.RegisterKill(10);
+            scoreSystem.RegisterKill(10);
+            scoreSystem.EndWave();
+
+            Assert.AreEqual(20f, scoreSystem.FinalizedWaveBaseScore, ScoreTolerance);
+            Assert.AreEqual(21f, scoreSystem.FinalizedWaveActualScore, ScoreTolerance);
+            Assert.AreEqual(1.05f, scoreSystem.LastWavePerformanceRatio, ScoreTolerance);
+            Assert.AreEqual(0.5f, scoreSystem.LastWavePerformanceBonus, ScoreTolerance);
+            Object.DestroyImmediate(config);
+        }
+
         private static WaveScalingConfig CreateWaveScalingConfig(
             AnimationCurve performanceWaveBonusCurve,
             float maxPerformanceWaveBonus)
