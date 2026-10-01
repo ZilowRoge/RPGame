@@ -1,4 +1,7 @@
+using System.Reflection;
 using NUnit.Framework;
+using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace RPGame.Encounter.Tests
 {
@@ -316,6 +319,140 @@ namespace RPGame.Encounter.Tests
             scoreSystem.EndWave();
 
             Assert.AreEqual(1f, scoreSystem.LastWavePerformanceRatio, ScoreTolerance);
+        }
+
+        [Test]
+        public void LastWavePerformanceBonus_WhenCurveMapsRatio_ReturnsExpectedBonus()
+        {
+            WaveScalingConfig config = CreateWaveScalingConfig(
+                AnimationCurve.Linear(1f, 0f, 2f, 10f),
+                10f);
+            ScoreSystem scoreSystem = new(null, config);
+
+            scoreSystem.BeginWave();
+            scoreSystem.RegisterKill(10);
+            scoreSystem.RegisterKill(10);
+            scoreSystem.EndWave();
+
+            Assert.AreEqual(0.5f, scoreSystem.LastWavePerformanceBonus, ScoreTolerance);
+            Object.DestroyImmediate(config);
+        }
+
+        [Test]
+        public void LastWavePerformanceBonus_WhenCurveResultExceedsMax_ClampsToMax()
+        {
+            WaveScalingConfig config = CreateWaveScalingConfig(
+                AnimationCurve.Linear(1f, 0f, 2f, 10f),
+                0.25f);
+            ScoreSystem scoreSystem = new(null, config);
+
+            scoreSystem.BeginWave();
+            scoreSystem.RegisterKill(10);
+            scoreSystem.RegisterKill(10);
+            scoreSystem.EndWave();
+
+            Assert.AreEqual(0.25f, scoreSystem.LastWavePerformanceBonus, ScoreTolerance);
+            Object.DestroyImmediate(config);
+        }
+
+        [Test]
+        public void LastWavePerformanceBonus_WhenCurveResultIsNegative_ClampsToZero()
+        {
+            WaveScalingConfig config = CreateWaveScalingConfig(
+                AnimationCurve.Linear(1f, -1f, 2f, -1f),
+                10f);
+            ScoreSystem scoreSystem = new(null, config);
+
+            scoreSystem.BeginWave();
+            scoreSystem.RegisterKill(10);
+            scoreSystem.EndWave();
+
+            Assert.AreEqual(0f, scoreSystem.LastWavePerformanceBonus, ScoreTolerance);
+            Object.DestroyImmediate(config);
+        }
+
+        [Test]
+        public void BeginWave_WhenCalled_DoesNotOverwriteLastWavePerformanceBonus()
+        {
+            WaveScalingConfig config = CreateWaveScalingConfig(
+                AnimationCurve.Linear(1f, 0f, 2f, 10f),
+                10f);
+            ScoreSystem scoreSystem = new(null, config);
+            scoreSystem.BeginWave();
+            scoreSystem.RegisterKill(10);
+            scoreSystem.RegisterKill(10);
+            scoreSystem.EndWave();
+
+            scoreSystem.BeginWave();
+            scoreSystem.RegisterKill(100);
+
+            Assert.AreEqual(0.5f, scoreSystem.LastWavePerformanceBonus, ScoreTolerance);
+            Object.DestroyImmediate(config);
+        }
+
+        [Test]
+        public void EndWave_WhenNewWaveCompletes_UpdatesLastWavePerformanceBonus()
+        {
+            WaveScalingConfig config = CreateWaveScalingConfig(
+                AnimationCurve.Linear(1f, 0f, 2f, 10f),
+                10f);
+            ScoreSystem scoreSystem = new(null, config);
+            scoreSystem.BeginWave();
+            scoreSystem.RegisterKill(10);
+            scoreSystem.RegisterKill(10);
+            scoreSystem.EndWave();
+
+            scoreSystem.Tick(ComboWindowSeconds);
+            scoreSystem.BeginWave();
+            scoreSystem.RegisterKill(10);
+            scoreSystem.EndWave();
+
+            Assert.AreEqual(0f, scoreSystem.LastWavePerformanceBonus, ScoreTolerance);
+            Object.DestroyImmediate(config);
+        }
+
+        [Test]
+        public void LastWavePerformanceBonus_WhenConfigIsMissing_ReturnsZero()
+        {
+            ScoreSystem scoreSystem = new();
+
+            scoreSystem.BeginWave();
+            scoreSystem.RegisterKill(10);
+            scoreSystem.RegisterKill(10);
+            scoreSystem.EndWave();
+
+            Assert.AreEqual(0f, scoreSystem.LastWavePerformanceBonus, ScoreTolerance);
+        }
+
+        [Test]
+        public void LastWavePerformanceBonus_WhenCurveIsMissing_ReturnsZero()
+        {
+            WaveScalingConfig config = CreateWaveScalingConfig(null, 10f);
+            ScoreSystem scoreSystem = new(null, config);
+
+            scoreSystem.BeginWave();
+            scoreSystem.RegisterKill(10);
+            scoreSystem.RegisterKill(10);
+            scoreSystem.EndWave();
+
+            Assert.AreEqual(0f, scoreSystem.LastWavePerformanceBonus, ScoreTolerance);
+            Object.DestroyImmediate(config);
+        }
+
+        private static WaveScalingConfig CreateWaveScalingConfig(
+            AnimationCurve performanceWaveBonusCurve,
+            float maxPerformanceWaveBonus)
+        {
+            WaveScalingConfig config = ScriptableObject.CreateInstance<WaveScalingConfig>();
+            SetPrivateField(config, "performanceWaveBonusCurve", performanceWaveBonusCurve);
+            SetPrivateField(config, "maxPerformanceWaveBonus", maxPerformanceWaveBonus);
+            return config;
+        }
+
+        private static void SetPrivateField<T>(object target, string fieldName, T value)
+        {
+            FieldInfo field = target.GetType().GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
+            field.SetValue(target, value);
         }
     }
 }

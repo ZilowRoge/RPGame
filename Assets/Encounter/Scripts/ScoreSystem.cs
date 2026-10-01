@@ -1,3 +1,5 @@
+using UnityEngine;
+
 namespace RPGame.Encounter
 {
     public sealed class ScoreSystem
@@ -5,28 +7,40 @@ namespace RPGame.Encounter
         private readonly float comboWindowSeconds;
         private readonly float multiplierPerKill;
         private readonly float initialMultiplier;
+        private readonly WaveScalingConfig waveScalingConfig;
 
         private float comboTimeRemaining;
         private bool isComboActive;
 
         public ScoreSystem()
-            : this(5f, 0.1f, 1f)
+            : this(null, null)
         {
         }
 
         public ScoreSystem(ScoreConfig scoreConfig)
-            : this(
-                scoreConfig != null ? scoreConfig.ComboWindowSeconds : 5f,
-                scoreConfig != null ? scoreConfig.MultiplierPerKill : 0.1f,
-                scoreConfig != null ? scoreConfig.InitialMultiplier : 1f)
+            : this(scoreConfig, null)
         {
         }
 
-        private ScoreSystem(float comboWindowSeconds, float multiplierPerKill, float initialMultiplier)
+        public ScoreSystem(ScoreConfig scoreConfig, WaveScalingConfig waveScalingConfig)
+            : this(
+                scoreConfig != null ? scoreConfig.ComboWindowSeconds : 5f,
+                scoreConfig != null ? scoreConfig.MultiplierPerKill : 0.1f,
+                scoreConfig != null ? scoreConfig.InitialMultiplier : 1f,
+                waveScalingConfig)
+        {
+        }
+
+        private ScoreSystem(
+            float comboWindowSeconds,
+            float multiplierPerKill,
+            float initialMultiplier,
+            WaveScalingConfig waveScalingConfig)
         {
             this.comboWindowSeconds = comboWindowSeconds > 0f ? comboWindowSeconds : 5f;
             this.multiplierPerKill = multiplierPerKill >= 0f ? multiplierPerKill : 0.1f;
             this.initialMultiplier = initialMultiplier > 0f ? initialMultiplier : 1f;
+            this.waveScalingConfig = waveScalingConfig;
             CurrentMultiplier = this.initialMultiplier;
         }
 
@@ -39,6 +53,7 @@ namespace RPGame.Encounter
         public float LastWavePerformanceRatio => FinalizedWaveBaseScore > 0f
             ? FinalizedWaveActualScore / FinalizedWaveBaseScore
             : 1f;
+        public float LastWavePerformanceBonus { get; private set; }
 
         public void BeginWave()
         {
@@ -50,6 +65,7 @@ namespace RPGame.Encounter
         {
             FinalizedWaveBaseScore = CurrentWaveBaseScore;
             FinalizedWaveActualScore = CurrentWaveActualScore;
+            LastWavePerformanceBonus = CalculatePerformanceBonus();
         }
 
         public void RegisterKill(int enemyCost)
@@ -85,6 +101,20 @@ namespace RPGame.Encounter
         private float CalculateScore(int enemyCost)
         {
             return enemyCost * CurrentMultiplier;
+        }
+
+        private float CalculatePerformanceBonus()
+        {
+            if (waveScalingConfig == null || waveScalingConfig.PerformanceWaveBonusCurve == null)
+            {
+                return 0f;
+            }
+
+            float maxBonus = waveScalingConfig.MaxPerformanceWaveBonus > 0f
+                ? waveScalingConfig.MaxPerformanceWaveBonus
+                : 0f;
+            float bonus = waveScalingConfig.PerformanceWaveBonusCurve.Evaluate(LastWavePerformanceRatio);
+            return Mathf.Clamp(bonus, 0f, maxBonus);
         }
 
         private void ResetCombo()
