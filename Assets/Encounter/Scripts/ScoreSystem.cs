@@ -36,6 +36,9 @@ namespace RPGame.Encounter
         public float CurrentWaveActualScore { get; private set; }
         public float FinalizedWaveBaseScore { get; private set; }
         public float FinalizedWaveActualScore { get; private set; }
+        public float LastWavePerformanceRatio => FinalizedWaveBaseScore > 0f
+            ? FinalizedWaveActualScore / FinalizedWaveBaseScore
+            : 1f;
 
         public void BeginWave()
         {

@@ -250,5 +250,72 @@ namespace RPGame.Encounter.Tests
             Assert.AreEqual(0f, scoreSystem.CurrentWaveBaseScore, ScoreTolerance);
             Assert.AreEqual(0f, scoreSystem.CurrentWaveActualScore, ScoreTolerance);
         }
+
+        [Test]
+        public void LastWavePerformanceRatio_WhenActualEqualsBase_ReturnsOne()
+        {
+            ScoreSystem scoreSystem = new();
+            scoreSystem.BeginWave();
+            scoreSystem.RegisterKill(10);
+            scoreSystem.EndWave();
+
+            Assert.AreEqual(1f, scoreSystem.LastWavePerformanceRatio, ScoreTolerance);
+        }
+
+        [Test]
+        public void LastWavePerformanceRatio_WhenComboEnhancesScore_ReturnsExpectedRatio()
+        {
+            ScoreSystem scoreSystem = new();
+            scoreSystem.BeginWave();
+            scoreSystem.RegisterKill(10);
+            scoreSystem.RegisterKill(10);
+            scoreSystem.EndWave();
+
+            Assert.Greater(scoreSystem.LastWavePerformanceRatio, 1f);
+            Assert.AreEqual(1.05f, scoreSystem.LastWavePerformanceRatio, ScoreTolerance);
+        }
+
+        [Test]
+        public void LastWavePerformanceRatio_WhenBaseScoreIsZero_ReturnsOne()
+        {
+            ScoreSystem scoreSystem = new();
+
+            scoreSystem.BeginWave();
+            scoreSystem.EndWave();
+
+            Assert.AreEqual(1f, scoreSystem.LastWavePerformanceRatio, ScoreTolerance);
+        }
+
+        [Test]
+        public void BeginWave_WhenCalled_DoesNotOverwriteLastWavePerformanceRatio()
+        {
+            ScoreSystem scoreSystem = new();
+            scoreSystem.BeginWave();
+            scoreSystem.RegisterKill(10);
+            scoreSystem.RegisterKill(10);
+            scoreSystem.EndWave();
+
+            scoreSystem.BeginWave();
+            scoreSystem.RegisterKill(100);
+
+            Assert.AreEqual(1.05f, scoreSystem.LastWavePerformanceRatio, ScoreTolerance);
+        }
+
+        [Test]
+        public void EndWave_WhenNewWaveCompletes_UpdatesLastWavePerformanceRatio()
+        {
+            ScoreSystem scoreSystem = new();
+            scoreSystem.BeginWave();
+            scoreSystem.RegisterKill(10);
+            scoreSystem.RegisterKill(10);
+            scoreSystem.EndWave();
+
+            scoreSystem.Tick(ComboWindowSeconds);
+            scoreSystem.BeginWave();
+            scoreSystem.RegisterKill(10);
+            scoreSystem.EndWave();
+
+            Assert.AreEqual(1f, scoreSystem.LastWavePerformanceRatio, ScoreTolerance);
+        }
     }
 }
