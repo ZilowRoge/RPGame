@@ -158,5 +158,97 @@ namespace RPGame.Encounter.Tests
 
             Assert.AreEqual(21f, scoreSystem.CurrentScore, ScoreTolerance);
         }
+
+        [Test]
+        public void BeginWave_WhenCalled_ResetsCurrentWaveCounters()
+        {
+            ScoreSystem scoreSystem = new();
+            scoreSystem.RegisterKill(10);
+
+            scoreSystem.BeginWave();
+
+            Assert.AreEqual(0f, scoreSystem.CurrentWaveBaseScore, ScoreTolerance);
+            Assert.AreEqual(0f, scoreSystem.CurrentWaveActualScore, ScoreTolerance);
+        }
+
+        [Test]
+        public void RegisterKill_WhenWaveIsActive_AddsRawCostToCurrentWaveBaseScore()
+        {
+            ScoreSystem scoreSystem = new();
+            scoreSystem.BeginWave();
+
+            scoreSystem.RegisterKill(7);
+
+            Assert.AreEqual(7f, scoreSystem.CurrentWaveBaseScore, ScoreTolerance);
+        }
+
+        [Test]
+        public void RegisterKill_WhenWaveIsActive_AddsAwardedScoreToCurrentWaveActualScore()
+        {
+            ScoreSystem scoreSystem = new();
+            scoreSystem.BeginWave();
+
+            scoreSystem.RegisterKill(7);
+
+            Assert.AreEqual(scoreSystem.CurrentScore, scoreSystem.CurrentWaveActualScore, ScoreTolerance);
+        }
+
+        [Test]
+        public void RegisterKill_WhenComboMultiplierIncreases_AffectsActualScoreButNotBaseScore()
+        {
+            ScoreSystem scoreSystem = new();
+            scoreSystem.BeginWave();
+
+            scoreSystem.RegisterKill(10);
+            scoreSystem.RegisterKill(10);
+
+            Assert.AreEqual(20f, scoreSystem.CurrentWaveBaseScore, ScoreTolerance);
+            Assert.AreEqual(21f, scoreSystem.CurrentWaveActualScore, ScoreTolerance);
+        }
+
+        [Test]
+        public void RegisterKill_WhenMultipleKillsHappen_AccumulatesCurrentWaveCounters()
+        {
+            ScoreSystem scoreSystem = new();
+            scoreSystem.BeginWave();
+
+            scoreSystem.RegisterKill(2);
+            scoreSystem.RegisterKill(5);
+            scoreSystem.RegisterKill(1);
+
+            Assert.AreEqual(8f, scoreSystem.CurrentWaveBaseScore, ScoreTolerance);
+            Assert.AreEqual(8.7f, scoreSystem.CurrentWaveActualScore, ScoreTolerance);
+        }
+
+        [Test]
+        public void RegisterKill_WhenCostIsInvalid_DoesNotChangeCurrentWaveCounters()
+        {
+            ScoreSystem scoreSystem = new();
+            scoreSystem.BeginWave();
+            scoreSystem.RegisterKill(4);
+
+            scoreSystem.RegisterKill(0);
+            scoreSystem.RegisterKill(-2);
+
+            Assert.AreEqual(4f, scoreSystem.CurrentWaveBaseScore, ScoreTolerance);
+            Assert.AreEqual(4f, scoreSystem.CurrentWaveActualScore, ScoreTolerance);
+        }
+
+        [Test]
+        public void EndWave_WhenCalled_PreservesFinalizedWaveValues()
+        {
+            ScoreSystem scoreSystem = new();
+            scoreSystem.BeginWave();
+            scoreSystem.RegisterKill(10);
+            scoreSystem.RegisterKill(10);
+
+            scoreSystem.EndWave();
+            scoreSystem.BeginWave();
+
+            Assert.AreEqual(20f, scoreSystem.FinalizedWaveBaseScore, ScoreTolerance);
+            Assert.AreEqual(21f, scoreSystem.FinalizedWaveActualScore, ScoreTolerance);
+            Assert.AreEqual(0f, scoreSystem.CurrentWaveBaseScore, ScoreTolerance);
+            Assert.AreEqual(0f, scoreSystem.CurrentWaveActualScore, ScoreTolerance);
+        }
     }
 }

@@ -32,6 +32,22 @@ namespace RPGame.Encounter
 
         public float CurrentScore { get; private set; }
         public float CurrentMultiplier { get; private set; }
+        public float CurrentWaveBaseScore { get; private set; }
+        public float CurrentWaveActualScore { get; private set; }
+        public float FinalizedWaveBaseScore { get; private set; }
+        public float FinalizedWaveActualScore { get; private set; }
+
+        public void BeginWave()
+        {
+            CurrentWaveBaseScore = 0f;
+            CurrentWaveActualScore = 0f;
+        }
+
+        public void EndWave()
+        {
+            FinalizedWaveBaseScore = CurrentWaveBaseScore;
+            FinalizedWaveActualScore = CurrentWaveActualScore;
+        }
 
         public void RegisterKill(int enemyCost)
         {
@@ -40,7 +56,10 @@ namespace RPGame.Encounter
                 return;
             }
 
-            CurrentScore += CalculateScore(enemyCost);
+            float awardedScore = CalculateScore(enemyCost);
+            CurrentScore += awardedScore;
+            CurrentWaveBaseScore += enemyCost;
+            CurrentWaveActualScore += awardedScore;
             isComboActive = true;
             comboTimeRemaining = comboWindowSeconds;
             CurrentMultiplier += multiplierPerKill;
