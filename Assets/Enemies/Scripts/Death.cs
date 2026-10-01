@@ -1,10 +1,11 @@
 using RPGame.Core.Statistics;
 using RPGame.Core.Targeting;
+using RPGame.Core.Pooling;
 using UnityEngine;
 
 namespace RPGame.Enemies
 {
-    public sealed class Death : MonoBehaviour
+    public sealed class Death : MonoBehaviour, IPooledEnemyResettable
     {
         [SerializeField] private StatisticsController deathSource;
         [SerializeField] private Movement movement;
@@ -31,6 +32,43 @@ namespace RPGame.Enemies
         private void OnDisable()
         {
             UnsubscribeDeathSource();
+        }
+
+        public void ResetForSpawn()
+        {
+            CacheRequiredComponents();
+            IsDead = false;
+
+            if (movement != null)
+            {
+                movement.enabled = true;
+            }
+
+            if (controller != null)
+            {
+                controller.enabled = true;
+            }
+
+            if (detection != null)
+            {
+                detection.enabled = true;
+            }
+
+            if (targetable != null)
+            {
+                targetable.enabled = true;
+            }
+
+            if (HasRequiredComponents())
+            {
+                SubscribeDeathSource();
+            }
+        }
+
+        public void ResetForDespawn()
+        {
+            UnsubscribeDeathSource();
+            IsDead = false;
         }
 
         private void HandleDeath()

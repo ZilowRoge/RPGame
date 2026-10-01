@@ -1,10 +1,11 @@
 using System.Collections.Generic;
 using RPGame.Core.Damage;
+using RPGame.Core.Pooling;
 using UnityEngine;
 
 namespace RPGame.Enemies
 {
-    public sealed class Attack : MonoBehaviour, IEnemyAttack
+    public sealed class Attack : MonoBehaviour, IEnemyAttack, IPooledEnemyResettable
     {
         [SerializeField] private AttackType attackType = AttackType.Melee;
         [SerializeField] private LineOfSight lineOfSight;
@@ -28,6 +29,28 @@ namespace RPGame.Enemies
 
             this.config = config;
             runtimeAttacks.Clear();
+        }
+
+        public void ResetForSpawn()
+        {
+            foreach (IEnemyAttack attack in runtimeAttacks.Values)
+            {
+                if (attack is IPooledEnemyResettable resettable)
+                {
+                    resettable.ResetForSpawn();
+                }
+            }
+        }
+
+        public void ResetForDespawn()
+        {
+            foreach (IEnemyAttack attack in runtimeAttacks.Values)
+            {
+                if (attack is IPooledEnemyResettable resettable)
+                {
+                    resettable.ResetForDespawn();
+                }
+            }
         }
 
         void IEnemyAttack.Tick(float deltaTime)

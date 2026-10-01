@@ -1,4 +1,5 @@
 using RPGame.Combat.Damage;
+using RPGame.Core.Pooling;
 using RPGame.Core.Statuses;
 using RPGame.Core.Statistics;
 using RPGame.Core.Targeting;
@@ -14,7 +15,7 @@ namespace RPGame.Enemies
     [RequireComponent(typeof(DamageReceiver))]
     [RequireComponent(typeof(Death))]
     [RequireComponent(typeof(StatusAggregator))]
-    public sealed class Controller : MonoBehaviour
+    public sealed class Controller : MonoBehaviour, IPooledEnemyResettable
     {
         [SerializeField] private Detection detection;
         [SerializeField] private Movement movement;
@@ -24,6 +25,21 @@ namespace RPGame.Enemies
         private IEnemyBehaviour behaviour;
 
         internal IEnemyBehaviour Behaviour => behaviour;
+
+        public void ResetForSpawn()
+        {
+            CacheRequiredComponents();
+            behaviour = null;
+            if (!TryCreateBehaviour(out behaviour))
+            {
+                enabled = false;
+            }
+        }
+
+        public void ResetForDespawn()
+        {
+            behaviour = null;
+        }
 
         private void Start()
         {

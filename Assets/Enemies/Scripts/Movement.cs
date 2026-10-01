@@ -1,13 +1,14 @@
 using System.Collections;
 using System;
 using RPGame.Core.Movement;
+using RPGame.Core.Pooling;
 using UnityEngine;
 using UnityEngine.AI;
 
 namespace RPGame.Enemies
 {
     [RequireComponent(typeof(NavMeshAgent))]
-    public sealed class Movement : MonoBehaviour, IEnemyMovement, IKnockbackable, IMovement
+    public sealed class Movement : MonoBehaviour, IEnemyMovement, IKnockbackable, IMovement, IPooledEnemyResettable
     {
         [SerializeField] private float moveSpeed = 3.5f;
         [SerializeField] private float destinationChangeThreshold = 0.05f;
@@ -269,6 +270,57 @@ namespace RPGame.Enemies
         }
 
         private bool IsMovementBlocked => movementBlockCount > 0;
+
+        public void ResetForSpawn()
+        {
+            ResetRuntimeState(stopAgent: false);
+        }
+
+        public void ResetForDespawn()
+        {
+            ResetRuntimeState(stopAgent: true);
+        }
+
+        private void ResetRuntimeState(bool stopAgent)
+        {
+            CacheRequiredComponents();
+
+            if (knockbackCoroutine != null)
+            {
+                StopCoroutine(knockbackCoroutine);
+                knockbackCoroutine = null;
+            }
+
+            isKnockedBack = false;
+            hasDestination = false;
+            lastDestination = default;
+            movementBlockCount = 0;
+            movementSpeedModifiers.Clear();
+            ConfigureAgent();
+            ResetAgent(stopAgent);
+        }
+
+        private void ResetAgent(bool stopAgent)
+        {
+            if (agent == null)
+            {
+                return;
+            }
+
+            if (!agent.enabled)
+            {
+                agent.enabled = true;
+            }
+
+            if (!CanUseAgent())
+            {
+                return;
+            }
+
+            agent.ResetPath();
+            agent.Warp(transform.position);
+            agent.isStopped = stopAgent;
+        }
 
         private float GetModifiedSpeed(float baseSpeed)
         {

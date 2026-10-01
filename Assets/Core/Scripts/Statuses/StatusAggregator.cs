@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using RPGame.Core.Damage;
 using RPGame.Core.Movement;
+using RPGame.Core.Pooling;
 using RPGame.Core.Statistics;
 using UnityEngine;
 using UnityEngine.Scripting.APIUpdating;
@@ -8,7 +9,7 @@ using UnityEngine.Scripting.APIUpdating;
 namespace RPGame.Core.Statuses
 {
     [MovedFrom(true, null, null, "StatusEffectAggregator")]
-    public sealed class StatusAggregator : MonoBehaviour, IStatusReceiver
+    public sealed class StatusAggregator : MonoBehaviour, IStatusReceiver, IPooledEnemyResettable
     {
         private StatusContainer statusContainer;
         private IStatisticsController statisticsController;
@@ -63,7 +64,29 @@ namespace RPGame.Core.Statuses
 
         public void ClearStatuses()
         {
+            EnsureStatusContainer();
             statusContainer.Clear();
+        }
+
+        public void ResetForSpawn()
+        {
+            ClearStatuses();
+        }
+
+        public void ResetForDespawn()
+        {
+            ClearStatuses();
+        }
+
+        private void EnsureStatusContainer()
+        {
+            if (statusContainer != null)
+            {
+                return;
+            }
+
+            CacheStatusTarget();
+            statusContainer = new StatusContainer(statusTarget);
         }
 
         private IStatisticsController GetStatisticsController()

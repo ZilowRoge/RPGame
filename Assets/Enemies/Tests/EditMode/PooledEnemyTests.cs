@@ -1,4 +1,11 @@
 using System;
+using System.Collections.Generic;
+using RPGame.Combat.Damage;
+using RPGame.Core.Damage;
+using RPGame.Core.Pooling;
+using RPGame.Core.Statistics;
+using RPGame.Core.Statuses;
+using RPGame.Core.Targeting;
 using NUnit.Framework;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -9,6 +16,7 @@ namespace RPGame.Enemies.Tests
     {
         private GameObject gameObject;
         private PooledEnemy pooledEnemy;
+        private readonly List<ScriptableObject> createdAssets = new();
 
         [SetUp]
         public void SetUp()
@@ -21,6 +29,15 @@ namespace RPGame.Enemies.Tests
         public void TearDown()
         {
             Object.DestroyImmediate(gameObject);
+            for (int i = 0; i < createdAssets.Count; i++)
+            {
+                if (createdAssets[i] != null)
+                {
+                    Object.DestroyImmediate(createdAssets[i]);
+                }
+            }
+
+            createdAssets.Clear();
         }
 
         [Test]
@@ -76,6 +93,146 @@ namespace RPGame.Enemies.Tests
             pooledEnemy.OnDespawned();
 
             Assert.IsFalse(pooledEnemy.IsSpawned);
+        }
+
+        [Test]
+        public void OnSpawnedAndOnDespawned_InvokeResettableComponents()
+        {
+            Object.DestroyImmediate(pooledEnemy);
+            TestResettable resettable = gameObject.AddComponent<TestResettable>();
+            pooledEnemy = gameObject.AddComponent<PooledEnemy>();
+
+            pooledEnemy.OnSpawned();
+            pooledEnemy.OnDespawned();
+
+            Assert.AreEqual(1, resettable.ResetForSpawnCount);
+            Assert.AreEqual(1, resettable.ResetForDespawnCount);
+        }
+
+        [Test]
+        public void OnSpawned_WhenResettableIsAddedAfterAwake_DoesNotDiscoverIt()
+        {
+            TestResettable lateResettable = gameObject.AddComponent<TestResettable>();
+
+            pooledEnemy.OnSpawned();
+
+            Assert.AreEqual(0, lateResettable.ResetForSpawnCount);
+        }
+
+        [Test]
+        public void StatisticsController_WhenPooledEnemySpawns_ReturnsVitalsToConfig()
+        {
+            StatisticsController statistics = gameObject.AddComponent<StatisticsController>();
+            SetPrivateField(statistics, "config", CreateStatisticsConfig());
+            statistics.ResetToConfig();
+            statistics.TakeDamage(40f);
+            statistics.TrySpendStamina(20f);
+            statistics.TrySpendMana(30f);
+
+            pooledEnemy.OnSpawned();
+
+            Assert.AreEqual(statistics.MaxHealth, statistics.CurrentHealth);
+            Assert.AreEqual(statistics.MaxStamina, statistics.CurrentStamina);
+            Assert.AreEqual(statistics.MaxMana, statistics.CurrentMana);
+        }
+
+        [Test]
+        public void StatusAggregator_WhenPooledEnemyRespawns_ClearsStatuses()
+        {
+            StatusAggregator statuses = gameObject.AddComponent<StatusAggregator>();
+            TestStatusDefinition status = CreateAsset<TestStatusDefinition>();
+            statuses.ApplyStatus(status, 5f, new StatusContext(new StatusSourceId("Test"), gameObject));
+
+            pooledEnemy.OnSpawned();
+
+            Assert.AreEqual(0, statuses.Statuses.Count);
+            Assert.AreEqual(1, status.CleanupCount);
+        }
+
+        [Test]
+        public void Death_WhenPooledEnemyRespawns_CanHandleDeathAgain()
+        {
+            StatisticsController statistics = gameObject.AddComponent<StatisticsController>();
+            SetPrivateField(statistics, "config", CreateStatisticsConfig());
+            statistics.ResetToConfig();
+            Movement movement = gameObject.AddComponent<Movement>();
+            Controller controller = gameObject.AddComponent<Controller>();
+            Detection detection = gameObject.AddComponent<Detection>();
+            EnemyTargetable targetable = gameObject.AddComponent<EnemyTargetable>();
+            gameObject.AddComponent<DamageReceiver>();
+            Death death = gameObject.AddComponent<Death>();
+            SetPrivateField(death, "deathSource", statistics);
+            SetPrivateField(death, "movement", movement);
+            SetPrivateField(death, "controller", controller);
+            SetPrivateField(death, "detection", detection);
+            SetPrivateField(death, "targetable", targetable);
+
+            pooledEnemy.OnSpawned();
+            statistics.TakeDamage(statistics.MaxHealth);
+            Assert.IsTrue(death.IsDead);
+            Assert.IsFalse(controller.enabled);
+
+            pooledEnemy.OnDespawned();
+            pooledEnemy.OnSpawned();
+            statistics.TakeDamage(statistics.MaxHealth);
+
+            Assert.IsTrue(death.IsDead);
+            Assert.IsFalse(controller.enabled);
+        }
+
+        private StatisticsConfig CreateStatisticsConfig()
+        {
+            StatisticsConfig config = CreateAsset<StatisticsConfig>();
+            SetPrivateField(config, "maxHealth", 100f);
+            SetPrivateField(config, "maxStamina", 50f);
+            SetPrivateField(config, "maxMana", 80f);
+            return config;
+        }
+
+        private T CreateAsset<T>() where T : ScriptableObject
+        {
+            T asset = ScriptableObject.CreateInstance<T>();
+            createdAssets.Add(asset);
+            return asset;
+        }
+
+        private static void SetPrivateField<T>(object target, string fieldName, T value)
+        {
+            System.Reflection.FieldInfo field = target.GetType().GetField(
+                fieldName,
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
+            field.SetValue(target, value);
+        }
+
+        private sealed class TestResettable : MonoBehaviour, IPooledEnemyResettable
+        {
+            public int ResetForSpawnCount { get; private set; }
+            public int ResetForDespawnCount { get; private set; }
+
+            public void ResetForSpawn()
+            {
+                ResetForSpawnCount++;
+            }
+
+            public void ResetForDespawn()
+            {
+                ResetForDespawnCount++;
+            }
+        }
+
+        private sealed class TestStatusDefinition : StatusDefinition
+        {
+            public int CleanupCount { get; private set; }
+
+            public override void OnApply(StatusTarget target, StatusInstance instance)
+            {
+                instance.RegisterCleanup(() => CleanupCount++);
+            }
+
+            public override string ToString()
+            {
+                return "Test Status";
+            }
         }
     }
 }

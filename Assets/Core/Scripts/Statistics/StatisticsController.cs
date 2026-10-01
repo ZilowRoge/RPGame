@@ -1,10 +1,11 @@
 using System;
+using RPGame.Core.Pooling;
 using RPGame.Core.Statistics.Attributes;
 using UnityEngine;
 
 namespace RPGame.Core.Statistics
 {
-    public sealed class StatisticsController : MonoBehaviour, IStatisticsController
+    public sealed class StatisticsController : MonoBehaviour, IStatisticsController, IPooledEnemyResettable
     {
         private const float AttributeVitalBonus = 5f;
 
@@ -87,9 +88,20 @@ namespace RPGame.Core.Statistics
 
         public void ResetToConfig()
         {
+            staminaRegenerationDelayTimer = 0f;
+            manaRegenerationDelayTimer = 0f;
             SetHealth(MaxHealth);
             SetStamina(MaxStamina);
             SetMana(MaxMana);
+        }
+
+        public void ResetForSpawn()
+        {
+            ResetToConfig();
+        }
+
+        public void ResetForDespawn()
+        {
         }
 
         public void TakeDamage(float amount)
