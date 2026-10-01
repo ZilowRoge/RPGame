@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
+using RPGame.Enemies;
 using UnityEngine;
 using UnityEngine.TestTools;
 using Object = UnityEngine.Object;
@@ -96,6 +97,7 @@ namespace RPGame.Encounter.Tests
             manager.StartSpawning(Wave(enemy, 10));
 
             Assert.AreEqual(1, CountSpawned(enemy));
+            Assert.IsTrue(FindSpawned(enemy)[0].IsSpawned);
             yield return null;
         }
 
@@ -181,6 +183,21 @@ namespace RPGame.Encounter.Tests
         }
 
         [UnityTest]
+        public IEnumerator CancelSpawning_WhenEnemyAlreadySpawned_DoesNotReleaseIt()
+        {
+            SpawnManager manager = CreateSpawnManager(0.1f, CreateSpawnPoint("A", Vector3.zero));
+            EnemyDefinition enemy = Enemy("CancelledLiveEnemy");
+            manager.StartSpawning(Wave(new[] { enemy, enemy }, 10));
+
+            PooledEnemy spawned = FindSpawned(enemy)[0];
+            manager.CancelSpawning();
+            yield return new WaitForSeconds(0.15f);
+
+            Assert.IsTrue(spawned.gameObject.activeSelf);
+            Assert.IsTrue(spawned.IsSpawned);
+        }
+
+        [UnityTest]
         public IEnumerator CancelSpawning_WhenCalled_DoesNotReportNormalCompletion()
         {
             SpawnManager manager = CreateSpawnManager(0.1f, CreateSpawnPoint("A", Vector3.zero));
@@ -213,7 +230,14 @@ namespace RPGame.Encounter.Tests
             SpawnManager manager = managerObject.AddComponent<SpawnManager>();
             SetPrivateField(manager, "spawnDelay", delay);
             SetPrivateField(manager, "spawnPoints", new List<SpawnPoint>(points));
+            SetPrivateField(manager, "enemyPool", CreateEnemyPool());
             return manager;
+        }
+
+        private EnemyPool CreateEnemyPool()
+        {
+            GameObject poolObject = CreateObject("EnemyPool");
+            return poolObject.AddComponent<EnemyPool>();
         }
 
         private SpawnPoint CreateSpawnPoint(string name, Vector3 position)
@@ -226,6 +250,7 @@ namespace RPGame.Encounter.Tests
         private EnemyDefinition Enemy(string name)
         {
             GameObject prefab = CreateObject(name);
+            prefab.AddComponent<PooledEnemy>();
             EnemyDefinition definition = ScriptableObject.CreateInstance<EnemyDefinition>();
             createdAssets.Add(definition);
             SetPrivateField(definition, "prefab", prefab);
@@ -251,11 +276,23 @@ namespace RPGame.Encounter.Tests
 
         private int CountSpawnedAt(EnemyDefinition enemy, Vector3? position)
         {
-            int count = 0;
-            Transform[] transforms = Object.FindObjectsByType<Transform>(FindObjectsInactive.Exclude);
-            for (int i = 0; i < transforms.Length; i++)
+            return FindSpawnedAt(enemy, position).Count;
+        }
+
+        private List<PooledEnemy> FindSpawned(EnemyDefinition enemy)
+        {
+            return FindSpawnedAt(enemy, null);
+        }
+
+        private List<PooledEnemy> FindSpawnedAt(EnemyDefinition enemy, Vector3? position)
+        {
+            List<PooledEnemy> spawned = new();
+            PooledEnemy[] enemies = Object.FindObjectsByType<PooledEnemy>(
+                FindObjectsInactive.Exclude,
+                FindObjectsSortMode.InstanceID);
+            for (int i = 0; i < enemies.Length; i++)
             {
-                GameObject gameObject = transforms[i].gameObject;
+                GameObject gameObject = enemies[i].gameObject;
                 if (!gameObject.name.StartsWith($"{enemy.Prefab.name}(Clone)", StringComparison.Ordinal))
                 {
                     continue;
@@ -263,12 +300,12 @@ namespace RPGame.Encounter.Tests
 
                 if (!position.HasValue || gameObject.transform.position == position.Value)
                 {
-                    count++;
                     TrackIfMissing(gameObject);
+                    spawned.Add(enemies[i]);
                 }
             }
 
-            return count;
+            return spawned;
         }
 
         private int FindSeedUsingBothPoints(IReadOnlyList<EnemyDefinition> enemies, IReadOnlyList<SpawnPoint> points)

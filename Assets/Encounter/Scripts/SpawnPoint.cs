@@ -15,6 +15,7 @@ namespace RPGame.Encounter
         internal void StartSpawnQueue(
             IReadOnlyList<EnemyDefinition> enemies,
             float spawnDelay,
+            EnemyPool enemyPool,
             SpawnManager manager,
             int operationId)
         {
@@ -22,7 +23,7 @@ namespace RPGame.Encounter
 
             activeManager = manager;
             activeOperationId = operationId;
-            spawnCoroutine = StartCoroutine(SpawnQueue(enemies, spawnDelay));
+            spawnCoroutine = StartCoroutine(SpawnQueue(enemies, spawnDelay, enemyPool));
         }
 
         internal void CancelSpawning()
@@ -37,11 +38,11 @@ namespace RPGame.Encounter
             activeOperationId = 0;
         }
 
-        private IEnumerator SpawnQueue(IReadOnlyList<EnemyDefinition> enemies, float spawnDelay)
+        private IEnumerator SpawnQueue(IReadOnlyList<EnemyDefinition> enemies, float spawnDelay, EnemyPool enemyPool)
         {
             for (int i = 0; i < enemies.Count; i++)
             {
-                Spawn(enemies[i]);
+                Spawn(enemies[i], enemyPool);
 
                 if (i < enemies.Count - 1 && spawnDelay > 0f)
                 {
@@ -57,14 +58,14 @@ namespace RPGame.Encounter
             manager?.NotifySpawnPointFinished(this, operationId);
         }
 
-        private void Spawn(EnemyDefinition enemyDefinition)
+        private void Spawn(EnemyDefinition enemyDefinition, EnemyPool enemyPool)
         {
-            if (enemyDefinition == null || enemyDefinition.Prefab == null)
+            if (enemyDefinition == null || enemyPool == null)
             {
                 return;
             }
 
-            Instantiate(enemyDefinition.Prefab, transform.position, transform.rotation);
+            enemyPool.Acquire(enemyDefinition, transform.position, transform.rotation);
         }
     }
 }

@@ -2,7 +2,8 @@
     "name": "RPGame.Encounter.Tests",
     "rootNamespace": "RPGame.Encounter.Tests",
     "references": [
-        "RPGame.Encounter"
+        "RPGame.Encounter",
+        "RPGame.Enemies"
     ],
     "includePlatforms": [
         "Editor"

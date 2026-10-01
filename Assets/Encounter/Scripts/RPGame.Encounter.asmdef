@@ -1,7 +1,9 @@
 {
     "name": "RPGame.Encounter",
     "rootNamespace": "RPGame.Encounter",
-    "references": [],
+    "references": [
+        "RPGame.Enemies"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

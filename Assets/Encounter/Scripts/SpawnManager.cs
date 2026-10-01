@@ -7,6 +7,7 @@ namespace RPGame.Encounter
     public sealed class SpawnManager : MonoBehaviour
     {
         [SerializeField] private List<SpawnPoint> spawnPoints = new();
+        [SerializeField] private EnemyPool enemyPool;
         [SerializeField] private float spawnDelay;
 
         private readonly HashSet<SpawnPoint> activeSpawnPoints = new();
@@ -41,6 +42,11 @@ namespace RPGame.Encounter
                 throw new InvalidOperationException("Cannot spawn a non-empty wave without valid spawn points.");
             }
 
+            if (enemyPool == null)
+            {
+                throw new InvalidOperationException("Cannot spawn a non-empty wave without an enemy pool.");
+            }
+
             Dictionary<SpawnPoint, List<EnemyDefinition>> assignments = AssignEnemiesToSpawnPoints(
                 validEnemies,
                 validSpawnPoints,
@@ -71,6 +77,7 @@ namespace RPGame.Encounter
                 assignment.Key.StartSpawnQueue(
                     assignment.Value,
                     Mathf.Max(0f, spawnDelay),
+                    enemyPool,
                     this,
                     activeOperationId);
             }
