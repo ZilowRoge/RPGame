@@ -4,6 +4,7 @@ using System.Reflection;
 using NUnit.Framework;
 using RPGame.Enemies;
 using UnityEngine;
+using UnityEngine.TestTools;
 using Object = UnityEngine.Object;
 
 namespace RPGame.Encounter.Tests
@@ -17,6 +18,8 @@ namespace RPGame.Encounter.Tests
         [TearDown]
         public void TearDown()
         {
+            LogAssert.ignoreFailingMessages = false;
+
             for (int i = 0; i < createdObjects.Count; i++)
             {
                 if (createdObjects[i] != null)
@@ -206,6 +209,87 @@ namespace RPGame.Encounter.Tests
             StringAssert.Contains("prefab root", exception.Message);
         }
 
+        [Test]
+        public void Death_InvokesCallbackOnceWithDefinitionAndReturnsEnemyToPool()
+        {
+            LogAssert.ignoreFailingMessages = true;
+            EnemyPool pool = CreatePool();
+            EnemyDefinition definition = EnemyWithDeath("DeathEnemy");
+            int callbackCount = 0;
+            EnemyDefinition callbackDefinition = null;
+            PooledEnemy acquired = pool.Acquire(
+                definition,
+                Vector3.zero,
+                Quaternion.identity,
+                diedDefinition =>
+                {
+                    callbackCount++;
+                    callbackDefinition = diedDefinition;
+                });
+
+            RaiseDeath(acquired);
+            RaiseDeath(acquired);
+
+            Assert.AreEqual(1, callbackCount);
+            Assert.AreSame(definition, callbackDefinition);
+            Assert.IsFalse(acquired.IsSpawned);
+            Assert.IsFalse(acquired.gameObject.activeSelf);
+            Assert.AreSame(acquired, pool.Acquire(definition, Vector3.right, Quaternion.identity));
+        }
+
+        [Test]
+        public void Death_WhenEnemyIsReused_CanReleaseAgain()
+        {
+            LogAssert.ignoreFailingMessages = true;
+            EnemyPool pool = CreatePool();
+            EnemyDefinition definition = EnemyWithDeath("ReusableDeathEnemy");
+            int callbackCount = 0;
+
+            PooledEnemy first = pool.Acquire(definition, Vector3.zero, Quaternion.identity, _ => callbackCount++);
+            RaiseDeath(first);
+            PooledEnemy second = pool.Acquire(definition, Vector3.right, Quaternion.identity, _ => callbackCount++);
+            RaiseDeath(second);
+
+            Assert.AreSame(first, second);
+            Assert.AreEqual(2, callbackCount);
+            Assert.IsFalse(second.IsSpawned);
+            Assert.IsFalse(second.gameObject.activeSelf);
+        }
+
+        [Test]
+        public void Release_RemovesOldDeathCallback()
+        {
+            LogAssert.ignoreFailingMessages = true;
+            EnemyPool pool = CreatePool();
+            EnemyDefinition definition = EnemyWithDeath("ManualReleaseDeathEnemy");
+            int oldCallbackCount = 0;
+            int newCallbackCount = 0;
+            PooledEnemy acquired = pool.Acquire(definition, Vector3.zero, Quaternion.identity, _ => oldCallbackCount++);
+
+            pool.Release(acquired);
+            RaiseDeath(acquired);
+            PooledEnemy reused = pool.Acquire(definition, Vector3.right, Quaternion.identity, _ => newCallbackCount++);
+            RaiseDeath(reused);
+
+            Assert.AreEqual(0, oldCallbackCount);
+            Assert.AreEqual(1, newCallbackCount);
+        }
+
+        [Test]
+        public void Death_DoesNotProduceDuplicateNotifications()
+        {
+            LogAssert.ignoreFailingMessages = true;
+            EnemyPool pool = CreatePool();
+            EnemyDefinition definition = EnemyWithDeath("DuplicateDeathEnemy");
+            int callbackCount = 0;
+            PooledEnemy acquired = pool.Acquire(definition, Vector3.zero, Quaternion.identity, _ => callbackCount++);
+
+            RaiseDeath(acquired);
+            RaiseDeath(acquired);
+
+            Assert.AreEqual(1, callbackCount);
+        }
+
         private EnemyPool CreatePool()
         {
             GameObject poolObject = CreateObject("EnemyPool");
@@ -235,6 +319,25 @@ namespace RPGame.Encounter.Tests
             child.transform.SetParent(prefab.transform);
             child.AddComponent<PooledEnemy>();
             return CreateDefinition(prefab, 0);
+        }
+
+        private EnemyDefinition EnemyWithDeath(string name)
+        {
+            GameObject prefab = CreateObject(name);
+            prefabObjects.Add(prefab);
+            prefab.AddComponent<PooledEnemy>();
+            prefab.AddComponent<Death>();
+            return CreateDefinition(prefab, 0);
+        }
+
+        private static void RaiseDeath(PooledEnemy pooledEnemy)
+        {
+            Death death = pooledEnemy.GetComponent<Death>();
+            FieldInfo field = typeof(Death).GetField(
+                "OnDeathCleanupEnd",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            Action callback = (Action)field.GetValue(death);
+            callback?.Invoke();
         }
 
         private EnemyDefinition CreateDefinition(GameObject prefab, int prewarmCount)

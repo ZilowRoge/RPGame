@@ -9,6 +9,8 @@ namespace RPGame.Encounter
     {
         private readonly Dictionary<EnemyDefinition, Queue<PooledEnemy>> availableByDefinition = new();
         private readonly Dictionary<PooledEnemy, EnemyDefinition> definitionByInstance = new();
+        private readonly Dictionary<PooledEnemy, Death> deathByInstance = new();
+        private readonly Dictionary<PooledEnemy, Action> deathHandlerByInstance = new();
         private readonly HashSet<PooledEnemy> activeInstances = new();
 
         public void Prewarm(IEnumerable<EnemyDefinition> enemyDefinitions)
@@ -36,7 +38,11 @@ namespace RPGame.Encounter
             }
         }
 
-        public PooledEnemy Acquire(EnemyDefinition definition, Vector3 position, Quaternion rotation)
+        public PooledEnemy Acquire(
+            EnemyDefinition definition,
+            Vector3 position,
+            Quaternion rotation,
+            Action<EnemyDefinition> onEnemyDied = null)
         {
             ValidateDefinition(definition);
 
@@ -45,10 +51,12 @@ namespace RPGame.Encounter
                 ? available.Dequeue()
                 : CreateInstance(definition);
 
+            UnbindDeath(instance);
             instance.transform.SetPositionAndRotation(position, rotation);
             instance.gameObject.SetActive(true);
             instance.OnSpawned();
             activeInstances.Add(instance);
+            BindDeath(instance, definition, onEnemyDied);
             return instance;
         }
 
@@ -69,6 +77,7 @@ namespace RPGame.Encounter
                 throw new InvalidOperationException("Cannot release an enemy that is not currently acquired.");
             }
 
+            UnbindDeath(instance);
             instance.OnDespawned();
             instance.gameObject.SetActive(false);
             GetOrCreateAvailableQueue(definition).Enqueue(instance);
@@ -79,7 +88,56 @@ namespace RPGame.Encounter
             GameObject instanceObject = Instantiate(definition.Prefab, transform);
             PooledEnemy instance = instanceObject.GetComponent<PooledEnemy>();
             definitionByInstance.Add(instance, definition);
+            Death death = instanceObject.GetComponent<Death>();
+            if (death != null)
+            {
+                deathByInstance.Add(instance, death);
+            }
+
             return instance;
+        }
+
+        private void BindDeath(PooledEnemy instance, EnemyDefinition definition, Action<EnemyDefinition> onEnemyDied)
+        {
+            if (!deathByInstance.TryGetValue(instance, out Death death))
+            {
+                return;
+            }
+
+            Action handler = () =>
+            {
+                if (!activeInstances.Contains(instance))
+                {
+                    return;
+                }
+
+                try
+                {
+                    onEnemyDied?.Invoke(definition);
+                }
+                finally
+                {
+                    Release(instance);
+                }
+            };
+
+            death.OnDeathCleanupEnd += handler;
+            deathHandlerByInstance[instance] = handler;
+        }
+
+        private void UnbindDeath(PooledEnemy instance)
+        {
+            if (!deathHandlerByInstance.TryGetValue(instance, out Action handler))
+            {
+                return;
+            }
+
+            if (deathByInstance.TryGetValue(instance, out Death death))
+            {
+                death.OnDeathCleanupEnd -= handler;
+            }
+
+            deathHandlerByInstance.Remove(instance);
         }
 
         private Queue<PooledEnemy> GetOrCreateAvailableQueue(EnemyDefinition definition)

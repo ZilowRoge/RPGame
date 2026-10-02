@@ -19,6 +19,8 @@ namespace RPGame.Encounter.Tests
         [TearDown]
         public void TearDown()
         {
+            LogAssert.ignoreFailingMessages = false;
+
             for (int i = 0; i < createdObjects.Count; i++)
             {
                 if (createdObjects[i] != null)
@@ -198,6 +200,29 @@ namespace RPGame.Encounter.Tests
         }
 
         [UnityTest]
+        public IEnumerator StartSpawning_WhenSpawnedEnemyDies_InvokesDeathCallback()
+        {
+            LogAssert.ignoreFailingMessages = true;
+            SpawnManager manager = CreateSpawnManager(10f, CreateSpawnPoint("A", Vector3.zero));
+            EnemyDefinition enemy = EnemyWithDeath("SpawnDeathEnemy");
+            int callbackCount = 0;
+            EnemyDefinition callbackDefinition = null;
+            manager.StartSpawning(
+                Wave(enemy, 10),
+                diedDefinition =>
+                {
+                    callbackCount++;
+                    callbackDefinition = diedDefinition;
+                });
+
+            RaiseDeath(FindSpawned(enemy)[0]);
+            yield return null;
+
+            Assert.AreEqual(1, callbackCount);
+            Assert.AreSame(enemy, callbackDefinition);
+        }
+
+        [UnityTest]
         public IEnumerator CancelSpawning_WhenCalled_DoesNotReportNormalCompletion()
         {
             SpawnManager manager = CreateSpawnManager(0.1f, CreateSpawnPoint("A", Vector3.zero));
@@ -256,6 +281,13 @@ namespace RPGame.Encounter.Tests
             SetPrivateField(definition, "prefab", prefab);
             SetPrivateField(definition, "cost", 1);
             SetPrivateField(definition, "unlockWave", 1);
+            return definition;
+        }
+
+        private EnemyDefinition EnemyWithDeath(string name)
+        {
+            EnemyDefinition definition = Enemy(name);
+            definition.Prefab.AddComponent<Death>();
             return definition;
         }
 
@@ -343,6 +375,16 @@ namespace RPGame.Encounter.Tests
         {
             FieldInfo field = target.GetType().GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
             field.SetValue(target, value);
+        }
+
+        private static void RaiseDeath(PooledEnemy pooledEnemy)
+        {
+            Death death = pooledEnemy.GetComponent<Death>();
+            FieldInfo field = typeof(Death).GetField(
+                "OnDeathCleanupEnd",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            Action callback = (Action)field.GetValue(death);
+            callback?.Invoke();
         }
     }
 }

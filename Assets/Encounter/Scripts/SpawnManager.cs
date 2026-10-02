@@ -17,7 +17,7 @@ namespace RPGame.Encounter
         public bool AllEnemiesSpawned { get; private set; } = true;
         public bool IsSpawning => isSpawning;
 
-        public void StartSpawning(WaveData waveData)
+        public void StartSpawning(WaveData waveData, Action<EnemyDefinition> onEnemyDied = null)
         {
             if (waveData == null)
             {
@@ -78,6 +78,7 @@ namespace RPGame.Encounter
                     assignment.Value,
                     Mathf.Max(0f, spawnDelay),
                     enemyPool,
+                    onEnemyDied,
                     this,
                     activeOperationId);
             }

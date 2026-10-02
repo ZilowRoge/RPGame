@@ -1,4 +1,5 @@
 using System.Collections;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -16,6 +17,7 @@ namespace RPGame.Encounter
             IReadOnlyList<EnemyDefinition> enemies,
             float spawnDelay,
             EnemyPool enemyPool,
+            Action<EnemyDefinition> onEnemyDied,
             SpawnManager manager,
             int operationId)
         {
@@ -23,7 +25,7 @@ namespace RPGame.Encounter
 
             activeManager = manager;
             activeOperationId = operationId;
-            spawnCoroutine = StartCoroutine(SpawnQueue(enemies, spawnDelay, enemyPool));
+            spawnCoroutine = StartCoroutine(SpawnQueue(enemies, spawnDelay, enemyPool, onEnemyDied));
         }
 
         internal void CancelSpawning()
@@ -38,11 +40,15 @@ namespace RPGame.Encounter
             activeOperationId = 0;
         }
 
-        private IEnumerator SpawnQueue(IReadOnlyList<EnemyDefinition> enemies, float spawnDelay, EnemyPool enemyPool)
+        private IEnumerator SpawnQueue(
+            IReadOnlyList<EnemyDefinition> enemies,
+            float spawnDelay,
+            EnemyPool enemyPool,
+            Action<EnemyDefinition> onEnemyDied)
         {
             for (int i = 0; i < enemies.Count; i++)
             {
-                Spawn(enemies[i], enemyPool);
+                Spawn(enemies[i], enemyPool, onEnemyDied);
 
                 if (i < enemies.Count - 1 && spawnDelay > 0f)
                 {
@@ -58,14 +64,14 @@ namespace RPGame.Encounter
             manager?.NotifySpawnPointFinished(this, operationId);
         }
 
-        private void Spawn(EnemyDefinition enemyDefinition, EnemyPool enemyPool)
+        private void Spawn(EnemyDefinition enemyDefinition, EnemyPool enemyPool, Action<EnemyDefinition> onEnemyDied)
         {
             if (enemyDefinition == null || enemyPool == null)
             {
                 return;
             }
 
-            enemyPool.Acquire(enemyDefinition, transform.position, transform.rotation);
+            enemyPool.Acquire(enemyDefinition, transform.position, transform.rotation, onEnemyDied);
         }
     }
 }

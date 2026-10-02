@@ -122,6 +122,24 @@ namespace RPGame.Enemies.Tests
         }
 
         [Test]
+        public void DeathEvent_FiresLifecycleCallbackOnceAfterDeathCleanup()
+        {
+            int callbackCount = 0;
+            bool controllerDisabledWhenCallbackFired = false;
+            death.OnDeathCleanupEnd += () =>
+            {
+                callbackCount++;
+                controllerDisabledWhenCallbackFired = !controller.enabled;
+            };
+
+            KillEnemy();
+            InvokeHandleDeathDirectly();
+
+            Assert.AreEqual(1, callbackCount);
+            Assert.IsTrue(controllerDisabledWhenCallbackFired);
+        }
+
+        [Test]
         public void DeathEvent_DisablesDetectionAndClearsCurrentTarget()
         {
             CreateDamageablePlayerTarget("PlayerTarget", new Vector3(1f, 0f, 0f));

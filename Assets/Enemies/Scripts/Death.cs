@@ -1,3 +1,4 @@
+using System;
 using RPGame.Core.Statistics;
 using RPGame.Core.Targeting;
 using RPGame.Core.Pooling;
@@ -16,6 +17,7 @@ namespace RPGame.Enemies
         private StatisticsController subscribedDeathSource;
 
         internal bool IsDead { get; private set; }
+        public event Action OnDeathCleanupEnd;
 
         private void Start()
         {
@@ -84,6 +86,7 @@ namespace RPGame.Enemies
             detection.enabled = false;
             detection.ClearCurrentTarget();
             targetable.enabled = false;
+            OnDeathCleanupEnd?.Invoke();
         }
 
         private void SubscribeDeathSource()
