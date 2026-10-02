@@ -3,19 +3,23 @@ using UnityEngine;
 
 namespace RPGame.Encounter
 {
-    public sealed class EncounterWaveController : MonoBehaviour
+    public class EncounterWaveController : MonoBehaviour
     {
         [SerializeField] private SpawnManager spawnManager;
 
         private WaveData activeWave;
         private Action<WaveData> activeCompleted;
+        private Action<EnemyDefinition> activeEnemyDied;
         private bool spawningFinished;
         private int activeWaveId;
 
         public bool IsWaveActive { get; private set; }
         public int RemainingEnemies { get; private set; }
 
-        public void StartWave(WaveData waveData, Action<WaveData> onCompleted)
+        public virtual void StartWave(
+            WaveData waveData,
+            Action<WaveData> onCompleted,
+            Action<EnemyDefinition> onEnemyDied = null)
         {
             if (waveData == null)
             {
@@ -38,13 +42,14 @@ namespace RPGame.Encounter
 
             activeWave = waveData;
             activeCompleted = onCompleted;
+            activeEnemyDied = onEnemyDied;
             RemainingEnemies = 0;
             spawningFinished = false;
             IsWaveActive = true;
 
             int scheduledEnemyCount = spawnManager.StartSpawning(
                 waveData,
-                _ => HandleEnemyDied(waveId),
+                enemyDefinition => HandleEnemyDied(waveId, enemyDefinition),
                 () =>
                 {
                     if (isStarting)
@@ -65,7 +70,7 @@ namespace RPGame.Encounter
             }
         }
 
-        public void CancelWave()
+        public virtual void CancelWave()
         {
             if (!IsWaveActive)
             {
@@ -77,13 +82,14 @@ namespace RPGame.Encounter
             ClearState();
         }
 
-        private void HandleEnemyDied(int waveId)
+        private void HandleEnemyDied(int waveId, EnemyDefinition enemyDefinition)
         {
             if (!IsWaveActive || waveId != activeWaveId)
             {
                 return;
             }
 
+            activeEnemyDied?.Invoke(enemyDefinition);
             RemainingEnemies = Math.Max(0, RemainingEnemies - 1);
             TryCompleteWave();
         }
@@ -117,6 +123,7 @@ namespace RPGame.Encounter
         {
             activeWave = null;
             activeCompleted = null;
+            activeEnemyDied = null;
             RemainingEnemies = 0;
             spawningFinished = false;
             IsWaveActive = false;
