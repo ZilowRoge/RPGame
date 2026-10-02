@@ -140,23 +140,34 @@ namespace RPGame.Encounter.Tests
         {
             SpawnManager manager = CreateSpawnManager(0.1f, CreateSpawnPoint("A", Vector3.zero));
             EnemyDefinition enemy = Enemy("CompletionEnemy");
+            int completedCount = 0;
 
-            manager.StartSpawning(Wave(new[] { enemy, enemy }, 10));
+            int scheduledCount = manager.StartSpawning(
+                Wave(new[] { enemy, enemy }, 10),
+                onSpawningCompleted: () => completedCount++);
 
+            Assert.AreEqual(2, scheduledCount);
             Assert.IsFalse(manager.AllEnemiesSpawned);
+            Assert.AreEqual(0, completedCount);
             yield return new WaitForSeconds(0.15f);
             Assert.IsTrue(manager.AllEnemiesSpawned);
+            Assert.AreEqual(1, completedCount);
         }
 
         [Test]
         public void StartSpawning_WhenWaveHasNoValidEnemies_CompletesImmediately()
         {
             SpawnManager manager = CreateSpawnManager(0.1f, CreateSpawnPoint("A", Vector3.zero));
+            int completedCount = 0;
 
-            manager.StartSpawning(new WaveData(1, 1f, 1, Array.Empty<EnemyDefinition>(), 10));
+            int scheduledCount = manager.StartSpawning(
+                new WaveData(1, 1f, 1, Array.Empty<EnemyDefinition>(), 10),
+                onSpawningCompleted: () => completedCount++);
 
+            Assert.AreEqual(0, scheduledCount);
             Assert.IsTrue(manager.AllEnemiesSpawned);
             Assert.IsFalse(manager.IsSpawning);
+            Assert.AreEqual(1, completedCount);
         }
 
         [Test]
@@ -227,13 +238,17 @@ namespace RPGame.Encounter.Tests
         {
             SpawnManager manager = CreateSpawnManager(0.1f, CreateSpawnPoint("A", Vector3.zero));
             EnemyDefinition enemy = Enemy("CancelledCompletionEnemy");
-            manager.StartSpawning(Wave(new[] { enemy, enemy }, 10));
+            int completedCount = 0;
+            manager.StartSpawning(
+                Wave(new[] { enemy, enemy }, 10),
+                onSpawningCompleted: () => completedCount++);
 
             manager.CancelSpawning();
             yield return new WaitForSeconds(0.15f);
 
             Assert.IsFalse(manager.AllEnemiesSpawned);
             Assert.IsFalse(manager.IsSpawning);
+            Assert.AreEqual(0, completedCount);
         }
 
         [Test]

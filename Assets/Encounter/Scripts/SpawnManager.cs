@@ -11,13 +11,17 @@ namespace RPGame.Encounter
         [SerializeField] private float spawnDelay;
 
         private readonly HashSet<SpawnPoint> activeSpawnPoints = new();
+        private Action activeSpawningCompleted;
         private int activeOperationId;
         private bool isSpawning;
 
         public bool AllEnemiesSpawned { get; private set; } = true;
         public bool IsSpawning => isSpawning;
 
-        public void StartSpawning(WaveData waveData, Action<EnemyDefinition> onEnemyDied = null)
+        public int StartSpawning(
+            WaveData waveData,
+            Action<EnemyDefinition> onEnemyDied = null,
+            Action onSpawningCompleted = null)
         {
             if (waveData == null)
             {
@@ -33,7 +37,8 @@ namespace RPGame.Encounter
             if (validEnemies.Count == 0)
             {
                 AllEnemiesSpawned = true;
-                return;
+                onSpawningCompleted?.Invoke();
+                return 0;
             }
 
             List<SpawnPoint> validSpawnPoints = GetValidSpawnPoints();
@@ -64,6 +69,7 @@ namespace RPGame.Encounter
             activeOperationId++;
             isSpawning = true;
             AllEnemiesSpawned = false;
+            activeSpawningCompleted = onSpawningCompleted;
             activeSpawnPoints.Clear();
 
             for (int i = 0; i < usedAssignments.Count; i++)
@@ -87,12 +93,15 @@ namespace RPGame.Encounter
             {
                 FinishSpawning();
             }
+
+            return validEnemies.Count;
         }
 
         public void CancelSpawning()
         {
             if (!isSpawning)
             {
+                activeSpawningCompleted = null;
                 return;
             }
 
@@ -104,6 +113,7 @@ namespace RPGame.Encounter
 
             activeSpawnPoints.Clear();
             isSpawning = false;
+            activeSpawningCompleted = null;
             activeOperationId++;
         }
 
@@ -147,6 +157,9 @@ namespace RPGame.Encounter
             activeSpawnPoints.Clear();
             isSpawning = false;
             AllEnemiesSpawned = true;
+            Action completed = activeSpawningCompleted;
+            activeSpawningCompleted = null;
+            completed?.Invoke();
         }
 
         private List<EnemyDefinition> GetValidEnemies(IReadOnlyList<EnemyDefinition> enemies)
