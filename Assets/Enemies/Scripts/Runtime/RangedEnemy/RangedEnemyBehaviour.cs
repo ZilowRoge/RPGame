@@ -15,6 +15,7 @@ namespace RPGame.Enemies
         private readonly IEnemyLineOfSight lineOfSight;
         private readonly IEnemyAttack straightAttack;
         private readonly IEnemyAttack parabolicAttack;
+        private readonly EnemySearchTarget searchTarget = new();
         private float repositionSearchCooldown;
         private float attackDelay;
 
@@ -42,12 +43,22 @@ namespace RPGame.Enemies
             straightAttack?.Tick(deltaTime);
             parabolicAttack?.Tick(deltaTime);
 
-            if (!detection.TryGetTarget(out SelectedTarget target) || !target.IsValid)
+            if (!detection.TryGetTarget(out SelectedTarget target))
             {
                 State = RangedBehaviourState.Idle;
+                searchTarget.MoveTowardsPlayerArea(movement);
+                return;
+            }
+
+            if (!target.IsValid)
+            {
+                State = RangedBehaviourState.Idle;
+                searchTarget.Reset();
                 movement.Stop();
                 return;
             }
+
+            searchTarget.Reset();
 
             repositionSearchCooldown = Mathf.Max(0f, repositionSearchCooldown - deltaTime);
             attackDelay -= deltaTime;
