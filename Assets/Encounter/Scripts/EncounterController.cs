@@ -18,6 +18,7 @@ namespace RPGame.Encounter
         private readonly WaveGenerator waveGenerator;
         private readonly ScoreSystem scoreSystem;
         private readonly float intermissionDuration;
+        private readonly Action endCleanup;
 
         private int runVersion;
         private WaveData activeWave;
@@ -27,11 +28,13 @@ namespace RPGame.Encounter
             EncounterWaveController waveController,
             WaveGenerator waveGenerator,
             ScoreSystem scoreSystem,
-            float intermissionDuration = DefaultIntermissionDuration)
+            float intermissionDuration = DefaultIntermissionDuration,
+            Action endCleanup = null)
         {
             this.waveController = waveController ?? throw new ArgumentNullException(nameof(waveController));
             this.waveGenerator = waveGenerator ?? throw new ArgumentNullException(nameof(waveGenerator));
             this.scoreSystem = scoreSystem ?? throw new ArgumentNullException(nameof(scoreSystem));
+            this.endCleanup = endCleanup;
 
             if (float.IsNaN(intermissionDuration) || float.IsInfinity(intermissionDuration)
                 || intermissionDuration < 0f)
@@ -146,6 +149,7 @@ namespace RPGame.Encounter
             PendingWave = null;
             IntermissionTimeRemaining = 0f;
             State = EncounterState.Ended;
+            endCleanup?.Invoke();
         }
 
         private void HandleEnemyDied(int callbackRunVersion, WaveData callbackWave, EnemyDefinition enemyDefinition)

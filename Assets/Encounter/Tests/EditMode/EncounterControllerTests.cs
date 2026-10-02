@@ -205,6 +205,37 @@ namespace RPGame.Encounter.Tests.EditMode
             Assert.That(scoreSystem.CurrentScore, Is.Zero);
         }
 
+        [Test]
+        public void EndEncounter_InvokesCleanupOnlyOnce()
+        {
+            int cleanupCount = 0;
+            EncounterController controller = new(
+                waveController,
+                waveGenerator,
+                scoreSystem,
+                IntermissionDuration,
+                () => cleanupCount++);
+            controller.StartEncounter(1234);
+
+            controller.EndEncounter();
+            controller.EndEncounter();
+
+            Assert.That(cleanupCount, Is.EqualTo(1));
+        }
+
+        [Test]
+        public void EndEncounter_IgnoresStaleEnemyDeathsAfterCleanup()
+        {
+            encounterController.StartEncounter(1234);
+            encounterController.StartPendingWaveNow();
+            encounterController.EndEncounter();
+
+            waveController.ReportEnemyDeath(enemyDefinition);
+
+            Assert.That(scoreSystem.CurrentScore, Is.Zero);
+            Assert.That(encounterController.State, Is.EqualTo(EncounterState.Ended));
+        }
+
         private void ConfigureDefinitions()
         {
             SerializedObject enemyDefinitionObject = new(enemyDefinition);

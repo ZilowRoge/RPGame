@@ -83,6 +83,15 @@ namespace RPGame.Encounter
             GetOrCreateAvailableQueue(definition).Enqueue(instance);
         }
 
+        public void ReleaseAllActive()
+        {
+            List<PooledEnemy> instancesToRelease = new(activeInstances);
+            for (int i = 0; i < instancesToRelease.Count; i++)
+            {
+                Release(instancesToRelease[i]);
+            }
+        }
+
         private PooledEnemy CreateInstance(EnemyDefinition definition)
         {
             GameObject instanceObject = Instantiate(definition.Prefab, transform);

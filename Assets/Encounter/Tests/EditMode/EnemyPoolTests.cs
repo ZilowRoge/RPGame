@@ -148,6 +148,35 @@ namespace RPGame.Encounter.Tests
         }
 
         [Test]
+        public void ReleaseAllActive_ReleasesAndReusesAllActiveInstances()
+        {
+            EnemyPool pool = CreatePool();
+            EnemyDefinition definition = Enemy("ReleaseAllEnemy", 0);
+            PooledEnemy first = pool.Acquire(definition, Vector3.zero, Quaternion.identity);
+            PooledEnemy second = pool.Acquire(definition, Vector3.right, Quaternion.identity);
+
+            pool.ReleaseAllActive();
+
+            Assert.IsFalse(first.gameObject.activeSelf);
+            Assert.IsFalse(second.gameObject.activeSelf);
+            Assert.AreSame(first, pool.Acquire(definition, Vector3.zero, Quaternion.identity));
+            Assert.AreSame(second, pool.Acquire(definition, Vector3.right, Quaternion.identity));
+        }
+
+        [Test]
+        public void ReleaseAllActive_DoesNotInvokeDeathCallbacks()
+        {
+            EnemyPool pool = CreatePool();
+            EnemyDefinition definition = EnemyWithDeath("ReleaseAllDeathEnemy");
+            int deathCallbackCount = 0;
+            pool.Acquire(definition, Vector3.zero, Quaternion.identity, _ => deathCallbackCount++);
+
+            pool.ReleaseAllActive();
+
+            Assert.AreEqual(0, deathCallbackCount);
+        }
+
+        [Test]
         public void DifferentDefinitions_DoNotShareInstances()
         {
             EnemyPool pool = CreatePool();
