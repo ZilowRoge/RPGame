@@ -2,7 +2,8 @@
     "name": "RPGame.Encounter",
     "rootNamespace": "RPGame.Encounter",
     "references": [
-        "RPGame.Enemies"
+        "RPGame.Enemies",
+        "RPGame.Core"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
