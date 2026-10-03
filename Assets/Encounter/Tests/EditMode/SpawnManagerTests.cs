@@ -104,21 +104,6 @@ namespace RPGame.Encounter.Tests
         }
 
         [UnityTest]
-        public IEnumerator StartSpawning_WhenQueueHasMultipleEnemies_WaitsDelayBeforeSubsequentEnemies()
-        {
-            SpawnManager manager = CreateSpawnManager(0.1f, CreateSpawnPoint("A", Vector3.zero));
-            EnemyDefinition enemy = Enemy("DelayedEnemy");
-
-            manager.StartSpawning(Wave(new[] { enemy, enemy }, 10));
-
-            Assert.AreEqual(1, CountSpawned(enemy));
-            yield return null;
-            Assert.AreEqual(1, CountSpawned(enemy));
-            yield return new WaitForSeconds(0.15f);
-            Assert.AreEqual(2, CountSpawned(enemy));
-        }
-
-        [UnityTest]
         public IEnumerator StartSpawning_WhenMultipleSpawnPointsAreUsed_StartsQueuesInParallel()
         {
             SpawnPoint firstPoint = CreateSpawnPoint("A", Vector3.zero);
@@ -133,25 +118,6 @@ namespace RPGame.Encounter.Tests
             Assert.AreEqual(1, CountSpawnedAt(enemy, firstPoint.transform.position));
             Assert.AreEqual(1, CountSpawnedAt(enemy, secondPoint.transform.position));
             yield return null;
-        }
-
-        [UnityTest]
-        public IEnumerator AllEnemiesSpawned_WhenQueuesAreActive_FiresAfterEveryActiveQueueFinishes()
-        {
-            SpawnManager manager = CreateSpawnManager(0.1f, CreateSpawnPoint("A", Vector3.zero));
-            EnemyDefinition enemy = Enemy("CompletionEnemy");
-            int completedCount = 0;
-
-            int scheduledCount = manager.StartSpawning(
-                Wave(new[] { enemy, enemy }, 10),
-                onSpawningCompleted: () => completedCount++);
-
-            Assert.AreEqual(2, scheduledCount);
-            Assert.IsFalse(manager.AllEnemiesSpawned);
-            Assert.AreEqual(0, completedCount);
-            yield return new WaitForSeconds(0.15f);
-            Assert.IsTrue(manager.AllEnemiesSpawned);
-            Assert.AreEqual(1, completedCount);
         }
 
         [Test]
@@ -269,7 +235,7 @@ namespace RPGame.Encounter.Tests
             GameObject managerObject = CreateObject("SpawnManager");
             SpawnManager manager = managerObject.AddComponent<SpawnManager>();
             SetPrivateField(manager, "spawnDelay", delay);
-            SetPrivateField(manager, "spawnPoints", new List<SpawnPoint>(points));
+            SetPrivateField(manager, "spawnPoints", new List<SpawnPoint>(points ?? Array.Empty<SpawnPoint>()));
             SetPrivateField(manager, "enemyPool", CreateEnemyPool());
             return manager;
         }

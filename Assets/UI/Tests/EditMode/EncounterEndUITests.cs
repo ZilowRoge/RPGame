@@ -48,7 +48,7 @@ namespace RPGame.UI.Encounter.Tests
 
             Assert.That(panel.activeSelf, Is.True);
             Assert.That(scoreText.text, Is.EqualTo("Final Score: 10"));
-            Assert.That(waveText.text, Is.EqualTo("Wave: 1"));
+            Assert.That(waveText.text, Is.EqualTo("Waves Completed: 0"));
         }
 
         [Test]
@@ -138,8 +138,8 @@ namespace RPGame.UI.Encounter.Tests
             definitionObject.ApplyModifiedPropertiesWithoutUndo();
 
             SerializedObject scalingConfigObject = new(scalingConfig);
-            scalingConfigObject.FindProperty("budgetCurve").animationCurveValue =
-                AnimationCurve.Constant(1f, 10f, 1f);
+            scalingConfigObject.FindProperty("budgetGrowthCurve").animationCurveValue =
+                AnimationCurve.Constant(1f, 10f, 0f);
             scalingConfigObject.ApplyModifiedPropertiesWithoutUndo();
         }
 

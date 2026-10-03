@@ -243,8 +243,10 @@ namespace RPGame.Encounter.Tests.EditMode
             enemyDefinitionObject.ApplyModifiedPropertiesWithoutUndo();
 
             SerializedObject scalingConfigObject = new(waveScalingConfig);
-            scalingConfigObject.FindProperty("budgetCurve").animationCurveValue =
-                AnimationCurve.Constant(1f, 10f, enemyDefinition.Cost);
+            scalingConfigObject.FindProperty("baseBudget").floatValue = enemyDefinition.Cost;
+            scalingConfigObject.FindProperty("budgetPerWave").floatValue = 0f;
+            scalingConfigObject.FindProperty("budgetGrowthCurve").animationCurveValue =
+                AnimationCurve.Constant(1f, 10f, 0f);
             scalingConfigObject.FindProperty("performanceWaveBonusCurve").animationCurveValue =
                 AnimationCurve.Constant(0f, 1f, PerformanceBonus);
             scalingConfigObject.FindProperty("maxPerformanceWaveBonus").floatValue = PerformanceBonus;

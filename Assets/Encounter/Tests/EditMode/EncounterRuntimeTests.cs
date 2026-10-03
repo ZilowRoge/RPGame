@@ -61,6 +61,8 @@ namespace RPGame.Encounter.Tests.EditMode
             EnemyDefinition definition = CreateEnemyDefinition();
             PooledEnemy activeEnemy = pool.Acquire(definition, Vector3.zero, Quaternion.identity);
 
+            typeof(EncounterRuntime).GetMethod("OnDestroy", BindingFlags.Instance | BindingFlags.NonPublic)
+                .Invoke(runtime, null);
             Object.DestroyImmediate(runtime.gameObject);
             RaisePlayerDeath(playerStatistics);
 
@@ -109,8 +111,10 @@ namespace RPGame.Encounter.Tests.EditMode
         private void ConfigureDefinitions(EnemyDefinition definition, WaveScalingConfig scalingConfig)
         {
             SerializedObject scalingConfigObject = new(scalingConfig);
-            scalingConfigObject.FindProperty("budgetCurve").animationCurveValue =
-                AnimationCurve.Constant(1f, 10f, definition.Cost);
+            scalingConfigObject.FindProperty("baseBudget").floatValue = definition.Cost;
+            scalingConfigObject.FindProperty("budgetPerWave").floatValue = 0f;
+            scalingConfigObject.FindProperty("budgetGrowthCurve").animationCurveValue =
+                AnimationCurve.Constant(1f, 10f, 0f);
             scalingConfigObject.ApplyModifiedPropertiesWithoutUndo();
         }
 

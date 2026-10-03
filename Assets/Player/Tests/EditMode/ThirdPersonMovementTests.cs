@@ -20,6 +20,8 @@ namespace RPGame.Player.Tests
             playerObject.AddComponent<CharacterController>();
             statisticsController = playerObject.AddComponent<StatisticsController>();
             movement = playerObject.AddComponent<ThirdPersonMovement>();
+            InvokeLifecycleMethod("Awake");
+            InvokeLifecycleMethod("OnEnable");
         }
 
         [TearDown]
@@ -58,6 +60,7 @@ namespace RPGame.Player.Tests
         public void OnDisable_UnsubscribesFromDeath()
         {
             movement.enabled = false;
+            InvokeLifecycleMethod("OnDisable");
 
             RaiseDied();
 
@@ -79,6 +82,12 @@ namespace RPGame.Player.Tests
         {
             FieldInfo diedField = typeof(StatisticsController).GetField("Died", BindingFlags.Instance | BindingFlags.NonPublic);
             ((Action)diedField.GetValue(statisticsController))?.Invoke();
+        }
+
+        private void InvokeLifecycleMethod(string methodName)
+        {
+            typeof(ThirdPersonMovement).GetMethod(methodName, BindingFlags.Instance | BindingFlags.NonPublic)
+                .Invoke(movement, null);
         }
 
         private static void SetPrivateField<T>(ThirdPersonMovement target, string fieldName, T value)

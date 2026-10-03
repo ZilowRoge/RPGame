@@ -100,7 +100,7 @@ namespace RPGame.Enemies.Tests
         {
             Object.DestroyImmediate(pooledEnemy);
             TestResettable resettable = gameObject.AddComponent<TestResettable>();
-            pooledEnemy = gameObject.AddComponent<PooledEnemy>();
+            CreatePooledEnemy();
 
             pooledEnemy.OnSpawned();
             pooledEnemy.OnDespawned();
@@ -122,12 +122,14 @@ namespace RPGame.Enemies.Tests
         [Test]
         public void StatisticsController_WhenPooledEnemySpawns_ReturnsVitalsToConfig()
         {
+            Object.DestroyImmediate(pooledEnemy);
             StatisticsController statistics = gameObject.AddComponent<StatisticsController>();
             SetPrivateField(statistics, "config", CreateStatisticsConfig());
             statistics.ResetToConfig();
             statistics.TakeDamage(40f);
             statistics.TrySpendStamina(20f);
             statistics.TrySpendMana(30f);
+            CreatePooledEnemy();
 
             pooledEnemy.OnSpawned();
 
@@ -139,9 +141,15 @@ namespace RPGame.Enemies.Tests
         [Test]
         public void StatusAggregator_WhenPooledEnemyRespawns_ClearsStatuses()
         {
+            Object.DestroyImmediate(pooledEnemy);
             StatusAggregator statuses = gameObject.AddComponent<StatusAggregator>();
+            typeof(StatusAggregator).GetMethod(
+                "Awake",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                .Invoke(statuses, null);
             TestStatusDefinition status = CreateAsset<TestStatusDefinition>();
             statuses.ApplyStatus(status, 5f, new StatusContext(new StatusSourceId("Test"), gameObject));
+            CreatePooledEnemy();
 
             pooledEnemy.OnSpawned();
 
@@ -152,20 +160,22 @@ namespace RPGame.Enemies.Tests
         [Test]
         public void Death_WhenPooledEnemyRespawns_CanHandleDeathAgain()
         {
+            Object.DestroyImmediate(pooledEnemy);
             StatisticsController statistics = gameObject.AddComponent<StatisticsController>();
             SetPrivateField(statistics, "config", CreateStatisticsConfig());
             statistics.ResetToConfig();
             Movement movement = gameObject.AddComponent<Movement>();
-            Controller controller = gameObject.AddComponent<Controller>();
             Detection detection = gameObject.AddComponent<Detection>();
             EnemyTargetable targetable = gameObject.AddComponent<EnemyTargetable>();
             gameObject.AddComponent<DamageReceiver>();
             Death death = gameObject.AddComponent<Death>();
             SetPrivateField(death, "deathSource", statistics);
             SetPrivateField(death, "movement", movement);
-            SetPrivateField(death, "controller", controller);
             SetPrivateField(death, "detection", detection);
             SetPrivateField(death, "targetable", targetable);
+            CreatePooledEnemy();
+            Controller controller = gameObject.AddComponent<Controller>();
+            SetPrivateField(death, "controller", controller);
 
             pooledEnemy.OnSpawned();
             statistics.TakeDamage(statistics.MaxHealth);
@@ -187,6 +197,15 @@ namespace RPGame.Enemies.Tests
             SetPrivateField(config, "maxStamina", 50f);
             SetPrivateField(config, "maxMana", 80f);
             return config;
+        }
+
+        private void CreatePooledEnemy()
+        {
+            pooledEnemy = gameObject.AddComponent<PooledEnemy>();
+            typeof(PooledEnemy).GetMethod(
+                "Awake",
+                System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+                .Invoke(pooledEnemy, null);
         }
 
         private T CreateAsset<T>() where T : ScriptableObject
