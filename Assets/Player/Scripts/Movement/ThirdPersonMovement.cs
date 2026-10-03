@@ -58,6 +58,7 @@ namespace RPGame.Player
         private int movementBlockCount;
         private bool isAirMoveLocked;
         private bool isSprinting;
+        private bool isBlockedByDeath;
         private readonly MovementSpeedModifiers movementSpeedModifiers = new();
 
         public bool IsGrounded { get; private set; }
@@ -103,6 +104,11 @@ namespace RPGame.Player
             {
                 resolvedJumpAction.performed += OnJumpPerformed;
             }
+
+            if (statisticsController != null)
+            {
+                statisticsController.Died += HandleDied;
+            }
         }
 
         private void OnDisable()
@@ -112,9 +118,22 @@ namespace RPGame.Player
                 resolvedJumpAction.performed -= OnJumpPerformed;
             }
 
+            if (statisticsController != null)
+            {
+                statisticsController.Died -= HandleDied;
+            }
+
             DisableAction(resolvedMoveAction);
             DisableAction(resolvedSprintAction);
             DisableAction(resolvedJumpAction);
+        }
+
+        private void OnDestroy()
+        {
+            if (statisticsController != null)
+            {
+                statisticsController.Died -= HandleDied;
+            }
         }
 
         private void Update()
@@ -457,6 +476,17 @@ namespace RPGame.Player
         {
             movementBlockCount++;
             StopNormalMovement();
+        }
+
+        private void HandleDied()
+        {
+            if (isBlockedByDeath)
+            {
+                return;
+            }
+
+            isBlockedByDeath = true;
+            BlockMovement();
         }
 
         public void UnblockMovement()
