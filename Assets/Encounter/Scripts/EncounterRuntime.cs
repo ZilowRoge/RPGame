@@ -107,6 +107,11 @@ namespace RPGame.Encounter
                 return;
             }
 
+            if (encounterController.State == EncounterState.Ended)
+            {
+                return;
+            }
+
             UnsubscribeFromPlayerDeath();
             encounterController.EndEncounter();
             RunEnded?.Invoke(new EncounterResult(

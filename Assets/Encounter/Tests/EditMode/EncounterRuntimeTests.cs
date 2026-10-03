@@ -54,7 +54,7 @@ namespace RPGame.Encounter.Tests.EditMode
         }
 
         [Test]
-        public void PlayerDeath_PublishesFinalEncounterResultOnce()
+        public void PlayerDeath_AfterRuntimeIsReenabled_PublishesFinalEncounterResultOnce()
         {
             EncounterRuntime runtime = CreateRuntime(out _, out _, out StatisticsController playerStatistics);
             StartRuntime(runtime);
@@ -70,6 +70,8 @@ namespace RPGame.Encounter.Tests.EditMode
             };
 
             RaisePlayerDeath(playerStatistics);
+            runtime.gameObject.SetActive(false);
+            runtime.gameObject.SetActive(true);
             RaisePlayerDeath(playerStatistics);
 
             Assert.That(invocationCount, Is.EqualTo(1));
