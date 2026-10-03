@@ -23,10 +23,11 @@ namespace RPGame.Leaderboard
     {
         private const string LeaderboardId = "endless_wave_leaderboard";
         private const string SubmitEndlessRunEndpoint = "SubmitEndlessRun";
-        private const int TopScoreLimit = 50;
-        private const int PlayerRangeLimit = 5;
+        private const int TopScoreLimit = 10;
+        private const int PlayerRangeLimit = 3;
 
         private static Task initializationTask;
+        private static ILeaderboardsService leaderboardService;
 
         public static LeaderboardServiceState State { get; private set; } = LeaderboardServiceState.NotInitialized;
         public static string PlayerId { get; private set; }
@@ -129,7 +130,7 @@ namespace RPGame.Leaderboard
 
             try
             {
-                var response = await LeaderboardsService.Instance.GetScoresAsync(
+                var response = await leaderboardService.GetScoresAsync(
                     LeaderboardId,
                     new GetScoresOptions
                     {
@@ -155,7 +156,7 @@ namespace RPGame.Leaderboard
 
             try
             {
-                UgsLeaderboardEntry response = await LeaderboardsService.Instance.GetPlayerScoreAsync(
+                UgsLeaderboardEntry response = await leaderboardService.GetPlayerScoreAsync(
                     LeaderboardId,
                     new GetPlayerScoreOptions
                     {
@@ -180,7 +181,7 @@ namespace RPGame.Leaderboard
 
             try
             {
-                var response = await LeaderboardsService.Instance.GetPlayerRangeAsync(
+                var response = await leaderboardService.GetPlayerRangeAsync(
                     LeaderboardId,
                     new GetPlayerRangeOptions
                     {
@@ -203,6 +204,7 @@ namespace RPGame.Leaderboard
             try
             {
                 await UnityServices.InitializeAsync();
+                leaderboardService = UnityServices.Instance.GetLeaderboardsService();
                 if (!AuthenticationService.Instance.IsSignedIn)
                 {
                     await AuthenticationService.Instance.SignInAnonymouslyAsync();

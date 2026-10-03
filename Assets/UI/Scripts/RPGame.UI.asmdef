@@ -5,6 +5,7 @@
         "RPGame.Core",
         "RPGame.Progression",
         "RPGame.Encounter",
+        "RPGame.Leaderboard",
         "Unity.TextMeshPro",
         "Unity.ugui",
         "Unity.InputSystem"

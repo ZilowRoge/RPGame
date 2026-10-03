@@ -8,6 +8,20 @@ const maximumGameVersionLength = 64;
 module.exports = async ({ params, context, logger }) => {
   const { score, wavesCompleted, encounterSeed, gameVersion } = params;
 
+logger.error(
+  "DEBUG params: " +
+  JSON.stringify({
+    score,
+    scoreType: typeof score,
+    wavesCompleted,
+    wavesCompletedType: typeof wavesCompleted,
+    encounterSeed,
+    encounterSeedType: typeof encounterSeed,
+    gameVersion,
+    gameVersionType: typeof gameVersion
+  })
+);
+
   if (!Number.isFinite(score)
       || score < 0
       || score > maximumScore
