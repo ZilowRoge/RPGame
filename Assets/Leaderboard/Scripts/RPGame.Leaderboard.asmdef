@@ -5,6 +5,7 @@
         "RPGame.Encounter",
         "Unity.Services.Core",
         "Unity.Services.Authentication",
+        "Unity.Services.CloudCode",
         "Unity.Services.Leaderboards"
     ],
     "includePlatforms": [],

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using RPGame.Encounter;
 using Unity.Services.Authentication;
+using Unity.Services.CloudCode;
 using Unity.Services.Core;
 using Unity.Services.Leaderboards;
 using UnityEngine;
@@ -21,6 +22,7 @@ namespace RPGame.Leaderboard
     public static class LeaderboardService
     {
         private const string LeaderboardId = "endless_wave_leaderboard";
+        private const string SubmitEndlessRunEndpoint = "SubmitEndlessRun";
         private const int TopScoreLimit = 50;
         private const int PlayerRangeLimit = 5;
 
@@ -101,22 +103,19 @@ namespace RPGame.Leaderboard
 
             try
             {
-                await LeaderboardsService.Instance.AddPlayerScoreAsync(
-                    LeaderboardId,
-                    result.Score,
-                    new AddPlayerScoreOptions
+                await CloudCodeService.Instance.CallEndpointAsync<bool>(
+                    SubmitEndlessRunEndpoint,
+                    new Dictionary<string, object>
                     {
-                        Metadata = new ScoreMetadata
-                        {
-                            wavesCompleted = result.WavesCompleted,
-                            encounterSeed = result.EncounterSeed,
-                            gameVersion = Application.version
-                        }
+                        { "score", result.Score },
+                        { "wavesCompleted", result.WavesCompleted },
+                        { "encounterSeed", result.EncounterSeed },
+                        { "gameVersion", Application.version }
                     });
             }
             catch (Exception exception)
             {
-                Debug.LogError($"Leaderboard score submission failed: {exception.Message}");
+                Debug.LogError($"Leaderboard score submission request failed: {exception.Message}");
             }
         }
 
