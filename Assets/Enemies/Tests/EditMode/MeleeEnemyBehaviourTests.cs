@@ -60,7 +60,8 @@ namespace RPGame.Enemies.Tests
             {
                 FakeDetection detection = CreateDetectionWithTarget(new Vector3(3f, 0f, 0f));
                 FakeMovement movement = new();
-                FakeAttack attack = new { IsTargetInRange = false };
+                FakeAttack attack = new();
+                attack.IsTargetInRange = false;
                 MeleeEnemyBehaviour behaviour = new(detection, movement, attack);
 
                 behaviour.Tick(0.1f);

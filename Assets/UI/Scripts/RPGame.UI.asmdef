@@ -4,6 +4,7 @@
     "references": [
         "RPGame.Core",
         "RPGame.Progression",
+        "RPGame.Encounter",
         "Unity.TextMeshPro",
         "Unity.ugui",
         "Unity.InputSystem"

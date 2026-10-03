@@ -5,6 +5,9 @@ using UnityEngine;
 
 namespace RPGame.Encounter
 {
+    [RequireComponent(typeof(EncounterWaveController))]
+    [RequireComponent(typeof(SpawnManager))]
+    [RequireComponent(typeof(EnemyPool))]
     public sealed class EncounterRuntime : MonoBehaviour
     {
         [SerializeField] private EncounterWaveController waveController;
@@ -19,9 +22,11 @@ namespace RPGame.Encounter
         private EncounterController encounterController;
         private ScoreSystem scoreSystem;
         private bool isSubscribedToPlayerDeath;
+        private int lastLoggedWaveNumber;
 
         public EncounterController EncounterController => encounterController;
         public ScoreSystem ScoreSystem => scoreSystem;
+        public int RemainingEnemyCount => waveController != null ? waveController.RemainingEnemies : 0;
 
         private void Start()
         {
@@ -37,16 +42,19 @@ namespace RPGame.Encounter
                 waveGenerator,
                 scoreSystem,
                 intermissionDuration,
-                enemyPool.ReleaseAllActive);
+                ReleaseActiveEnemies);
             startWaveInteractable.Initialize(encounterController);
             enemyPool.Prewarm(enemyDefinitions);
             SubscribeToPlayerDeath();
-            encounterController.StartEncounter(Guid.NewGuid().GetHashCode());
+            int runSeed = Guid.NewGuid().GetHashCode();
+            encounterController.StartEncounter(runSeed);
+            Debug.Log($"Encounter initialized with run seed {runSeed} and entered intermission.", this);
         }
 
         private void Update()
         {
             encounterController?.Tick(Time.deltaTime);
+            LogWaveStart();
         }
 
         private void OnEnable()
@@ -92,7 +100,27 @@ namespace RPGame.Encounter
 
         private void HandlePlayerDied()
         {
+            Debug.Log("Player died. Ending encounter.", this);
             encounterController?.EndEncounter();
+        }
+
+        private void ReleaseActiveEnemies()
+        {
+            Debug.Log("Encounter cleanup: releasing active enemies.", this);
+            enemyPool.ReleaseAllActive();
+        }
+
+        private void LogWaveStart()
+        {
+            if (encounterController == null
+                || encounterController.State != EncounterState.WaveActive
+                || encounterController.CurrentWaveNumber == lastLoggedWaveNumber)
+            {
+                return;
+            }
+
+            lastLoggedWaveNumber = encounterController.CurrentWaveNumber;
+            Debug.Log($"Encounter wave {lastLoggedWaveNumber} started spawning.", this);
         }
     }
 }

@@ -2,10 +2,11 @@
     "name": "RPGame.UI.Tests",
     "rootNamespace": "RPGame.UI.Tests",
     "references": [
-        "RPGame.Core",
-        "RPGame.Progression",
         "RPGame.UI",
         "RPGame.UI.Jobs",
+        "RPGame.Encounter",
+        "RPGame.Core",
+        "RPGame.Progression",
         "Unity.TextMeshPro",
         "Unity.ugui"
     ],

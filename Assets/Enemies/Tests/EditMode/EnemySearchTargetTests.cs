@@ -67,7 +67,8 @@ namespace RPGame.Enemies.Tests
         public void MoveTowardsPlayerArea_WhenDestinationCannotResolve_StopsWithoutRetryingEveryTick()
         {
             CreatePlayer(Vector3.zero);
-            FakeMovement movement = new { CanResolvePosition = false };
+            FakeMovement movement = new();
+            movement.CanResolvePosition = false;
             EnemySearchTarget searchTarget = new();
 
             searchTarget.MoveTowardsPlayerArea(movement);

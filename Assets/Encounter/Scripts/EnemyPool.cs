@@ -57,6 +57,7 @@ namespace RPGame.Encounter
             instance.OnSpawned();
             activeInstances.Add(instance);
             BindDeath(instance, definition, onEnemyDied);
+            Debug.Log($"Spawned encounter enemy '{definition.name}'.", instance);
             return instance;
         }
 
@@ -86,6 +87,7 @@ namespace RPGame.Encounter
         public void ReleaseAllActive()
         {
             List<PooledEnemy> instancesToRelease = new(activeInstances);
+            Debug.Log($"Releasing {instancesToRelease.Count} active encounter enemies.", this);
             for (int i = 0; i < instancesToRelease.Count; i++)
             {
                 Release(instancesToRelease[i]);

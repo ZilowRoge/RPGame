@@ -1,4 +1,5 @@
 using System;
+using UnityEngine;
 
 namespace RPGame.Encounter
 {
@@ -67,6 +68,7 @@ namespace RPGame.Encounter
             PendingWave = waveGenerator.GenerateWave(CurrentWaveNumber, 0f, EncounterSeed);
             IntermissionTimeRemaining = intermissionDuration;
             State = EncounterState.Intermission;
+            Debug.Log($"Encounter started. Wave {CurrentWaveNumber} is waiting in intermission.");
         }
 
         public void Tick(float deltaTime)
@@ -108,6 +110,8 @@ namespace RPGame.Encounter
             WaveData waveToStart = PendingWave;
             int waveRunVersion = runVersion;
 
+            Debug.Log($"Starting encounter wave {CurrentWaveNumber}.");
+
             PendingWave = null;
             IntermissionTimeRemaining = 0f;
             activeWave = waveToStart;
@@ -137,6 +141,8 @@ namespace RPGame.Encounter
             {
                 return;
             }
+
+            Debug.Log("Ending encounter and cancelling the active wave.");
 
             runVersion++;
 

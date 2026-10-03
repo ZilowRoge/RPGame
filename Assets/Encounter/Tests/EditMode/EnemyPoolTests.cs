@@ -383,8 +383,7 @@ namespace RPGame.Encounter.Tests
         private PooledEnemy[] FindPooledEnemies()
         {
             PooledEnemy[] enemies = Object.FindObjectsByType<PooledEnemy>(
-                FindObjectsInactive.Include,
-                FindObjectsSortMode.InstanceID);
+                FindObjectsInactive.Include);
 
             List<PooledEnemy> instances = new();
             for (int i = 0; i < enemies.Length; i++)

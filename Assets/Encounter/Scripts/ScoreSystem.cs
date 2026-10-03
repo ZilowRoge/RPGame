@@ -46,6 +46,11 @@ namespace RPGame.Encounter
 
         public float CurrentScore { get; private set; }
         public float CurrentMultiplier { get; private set; }
+        public float ComboTimeRemaining => comboTimeRemaining;
+        public float ComboWindowSeconds => comboWindowSeconds;
+        public float ComboTimeNormalized => !isComboActive || comboWindowSeconds <= 0f
+            ? 0f
+            : Mathf.Clamp01(comboTimeRemaining / comboWindowSeconds);
         public float CurrentWaveBaseScore { get; private set; }
         public float CurrentWaveActualScore { get; private set; }
         public float FinalizedWaveBaseScore { get; private set; }

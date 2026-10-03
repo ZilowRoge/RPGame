@@ -335,8 +335,7 @@ namespace RPGame.Encounter.Tests
         {
             List<PooledEnemy> spawned = new();
             PooledEnemy[] enemies = Object.FindObjectsByType<PooledEnemy>(
-                FindObjectsInactive.Exclude,
-                FindObjectsSortMode.InstanceID);
+                FindObjectsInactive.Exclude);
             for (int i = 0; i < enemies.Length; i++)
             {
                 GameObject gameObject = enemies[i].gameObject;
