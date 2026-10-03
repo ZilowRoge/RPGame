@@ -42,3 +42,10 @@ module.exports = async ({ params, context, logger }) => {
     throw error;
   }
 };
+
+module.exports.params = {
+  score: { type: "Numeric", required: true },
+  wavesCompleted: { type: "Numeric", required: true },
+  encounterSeed: { type: "Numeric", required: true },
+  gameVersion: { type: "String", required: true }
+};
