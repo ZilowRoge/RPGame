@@ -27,6 +27,7 @@ namespace RPGame.Encounter
         public EncounterController EncounterController => encounterController;
         public ScoreSystem ScoreSystem => scoreSystem;
         public int RemainingEnemyCount => waveController != null ? waveController.RemainingEnemies : 0;
+        public event Action<EncounterResult> RunEnded;
 
         private void Start()
         {
@@ -101,7 +102,17 @@ namespace RPGame.Encounter
         private void HandlePlayerDied()
         {
             Debug.Log("Player died. Ending encounter.", this);
-            encounterController?.EndEncounter();
+            if (encounterController == null)
+            {
+                return;
+            }
+
+            UnsubscribeFromPlayerDeath();
+            encounterController.EndEncounter();
+            RunEnded?.Invoke(new EncounterResult(
+                scoreSystem.CurrentScore,
+                Math.Max(0, encounterController.CurrentWaveNumber - 1),
+                encounterController.EncounterSeed));
         }
 
         private void ReleaseActiveEnemies()
