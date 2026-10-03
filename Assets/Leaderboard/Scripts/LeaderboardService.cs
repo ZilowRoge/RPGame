@@ -1,7 +1,9 @@
 using System;
 using System.Threading.Tasks;
+using RPGame.Encounter;
 using Unity.Services.Authentication;
 using Unity.Services.Core;
+using Unity.Services.Leaderboards;
 using UnityEngine;
 
 namespace RPGame.Leaderboard
@@ -16,6 +18,8 @@ namespace RPGame.Leaderboard
 
     public static class LeaderboardService
     {
+        private const string LeaderboardId = "endless_wave_leaderboard";
+
         private static Task initializationTask;
 
         public static LeaderboardServiceState State { get; private set; } = LeaderboardServiceState.NotInitialized;
@@ -77,6 +81,41 @@ namespace RPGame.Leaderboard
             }
         }
 
+        public static async Task SubmitScoreAsync(EncounterResult result)
+        {
+            if (!IsValid(result))
+            {
+                Debug.LogWarning("Leaderboard score submission skipped: invalid run result.");
+                return;
+            }
+
+            await InitializeAsync();
+            if (State != LeaderboardServiceState.Ready)
+            {
+                return;
+            }
+
+            try
+            {
+                await LeaderboardsService.Instance.AddPlayerScoreAsync(
+                    LeaderboardId,
+                    result.Score,
+                    new AddPlayerScoreOptions
+                    {
+                        Metadata = new ScoreMetadata
+                        {
+                            wavesCompleted = result.WavesCompleted,
+                            encounterSeed = result.EncounterSeed,
+                            gameVersion = Application.version
+                        }
+                    });
+            }
+            catch (Exception exception)
+            {
+                Debug.LogError($"Leaderboard score submission failed: {exception.Message}");
+            }
+        }
+
         private static async Task InitializeInternalAsync()
         {
             State = LeaderboardServiceState.Initializing;
@@ -103,6 +142,22 @@ namespace RPGame.Leaderboard
         {
             State = LeaderboardServiceState.Failed;
             Debug.LogError($"Leaderboard service failed while {operation}: {exception.Message}");
+        }
+
+        private static bool IsValid(EncounterResult result)
+        {
+            return result.Score >= 0f
+                && !float.IsNaN(result.Score)
+                && !float.IsInfinity(result.Score)
+                && result.WavesCompleted >= 0;
+        }
+
+        [Serializable]
+        private sealed class ScoreMetadata
+        {
+            public int wavesCompleted;
+            public int encounterSeed;
+            public string gameVersion;
         }
     }
 }

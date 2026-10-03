@@ -2,8 +2,10 @@
     "name": "RPGame.Leaderboard",
     "rootNamespace": "RPGame.Leaderboard",
     "references": [
+        "RPGame.Encounter",
         "Unity.Services.Core",
-        "Unity.Services.Authentication"
+        "Unity.Services.Authentication",
+        "Unity.Services.Leaderboards"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
