@@ -5,6 +5,7 @@ namespace RPGame.Enemies
         private readonly IEnemyDetection detection;
         private readonly IEnemyMovement movement;
         private readonly IEnemyAttack attack;
+        private readonly EnemySearchTarget searchTarget = new();
 
         public MeleeEnemyBehaviour(
             IEnemyDetection detection,
@@ -22,9 +23,11 @@ namespace RPGame.Enemies
 
             if (!detection.TryGetTarget(out SelectedTarget target))
             {
-                movement.Stop();
+                searchTarget.MoveTowardsPlayerArea(movement);
                 return;
             }
+
+            searchTarget.Reset();
 
             if (attack.IsInRange(target))
             {

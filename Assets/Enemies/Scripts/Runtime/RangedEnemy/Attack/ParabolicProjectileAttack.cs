@@ -1,10 +1,11 @@
 using System;
 using RPGame.Core.Damage;
+using RPGame.Core.Pooling;
 using UnityEngine;
 
 namespace RPGame.Enemies
 {
-    public sealed class ParabolicProjectileAttack : IEnemyAttack
+    public sealed class ParabolicProjectileAttack : IEnemyAttack, IPooledEnemyResettable
     {
         private readonly ParabolicProjectileAttackConfig config;
         private readonly IEnemyLineOfSight lineOfSight;
@@ -51,6 +52,16 @@ namespace RPGame.Enemies
         public void Tick(float deltaTime)
         {
             remainingCooldown -= deltaTime;
+        }
+
+        public void ResetForSpawn()
+        {
+            remainingCooldown = 0f;
+        }
+
+        public void ResetForDespawn()
+        {
+            remainingCooldown = 0f;
         }
 
         public bool IsInRange(SelectedTarget target)

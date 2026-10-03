@@ -26,6 +26,55 @@ namespace RPGame.Enemies.Tests
         }
 
         [Test]
+        public void Tick_WhenNoTarget_MovesTowardPlayerSearchArea()
+        {
+            GameObject playerObject = new("PlayerTarget");
+            playerObject.transform.position = new Vector3(10f, 0f, 0f);
+            playerObject.AddComponent<PlayerTargetable>();
+
+            try
+            {
+                FakeDetection detection = new();
+                FakeMovement movement = new();
+                MeleeEnemyBehaviour behaviour = new(detection, movement, new FakeAttack());
+
+                behaviour.Tick(0.1f);
+
+                Assert.AreEqual(1, movement.MoveToCount);
+                Assert.LessOrEqual(Vector3.Distance(movement.LastDestination, playerObject.transform.position), 3f);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(playerObject);
+            }
+        }
+
+        [Test]
+        public void Tick_WhenTargetIsDetected_UsesCombatMovementInsteadOfSearchMovement()
+        {
+            GameObject playerObject = new("PlayerTarget");
+            playerObject.transform.position = new Vector3(10f, 0f, 0f);
+            playerObject.AddComponent<PlayerTargetable>();
+
+            try
+            {
+                FakeDetection detection = CreateDetectionWithTarget(new Vector3(3f, 0f, 0f));
+                FakeMovement movement = new();
+                FakeAttack attack = new();
+                attack.IsTargetInRange = false;
+                MeleeEnemyBehaviour behaviour = new(detection, movement, attack);
+
+                behaviour.Tick(0.1f);
+
+                Assert.AreEqual(new Vector3(3f, 0f, 0f), movement.LastDestination);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(playerObject);
+            }
+        }
+
+        [Test]
         public void Tick_WhenTargetIsOutsideAttackRange_MovesToTarget()
         {
             FakeTargetable targetable = new();

@@ -1,10 +1,11 @@
 using System;
 using RPGame.Core.Damage;
+using RPGame.Core.Pooling;
 using UnityEngine;
 
 namespace RPGame.Enemies
 {
-    public sealed class StraightProjectileAttack : IEnemyAttack
+    public sealed class StraightProjectileAttack : IEnemyAttack, IPooledEnemyResettable
     {
         private readonly StraightProjectileAttackConfig config;
         private readonly IEnemyLineOfSight lineOfSight;
@@ -32,6 +33,16 @@ namespace RPGame.Enemies
         public void Tick(float deltaTime)
         {
             remainingCooldown -= deltaTime;
+        }
+
+        public void ResetForSpawn()
+        {
+            remainingCooldown = 0f;
+        }
+
+        public void ResetForDespawn()
+        {
+            remainingCooldown = 0f;
         }
 
         public bool IsInRange(SelectedTarget target)

@@ -34,6 +34,11 @@ namespace RPGame.Core.Movement
             return modifiers.Remove(modifierId);
         }
 
+        public void Clear()
+        {
+            modifiers.Clear();
+        }
+
         private int GetNextModifierId()
         {
             for (int i = 0; i < int.MaxValue; i++)

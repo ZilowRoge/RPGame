@@ -1,10 +1,11 @@
 using System.Collections;
+using RPGame.Core.Pooling;
 using RPGame.Core.Targeting;
 using UnityEngine;
 
 namespace RPGame.Enemies
 {
-    public sealed class Detection : MonoBehaviour, IEnemyDetection
+    public sealed class Detection : MonoBehaviour, IEnemyDetection, IPooledEnemyResettable
     {
         [SerializeField] private float detectionRange = 6f;
         [SerializeField] private float detectionInterval = 0.2f;
@@ -19,20 +20,25 @@ namespace RPGame.Enemies
         {
             RefreshDetection();
 
-            if (Application.isPlaying)
-            {
-                detectionCoroutine = StartCoroutine(DetectionRoutine());
-            }
+            StartDetectionRoutine();
         }
 
         private void OnDisable()
         {
-            if (detectionCoroutine != null)
-            {
-                StopCoroutine(detectionCoroutine);
-                detectionCoroutine = null;
-            }
+            StopDetectionRoutine();
+            ClearCurrentTarget();
+        }
 
+        public void ResetForSpawn()
+        {
+            StopDetectionRoutine();
+            RefreshDetection();
+            StartDetectionRoutine();
+        }
+
+        public void ResetForDespawn()
+        {
+            StopDetectionRoutine();
             ClearCurrentTarget();
         }
 
@@ -70,6 +76,27 @@ namespace RPGame.Enemies
                 yield return wait;
                 RefreshDetection();
             }
+        }
+
+        private void StartDetectionRoutine()
+        {
+            if (!Application.isPlaying || detectionCoroutine != null || !isActiveAndEnabled)
+            {
+                return;
+            }
+
+            detectionCoroutine = StartCoroutine(DetectionRoutine());
+        }
+
+        private void StopDetectionRoutine()
+        {
+            if (detectionCoroutine == null)
+            {
+                return;
+            }
+
+            StopCoroutine(detectionCoroutine);
+            detectionCoroutine = null;
         }
 
         private void OnValidate()

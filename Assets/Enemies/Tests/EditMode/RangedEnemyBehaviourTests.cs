@@ -31,6 +31,56 @@ namespace RPGame.Enemies.Tests
         }
 
         [Test]
+        public void Tick_WhenNoTarget_MovesTowardPlayerSearchArea()
+        {
+            GameObject playerObject = new("PlayerTarget");
+            playerObject.transform.position = new Vector3(10f, 0f, 0f);
+            playerObject.AddComponent<PlayerTargetable>();
+
+            try
+            {
+                FakeDetection detection = new();
+                FakeMovement movement = new();
+                RangedEnemyBehaviour behaviour = CreateBehaviour(detection, movement);
+
+                behaviour.Tick(0.1f);
+
+                Assert.AreEqual(RangedBehaviourState.Idle, behaviour.State);
+                Assert.AreEqual(1, movement.MoveToCount);
+                Assert.LessOrEqual(Vector3.Distance(movement.LastDestination, playerObject.transform.position), 3f);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(playerObject);
+            }
+        }
+
+        [Test]
+        public void Tick_WhenTargetIsDetected_UsesCombatMovementInsteadOfSearchMovement()
+        {
+            GameObject playerObject = new("PlayerTarget");
+            playerObject.transform.position = new Vector3(10f, 0f, 0f);
+            playerObject.AddComponent<PlayerTargetable>();
+
+            try
+            {
+                Vector3 targetPosition = new(8f, 0f, 0f);
+                FakeDetection detection = CreateDetectionWithTarget(targetPosition);
+                FakeMovement movement = new();
+                RangedEnemyBehaviour behaviour = CreateBehaviour(detection, movement);
+
+                behaviour.Tick(0.1f);
+
+                Assert.AreEqual(RangedBehaviourState.Approach, behaviour.State);
+                Assert.AreEqual(targetPosition, movement.LastDestination);
+            }
+            finally
+            {
+                UnityEngine.Object.DestroyImmediate(playerObject);
+            }
+        }
+
+        [Test]
         public void Tick_WhenTargetIsTooFar_Approaches()
         {
             FakeDetection detection = CreateDetectionWithTarget(new Vector3(8f, 0f, 0f));
