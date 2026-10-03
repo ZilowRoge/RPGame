@@ -39,12 +39,15 @@ namespace RPGame.Encounter
 
         private int CalculateBudget(float effectiveWave)
         {
-            if (scalingConfig.BudgetCurve == null)
+            if (scalingConfig.BudgetGrowthCurve == null)
             {
-                throw new InvalidOperationException("Wave scaling config is missing a budget curve.");
+                throw new InvalidOperationException("Wave scaling config is missing a budget growth curve.");
             }
 
-            int budget = Mathf.FloorToInt(scalingConfig.BudgetCurve.Evaluate(effectiveWave));
+            float rawBudget = scalingConfig.BaseBudget
+                + scalingConfig.BudgetPerWave * (effectiveWave - 1f)
+                + scalingConfig.BudgetGrowthCurve.Evaluate(effectiveWave);
+            int budget = Mathf.FloorToInt(rawBudget);
             return Mathf.Max(1, budget);
         }
 

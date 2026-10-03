@@ -34,19 +34,52 @@ namespace RPGame.Encounter.Tests
         }
 
         [Test]
-        public void GenerateWave_WhenBudgetCurveEvaluates_UsesCurveValueForBudget()
+        public void GenerateWave_WaveOne_UsesBaseBudget()
         {
-            WaveGenerator generator = CreateGenerator(CreateScalingConfig(AnimationCurve.Linear(1f, 2f, 3f, 6f)), Enemy(1, 1));
+            WaveGenerator generator = CreateGenerator(CreateScalingConfig(6f, 1.2f, AnimationCurve.Constant(0f, 10f, 0f)), Enemy(1, 1));
 
-            WaveData wave = generator.GenerateWave(2, 0f, 123);
+            WaveData wave = generator.GenerateWave(1, 0f, 123);
 
-            Assert.AreEqual(4, wave.Budget);
+            Assert.AreEqual(6, wave.Budget);
         }
 
         [Test]
-        public void GenerateWave_WhenBudgetCurveValueIsFractional_RoundsBudgetDown()
+        public void GenerateWave_LinearGrowth_UsesEffectiveWave()
         {
-            WaveGenerator generator = CreateGenerator(CreateScalingConfig(AnimationCurve.Constant(0f, 10f, 3.9f)), Enemy(1, 1));
+            WaveGenerator generator = CreateGenerator(CreateScalingConfig(6f, 1.2f, AnimationCurve.Constant(0f, 10f, 0f)), Enemy(1, 1));
+
+            WaveData wave = generator.GenerateWave(3, 0f, 123);
+
+            Assert.AreEqual(8, wave.Budget);
+        }
+
+        [Test]
+        public void GenerateWave_GrowthCurve_AddsBonusToBudget()
+        {
+            WaveGenerator generator = CreateGenerator(CreateScalingConfig(6f, 0f, AnimationCurve.Constant(0f, 10f, 2.9f)), Enemy(1, 1));
+
+            WaveData wave = generator.GenerateWave(1, 0f, 123);
+
+            Assert.AreEqual(8, wave.Budget);
+        }
+
+        [Test]
+        public void GenerateWave_PerformanceBonus_AffectsTheWholeEffectiveWaveCalculation()
+        {
+            WaveGenerator generator = CreateGenerator(
+                CreateScalingConfig(6f, 1.2f, AnimationCurve.Linear(0f, 0f, 10f, 10f)),
+                Enemy(1, 1));
+
+            WaveData wave = generator.GenerateWave(1, 1f, 123);
+
+            Assert.AreEqual(2f, wave.EffectiveWave);
+            Assert.AreEqual(9, wave.Budget);
+        }
+
+        [Test]
+        public void GenerateWave_WhenRawBudgetIsFractional_FloorsBudget()
+        {
+            WaveGenerator generator = CreateGenerator(CreateScalingConfig(3.9f, 0f, AnimationCurve.Constant(0f, 10f, 0f)), Enemy(1, 1));
 
             WaveData wave = generator.GenerateWave(1, 0f, 123);
 
@@ -54,9 +87,9 @@ namespace RPGame.Encounter.Tests
         }
 
         [Test]
-        public void GenerateWave_WhenBudgetCurveValueIsBelowOne_ClampsBudgetToOne()
+        public void GenerateWave_WhenRawBudgetIsBelowOne_ClampsBudgetToOne()
         {
-            WaveGenerator generator = CreateGenerator(CreateScalingConfig(AnimationCurve.Constant(0f, 10f, 0.2f)), Enemy(1, 1));
+            WaveGenerator generator = CreateGenerator(CreateScalingConfig(0.2f, 0f, AnimationCurve.Constant(0f, 10f, 0f)), Enemy(1, 1));
 
             WaveData wave = generator.GenerateWave(1, 0f, 123);
 
@@ -200,11 +233,21 @@ namespace RPGame.Encounter.Tests
             return new WaveGenerator(config, enemies);
         }
 
-        private WaveScalingConfig CreateScalingConfig(AnimationCurve budgetCurve)
+        private WaveScalingConfig CreateScalingConfig(AnimationCurve budgetGrowthCurve)
+        {
+            return CreateScalingConfig(0f, 0f, budgetGrowthCurve);
+        }
+
+        private WaveScalingConfig CreateScalingConfig(
+            float baseBudget,
+            float budgetPerWave,
+            AnimationCurve budgetGrowthCurve)
         {
             WaveScalingConfig config = ScriptableObject.CreateInstance<WaveScalingConfig>();
             createdAssets.Add(config);
-            SetPrivateField(config, "budgetCurve", budgetCurve);
+            SetPrivateField(config, "baseBudget", baseBudget);
+            SetPrivateField(config, "budgetPerWave", budgetPerWave);
+            SetPrivateField(config, "budgetGrowthCurve", budgetGrowthCurve);
             return config;
         }
 
