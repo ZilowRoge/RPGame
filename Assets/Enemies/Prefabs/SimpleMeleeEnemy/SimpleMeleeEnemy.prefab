@@ -24,6 +24,7 @@ GameObject:
   - component: {fileID: 2767910605759657526}
   - component: {fileID: 5001817109333800252}
   - component: {fileID: 8405724569605279724}
+  - component: {fileID: 7414506123678943208}
   m_Layer: 6
   m_Name: SimpleMeleeEnemy
   m_TagString: Untagged
@@ -192,7 +193,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2e80a2866f6d490e84cc7a244ef21c9a, type: 3}
-  m_Name:
+  m_Name: 
   m_EditorClassIdentifier: RPGame.Enemies::RPGame.Enemies.EnemyExperienceReward
 --- !u!114 &896530926046458949
 MonoBehaviour:
@@ -306,3 +307,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 098a3edb1b074a0a9fc4bb02bf22ec71, type: 3}
   m_Name: 
   m_EditorClassIdentifier: RPGame.Enemies::RPGame.Enemies.PooledEnemy
+--- !u!114 &7414506123678943208
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3977383957096067067}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1bf54b54ceff4ed494db66292353bf3d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: RPGame.Loot::RPGame.Loot.LootDropper
+  lootTable: {fileID: 11400000, guid: 144cca28476927f4b9306fa8d7f94257, type: 2}
+  pickupPrefab: {fileID: 1140000000000000000, guid: e8ffb298e0954fc7b7971bffa75bfd66, type: 3}
+  dropOrigin: {fileID: 6175671529599007758}
+  deathSource: {fileID: 1754915428058411402}
+  dropRadius: 0.5
+  logDrops: 0
