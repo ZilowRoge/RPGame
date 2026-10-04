@@ -56,6 +56,50 @@ namespace RPGame.Enemies.Tests
         }
 
         [Test]
+        public void PlayerProjectile_WhenHitPlayerProjectile_KeepsBothActive()
+        {
+            ProjectileController firstProjectile = CreatePlayerProjectile();
+            ProjectileController secondProjectile = CreatePlayerProjectile();
+
+            HandlePlayerHit(firstProjectile, secondProjectile.GetComponent<Collider>());
+
+            Assert.IsFalse(IsPlayerProjectileDestroyed(firstProjectile));
+            Assert.IsFalse(IsPlayerProjectileDestroyed(secondProjectile));
+        }
+
+        [Test]
+        public void EnemyProjectile_WhenHitEnemyProjectile_KeepsBothActive()
+        {
+            EnemyStraightProjectile firstProjectile = CreateStraightEnemyProjectile();
+            EnemyStraightProjectile secondProjectile = CreateStraightEnemyProjectile();
+            firstProjectile.Initialize(Vector3.forward, null, CreateDamageParts(), null);
+            secondProjectile.Initialize(Vector3.forward, null, CreateDamageParts(), null);
+
+            firstProjectile.HandleHit(secondProjectile.GetComponent<Collider>());
+
+            Assert.IsFalse(firstProjectile.IsFinished);
+            Assert.IsFalse(secondProjectile.IsFinished);
+        }
+
+        [Test]
+        public void EnemyProjectile_WhenSameTeamProjectileIsCloser_InterceptsOpposingProjectileBehindIt()
+        {
+            EnemyStraightProjectile movingProjectile = CreateStraightEnemyProjectile();
+            EnemyStraightProjectile sameTeamProjectile = CreateStraightEnemyProjectile();
+            ProjectileController opposingProjectile = CreatePlayerProjectile();
+            sameTeamProjectile.transform.position = Vector3.forward * 2f;
+            opposingProjectile.transform.position = Vector3.forward * 4f;
+            movingProjectile.Initialize(Vector3.forward * 10f, null, CreateDamageParts(), null);
+            Physics.SyncTransforms();
+
+            movingProjectile.Tick(0.5f);
+
+            Assert.IsTrue(movingProjectile.IsFinished);
+            Assert.IsFalse(sameTeamProjectile.IsFinished);
+            Assert.IsTrue(IsPlayerProjectileDestroyed(opposingProjectile));
+        }
+
+        [Test]
         public void EnemyParabolicProjectile_WhenIntercepted_DoesNotApplyImpactAndCleansUpTelegraph()
         {
             ProjectileController playerProjectile = CreatePlayerProjectile();

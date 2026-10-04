@@ -20,6 +20,7 @@ namespace RPGame.Enemies
         internal bool IsInitialized { get; private set; }
         internal bool IsFinished { get; private set; }
         internal int FinishCount { get; private set; }
+        public ProjectileTeam Team => ProjectileTeam.Enemy;
 
         public void DestroyProjectile()
         {
@@ -141,8 +142,12 @@ namespace RPGame.Enemies
             if (TryGetProjectileDestructible(hit.Collider, out IProjectileDestructible projectile)
                 && !ReferenceEquals(projectile, this))
             {
-                projectile.DestroyProjectile();
-                Finish();
+                if (projectile.Team != Team)
+                {
+                    projectile.DestroyProjectile();
+                    Finish();
+                }
+
                 return;
             }
 
@@ -182,6 +187,13 @@ namespace RPGame.Enemies
         {
             GameObject hitObject = hitCollider.gameObject;
             if (hitObject == gameObject || hitObject.transform.IsChildOf(transform))
+            {
+                return true;
+            }
+
+            if (TryGetProjectileDestructible(hitCollider, out IProjectileDestructible projectile)
+                && !ReferenceEquals(projectile, this)
+                && projectile.Team == Team)
             {
                 return true;
             }

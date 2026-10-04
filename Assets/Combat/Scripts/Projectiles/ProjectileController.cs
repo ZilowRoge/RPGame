@@ -24,6 +24,7 @@ namespace RPGame.Combat.Projectiles
         public CasterData CasterData { get; private set; }
         public float CurrentSpeed => currentSpeed;
         public bool IsInitialized { get; private set; }
+        public ProjectileTeam Team => ProjectileTeam.Player;
 
         public void DestroyProjectile()
         {
@@ -154,8 +155,12 @@ namespace RPGame.Combat.Projectiles
             if (TryGetProjectileDestructible(hitCollider, out IProjectileDestructible projectile)
                 && !ReferenceEquals(projectile, this))
             {
-                projectile.DestroyProjectile();
-                DestroyProjectile();
+                if (projectile.Team != Team)
+                {
+                    projectile.DestroyProjectile();
+                    DestroyProjectile();
+                }
+
                 return;
             }
 
@@ -197,6 +202,13 @@ namespace RPGame.Combat.Projectiles
         {
             GameObject hitObject = hitCollider.gameObject;
             if (hitObject == gameObject || hitObject.transform.IsChildOf(transform))
+            {
+                return true;
+            }
+
+            if (TryGetProjectileDestructible(hitCollider, out IProjectileDestructible projectile)
+                && !ReferenceEquals(projectile, this)
+                && projectile.Team == Team)
             {
                 return true;
             }
