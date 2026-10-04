@@ -54,6 +54,33 @@ namespace RPGame.Encounter.Tests.EditMode
         }
 
         [Test]
+        public void PlayerDeath_AfterRuntimeIsReenabled_PublishesFinalEncounterResultOnce()
+        {
+            EncounterRuntime runtime = CreateRuntime(out _, out _, out StatisticsController playerStatistics);
+            StartRuntime(runtime);
+            SetAutoProperty(runtime.EncounterController, "CurrentWaveNumber", 3);
+            SetAutoProperty(runtime.EncounterController, "EncounterSeed", 1234);
+            runtime.ScoreSystem.RegisterKill(5);
+            int invocationCount = 0;
+            EncounterResult result = default;
+            runtime.RunEnded += endedResult =>
+            {
+                invocationCount++;
+                result = endedResult;
+            };
+
+            RaisePlayerDeath(playerStatistics);
+            runtime.gameObject.SetActive(false);
+            runtime.gameObject.SetActive(true);
+            RaisePlayerDeath(playerStatistics);
+
+            Assert.That(invocationCount, Is.EqualTo(1));
+            Assert.That(result.Score, Is.EqualTo(5f));
+            Assert.That(result.WavesCompleted, Is.EqualTo(2));
+            Assert.That(result.EncounterSeed, Is.EqualTo(1234));
+        }
+
+        [Test]
         public void Destroy_UnsubscribesFromPlayerDeath()
         {
             EncounterRuntime runtime = CreateRuntime(out _, out EnemyPool pool, out StatisticsController playerStatistics);
@@ -150,6 +177,13 @@ namespace RPGame.Encounter.Tests.EditMode
         {
             target.GetType().GetField(fieldName, BindingFlags.Instance | BindingFlags.NonPublic)
                 .SetValue(target, value);
+        }
+
+        private static void SetAutoProperty<T>(object target, string propertyName, T value)
+        {
+            target.GetType().GetField(
+                $"<{propertyName}>k__BackingField",
+                BindingFlags.Instance | BindingFlags.NonPublic).SetValue(target, value);
         }
     }
 }

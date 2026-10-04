@@ -14,5 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: RPGame.Core::RPGame.Core.Statistics.StatisticsConfig
   maxHealth: 100
   maxStamina: 100
+  maxMana: 100
   healthRegenerationPerSecond: 0
   staminaRegenerationPerSecond: 15
+  staminaRegenerationDelay: 0.75
+  manaRegenerationPerSecond: 5
+  manaRegenerationDelay: 0.75

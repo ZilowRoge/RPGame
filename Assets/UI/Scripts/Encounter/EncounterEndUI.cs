@@ -1,6 +1,7 @@
 using System;
 using TMPro;
 using RPGame.Encounter;
+using RPGame.UI.Leaderboard;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -14,9 +15,17 @@ namespace RPGame.UI.Encounter
         [SerializeField] private TMP_Text finalScoreText;
         [SerializeField] private TMP_Text reachedWaveText;
         [SerializeField] private Button restartButton;
+        [SerializeField] private Button scoreboardButton;
+        [SerializeField] private LeaderboardScreen leaderboardScreen;
 
         private Action<int> loadScene = sceneBuildIndex => SceneManager.LoadScene(sceneBuildIndex);
         private bool hasDisplayedEnd;
+
+        private void Start()
+        {
+            SetPanelVisible(false);
+            leaderboardScreen?.Close();
+        }
 
         private void OnEnable()
         {
@@ -25,6 +34,13 @@ namespace RPGame.UI.Encounter
                 restartButton.onClick.RemoveListener(RestartCurrentScene);
                 restartButton.onClick.AddListener(RestartCurrentScene);
             }
+
+            if (scoreboardButton != null)
+            {
+                scoreboardButton.onClick.RemoveListener(ShowScoreboard);
+                scoreboardButton.onClick.AddListener(ShowScoreboard);
+            }
+
         }
 
         private void OnDisable()
@@ -33,6 +49,12 @@ namespace RPGame.UI.Encounter
             {
                 restartButton.onClick.RemoveListener(RestartCurrentScene);
             }
+
+            if (scoreboardButton != null)
+            {
+                scoreboardButton.onClick.RemoveListener(ShowScoreboard);
+            }
+
         }
 
         private void Update()
@@ -42,6 +64,7 @@ namespace RPGame.UI.Encounter
             {
                 hasDisplayedEnd = false;
                 SetPanelVisible(false);
+                leaderboardScreen?.Close();
                 return;
             }
 
@@ -51,6 +74,7 @@ namespace RPGame.UI.Encounter
             }
 
             SetPanelVisible(true);
+            leaderboardScreen?.Close();
 
             ScoreSystem scoreSystem = runtime.ScoreSystem;
             if (finalScoreText != null && scoreSystem != null)
@@ -71,6 +95,11 @@ namespace RPGame.UI.Encounter
             loadScene(SceneManager.GetActiveScene().buildIndex);
         }
 
+        private void ShowScoreboard()
+        {
+            leaderboardScreen?.Open();
+        }
+
         private void SetPanelVisible(bool isVisible)
         {
             if (panel != null && panel.activeSelf != isVisible)
@@ -78,5 +107,6 @@ namespace RPGame.UI.Encounter
                 panel.SetActive(isVisible);
             }
         }
+
     }
 }

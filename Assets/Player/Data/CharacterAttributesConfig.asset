@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e1b26e2fcdc64073a10de616a11ee62a, type: 3}
   m_Name: CharacterAttributesConfig
   m_EditorClassIdentifier: RPGame.Core::RPGame.Core.Statistics.Attributes.CharacterAttributesConfig
-  strength: 5
-  dexterity: 5
-  endurance: 5
-  vitality: 5
-  intelligence: 5
-  power: 5
+  strength: 0
+  dexterity: 0
+  endurance: 0
+  vitality: 0
+  intelligence: 0
+  power: 0

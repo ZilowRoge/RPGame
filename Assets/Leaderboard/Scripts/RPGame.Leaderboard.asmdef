@@ -1,14 +1,12 @@
 {
-    "name": "RPGame.UI",
-    "rootNamespace": "RPGame.UI",
+    "name": "RPGame.Leaderboard",
+    "rootNamespace": "RPGame.Leaderboard",
     "references": [
-        "RPGame.Core",
-        "RPGame.Progression",
         "RPGame.Encounter",
-        "RPGame.Leaderboard",
-        "Unity.TextMeshPro",
-        "Unity.ugui",
-        "Unity.InputSystem"
+        "Unity.Services.Core",
+        "Unity.Services.Authentication",
+        "Unity.Services.CloudCode",
+        "Unity.Services.Leaderboards"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
