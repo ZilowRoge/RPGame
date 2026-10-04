@@ -18,7 +18,6 @@ GameObject:
   - component: {fileID: 896530926046458949}
   - component: {fileID: 8546718972918938816}
   - component: {fileID: 1434449273843886759}
-  - component: {fileID: 2422390360541412733}
   - component: {fileID: 98207530189551780}
   - component: {fileID: 2738486469158683143}
   - component: {fileID: 2767910605759657526}
@@ -226,19 +225,6 @@ MonoBehaviour:
   lineOfSight: {fileID: 0}
   groundProjection: {fileID: 0}
   projectileLauncher: {fileID: 0}
---- !u!114 &2422390360541412733
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3977383957096067067}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c10d6b62f2f845639483ccd39c3c7f4e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: RPGame.Core::RPGame.Core.Statistics.DestroyOnDeath
-  deathSource: {fileID: 1754915428058411402}
 --- !u!114 &98207530189551780
 MonoBehaviour:
   m_ObjectHideFlags: 0

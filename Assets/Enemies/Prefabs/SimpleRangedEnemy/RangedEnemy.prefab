@@ -24,7 +24,6 @@ GameObject:
   - component: {fileID: 6117987733199445754}
   - component: {fileID: 5657009229922300537}
   - component: {fileID: 5133160307654970121}
-  - component: {fileID: 9172990148900286399}
   - component: {fileID: -1849153358468534224}
   - component: {fileID: 7314496810227115782}
   m_Layer: 6
@@ -320,19 +319,6 @@ MonoBehaviour:
     m_Bits: 1
   raycastStartHeight: 5
   raycastDistance: 20
---- !u!114 &9172990148900286399
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1330688795939094697}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c10d6b62f2f845639483ccd39c3c7f4e, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: RPGame.Core::RPGame.Core.Statistics.DestroyOnDeath
-  deathSource: {fileID: 5997701551370722757}
 --- !u!114 &-1849153358468534224
 MonoBehaviour:
   m_ObjectHideFlags: 0
