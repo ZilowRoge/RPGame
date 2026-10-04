@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace RPGame.Combat.Projectiles
 {
-    public sealed class ProjectileController : MonoBehaviour, IProjectileMovementSource
+    public sealed class ProjectileController : MonoBehaviour, IProjectileMovementSource, IProjectileDestructible
     {
         [SerializeField] private float speed = 10f;
         [SerializeField] private float acceleration;
@@ -19,10 +19,23 @@ namespace RPGame.Combat.Projectiles
         private float remainingLifetime;
         private readonly RaycastHit[] hitBuffer = new RaycastHit[8];
         private bool hasHit;
+        private bool isDestroyed;
 
         public CasterData CasterData { get; private set; }
         public float CurrentSpeed => currentSpeed;
         public bool IsInitialized { get; private set; }
+
+        public void DestroyProjectile()
+        {
+            if (isDestroyed)
+            {
+                return;
+            }
+
+            isDestroyed = true;
+            hasHit = true;
+            Destroy(gameObject);
+        }
 
         public void Initialize(CasterData casterData)
         {
@@ -30,12 +43,13 @@ namespace RPGame.Combat.Projectiles
             currentSpeed = speed;
             remainingLifetime = maxLifetime;
             hasHit = false;
+            isDestroyed = false;
             mover = GetComponent<ProjectileMover>();
 
             if (mover == null)
             {
                 Debug.LogWarning($"{name} cannot move because no {nameof(ProjectileMover)} is attached.", this);
-                Destroy(gameObject);
+                DestroyProjectile();
                 return;
             }
 
@@ -45,7 +59,7 @@ namespace RPGame.Combat.Projectiles
 
         private void Update()
         {
-            if (!IsInitialized)
+            if (!IsInitialized || isDestroyed)
             {
                 return;
             }
@@ -54,7 +68,7 @@ namespace RPGame.Combat.Projectiles
             remainingLifetime -= deltaTime;
             if (remainingLifetime <= 0f)
             {
-                Destroy(gameObject);
+                DestroyProjectile();
                 return;
             }
 
@@ -132,7 +146,20 @@ namespace RPGame.Combat.Projectiles
 
         private void HandleHit(Collider hitCollider)
         {
-            if (hasHit || hitCollider == null || ShouldIgnore(hitCollider))
+            if (hitCollider == null || ShouldIgnore(hitCollider))
+            {
+                return;
+            }
+
+            if (TryGetProjectileDestructible(hitCollider, out IProjectileDestructible projectile)
+                && !ReferenceEquals(projectile, this))
+            {
+                projectile.DestroyProjectile();
+                DestroyProjectile();
+                return;
+            }
+
+            if (hasHit)
             {
                 return;
             }
@@ -148,7 +175,7 @@ namespace RPGame.Combat.Projectiles
 
             if (destroyOnHit)
             {
-                Destroy(gameObject);
+                DestroyProjectile();
             }
         }
 
@@ -156,6 +183,14 @@ namespace RPGame.Combat.Projectiles
         {
             damageable = hitCollider.GetComponentInParent<IDamageable>();
             return damageable != null;
+        }
+
+        private static bool TryGetProjectileDestructible(
+            Collider hitCollider,
+            out IProjectileDestructible projectile)
+        {
+            projectile = hitCollider.GetComponentInParent(typeof(IProjectileDestructible)) as IProjectileDestructible;
+            return projectile != null;
         }
 
         private bool ShouldIgnore(Collider hitCollider)
