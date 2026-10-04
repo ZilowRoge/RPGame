@@ -59,6 +59,18 @@ namespace RPGame.Enemies
             }
         }
 
+        internal void FaceTowards(Vector3 position)
+        {
+            Vector3 direction = position - transform.position;
+            direction.y = 0f;
+            if (direction.sqrMagnitude <= 0f)
+            {
+                return;
+            }
+
+            transform.rotation = Quaternion.LookRotation(direction);
+        }
+
         internal void Stop()
         {
             if (isKnockedBack || !CanUseAgent())
@@ -369,6 +381,11 @@ namespace RPGame.Enemies
         void IEnemyMovement.MoveTo(Vector3 position)
         {
             MoveTo(position);
+        }
+
+        void IEnemyMovement.FaceTowards(Vector3 position)
+        {
+            FaceTowards(position);
         }
 
         void IEnemyMovement.Stop()

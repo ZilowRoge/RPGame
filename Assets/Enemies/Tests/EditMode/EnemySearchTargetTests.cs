@@ -95,6 +95,10 @@ namespace RPGame.Enemies.Tests
             public Vector3 Position { get; set; }
             public Vector3 LastDestination { get; private set; }
 
+            public void FaceTowards(Vector3 position)
+            {
+            }
+
             public void MoveTo(Vector3 position)
             {
                 MoveToCount++;
