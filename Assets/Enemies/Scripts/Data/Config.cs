@@ -9,10 +9,12 @@ namespace RPGame.Enemies
     {
         [SerializeField] private EnemyBehaviourConfigBase behaviourConfig;
         [SerializeField] private List<AttackEntry> attacks = new();
+        [SerializeField, Min(0)] private int experienceReward;
 
         private Dictionary<AttackType, AttackConfig> attackLookup;
 
         public EnemyBehaviourConfigBase BehaviourConfig => behaviourConfig;
+        public int ExperienceReward => experienceReward;
 
         public T GetAttack<T>(AttackType type) where T : AttackConfig
         {

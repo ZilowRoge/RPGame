@@ -25,6 +25,7 @@ namespace RPGame.Enemies
         private IEnemyBehaviour behaviour;
 
         internal IEnemyBehaviour Behaviour => behaviour;
+        internal Config Config => config;
 
         public void ResetForSpawn()
         {

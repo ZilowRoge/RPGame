@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 4790906503720014475}
   - component: {fileID: 1754915428058411402}
   - component: {fileID: 818951505973610660}
+  - component: {fileID: 7414506123678943201}
   - component: {fileID: 896530926046458949}
   - component: {fileID: 8546718972918938816}
   - component: {fileID: 1434449273843886759}
@@ -181,6 +182,18 @@ MonoBehaviour:
   movement: {fileID: 8546718972918938816}
   config: {fileID: 11400000, guid: ed08f6085c824b2a8b77efbd58d79cee, type: 2}
   attack: {fileID: 0}
+--- !u!114 &7414506123678943201
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3977383957096067067}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2e80a2866f6d490e84cc7a244ef21c9a, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: RPGame.Enemies::RPGame.Enemies.EnemyExperienceReward
 --- !u!114 &896530926046458949
 MonoBehaviour:
   m_ObjectHideFlags: 0
