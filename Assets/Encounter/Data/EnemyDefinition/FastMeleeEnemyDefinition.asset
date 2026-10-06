@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 04a16d32523a4c48ba2b77af423ec766, type: 3}
-  m_Name: SlowMeleeEnemyDefinition
+  m_Name: FastMeleeEnemyDefinition
   m_EditorClassIdentifier: RPGame.Encounter::RPGame.Encounter.EnemyDefinition
-  prefab: {fileID: 3701650624101095550, guid: 777f86d8e2ca3694ca6969e3b569042d, type: 3}
-  cost: 1
-  unlockWave: 1
+  prefab: {fileID: 8567591246751382427, guid: 42a0e484bcb61814f9e0ba7369747fef, type: 3}
+  cost: 3
+  unlockWave: 2
   prewarmCount: 50

@@ -10318,6 +10318,7 @@ MonoBehaviour:
   scoreConfig: {fileID: 11400000, guid: dd8fd0cd1798bd14c9df3ac011754663, type: 2}
   enemyDefinitions:
   - {fileID: 11400000, guid: 970b927fdcd4b92439ed8407f33de19c, type: 2}
+  - {fileID: 11400000, guid: ffe9d5a462b364543b4ca74ef10236af, type: 2}
   - {fileID: 11400000, guid: 55286a6920799214d83468d1d63f347f, type: 2}
   playerStatistics: {fileID: 917633044}
   startWaveInteractable: {fileID: 534325457562861969}
