@@ -211,6 +211,16 @@ namespace RPGame.Enemies.Tests
         }
 
         [Test]
+        public void DeathEvent_WhenLeaping_ClearsLeapState()
+        {
+            SetIsLeaping(movement, true);
+
+            KillEnemy();
+
+            Assert.IsFalse(movement.IsLeaping);
+        }
+
+        [Test]
         public void CoreAndCombat_DoNotReferenceEnemiesOrLoot()
         {
             bool coreReferencesEnemies = typeof(StatisticsController).Assembly
@@ -287,6 +297,12 @@ namespace RPGame.Enemies.Tests
             serializedController.FindProperty("config").objectReferenceValue = statisticsConfig;
             serializedController.FindProperty("initializeOnAwake").boolValue = false;
             serializedController.ApplyModifiedPropertiesWithoutUndo();
+        }
+
+        private static void SetIsLeaping(Movement enemyMovement, bool isLeaping)
+        {
+            FieldInfo field = typeof(Movement).GetField("isLeaping", BindingFlags.Instance | BindingFlags.NonPublic);
+            field.SetValue(enemyMovement, isLeaping);
         }
 
         private static void ClearTargetRegistry()

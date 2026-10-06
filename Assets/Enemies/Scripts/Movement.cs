@@ -12,17 +12,26 @@ namespace RPGame.Enemies
     {
         [SerializeField] private float moveSpeed = 3.5f;
         [SerializeField] private float destinationChangeThreshold = 0.05f;
+        [SerializeField] private float traversalLeapSpeed = 6f;
+        [SerializeField] private float traversalLeapArcHeight = 1f;
 
         private NavMeshAgent agent;
         private Vector3 lastDestination;
         private bool hasDestination;
         private Coroutine knockbackCoroutine;
+        private Coroutine leapCoroutine;
         private int movementBlockCount;
         private bool isKnockedBack;
+        private bool isLeaping;
+        private bool leapAgentWasStopped;
+        private bool leapAgentUpdatedPosition = true;
+        private bool leapTraversesOffMeshLink;
+        private Vector3 leapStartPosition;
         private readonly RaycastHit[] knockbackHitBuffer = new RaycastHit[16];
         private readonly MovementSpeedModifiers movementSpeedModifiers = new();
 
-        private Vector3 Position => transform.position;
+        public Vector3 Position => transform.position;
+        public bool IsLeaping => isLeaping;
 
         private void Start()
         {
@@ -36,9 +45,14 @@ namespace RPGame.Enemies
             ConfigureAgent();
         }
 
-        internal void MoveTo(Vector3 position)
+        private void Update()
         {
-            if (isKnockedBack || IsMovementBlocked || !CanUseAgent())
+            TryTraverseOffMeshLink();
+        }
+
+        public void MoveTo(Vector3 position)
+        {
+            if (isLeaping || isKnockedBack || IsMovementBlocked || !CanUseAgent())
             {
                 return;
             }
@@ -59,7 +73,7 @@ namespace RPGame.Enemies
             }
         }
 
-        internal void FaceTowards(Vector3 position)
+        public void FaceTowards(Vector3 position)
         {
             Vector3 direction = position - transform.position;
             direction.y = 0f;
@@ -71,9 +85,9 @@ namespace RPGame.Enemies
             transform.rotation = Quaternion.LookRotation(direction);
         }
 
-        internal void Stop()
+        public void Stop()
         {
-            if (isKnockedBack || !CanUseAgent())
+            if (isLeaping || isKnockedBack || !CanUseAgent())
             {
                 return;
             }
@@ -81,7 +95,7 @@ namespace RPGame.Enemies
             agent.isStopped = true;
         }
 
-        private bool TryResolvePosition(Vector3 desiredPosition, out Vector3 validPosition)
+        public bool TryResolvePosition(Vector3 desiredPosition, out Vector3 validPosition)
         {
             validPosition = default;
             if (agent == null)
@@ -98,11 +112,144 @@ namespace RPGame.Enemies
             return true;
         }
 
+        public bool TryLeapTo(Vector3 destination, float speed, float arcHeight)
+        {
+            if (!CanLeap() || !HasValidLeapParameters(destination, speed, arcHeight))
+            {
+                return false;
+            }
+
+            if (!NavMesh.SamplePosition(destination, out NavMeshHit hit, agent.height, agent.areaMask))
+            {
+                return false;
+            }
+
+            StartLeap(hit.position, speed, arcHeight);
+            return true;
+        }
+
+        private static bool HasValidLeapParameters(Vector3 destination, float speed, float arcHeight)
+        {
+            return speed > 0f
+                && arcHeight >= 0f
+                && !float.IsNaN(speed)
+                && !float.IsInfinity(speed)
+                && !float.IsNaN(arcHeight)
+                && !float.IsInfinity(arcHeight)
+                && !float.IsNaN(destination.x)
+                && !float.IsNaN(destination.y)
+                && !float.IsNaN(destination.z)
+                && !float.IsInfinity(destination.x)
+                && !float.IsInfinity(destination.y)
+                && !float.IsInfinity(destination.z);
+        }
+
+        internal void CancelLeap()
+        {
+            if (!isLeaping)
+            {
+                return;
+            }
+
+            if (leapCoroutine != null)
+            {
+                StopCoroutine(leapCoroutine);
+                leapCoroutine = null;
+            }
+
+            FinishLeap(leapStartPosition, false);
+        }
+
+        private void StartLeap(Vector3 landingPoint, float speed, float arcHeight)
+        {
+            leapStartPosition = transform.position;
+            leapAgentWasStopped = agent.isStopped;
+            leapAgentUpdatedPosition = agent.updatePosition;
+            leapTraversesOffMeshLink = agent.isOnOffMeshLink;
+            isLeaping = true;
+            agent.isStopped = true;
+            agent.updatePosition = false;
+            leapCoroutine = StartCoroutine(LeapRoutine(leapStartPosition, landingPoint, speed, arcHeight));
+        }
+
+        private IEnumerator LeapRoutine(Vector3 start, Vector3 end, float speed, float arcHeight)
+        {
+            float duration = Vector3.Distance(start, end) / speed;
+            float elapsed = 0f;
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                float progress = duration > Mathf.Epsilon ? Mathf.Clamp01(elapsed / duration) : 1f;
+                transform.position = Vector3.Lerp(start, end, progress)
+                    + Vector3.up * Mathf.Sin(Mathf.PI * progress) * arcHeight;
+                yield return null;
+            }
+
+            FinishLeap(end, true);
+        }
+
+        private void FinishLeap(Vector3 landingPoint, bool completeTraversal)
+        {
+            bool shouldCompleteTraversal = completeTraversal && leapTraversesOffMeshLink;
+            isLeaping = false;
+            leapCoroutine = null;
+            leapTraversesOffMeshLink = false;
+
+            if (agent == null || !agent.enabled)
+            {
+                leapAgentWasStopped = false;
+                leapAgentUpdatedPosition = true;
+                return;
+            }
+
+            if (NavMesh.SamplePosition(landingPoint, out NavMeshHit hit, agent.height, agent.areaMask))
+            {
+                transform.position = hit.position;
+                agent.Warp(hit.position);
+            }
+
+            if (shouldCompleteTraversal && agent.isOnOffMeshLink)
+            {
+                agent.CompleteOffMeshLink();
+            }
+
+            agent.updatePosition = leapAgentUpdatedPosition;
+            if (agent.isOnNavMesh)
+            {
+                agent.isStopped = IsMovementBlocked || leapAgentWasStopped;
+            }
+
+            leapAgentWasStopped = false;
+            leapAgentUpdatedPosition = true;
+        }
+
+        private void TryTraverseOffMeshLink()
+        {
+            if (!CanLeap() || !agent.isOnOffMeshLink)
+            {
+                return;
+            }
+
+            TryLeapTo(
+                agent.currentOffMeshLinkData.endPos,
+                traversalLeapSpeed,
+                traversalLeapArcHeight);
+        }
+
+        private bool CanLeap()
+        {
+            return !isLeaping
+                && !isKnockedBack
+                && !IsMovementBlocked
+                && CanUseAgent();
+        }
+
         private void ConfigureAgent()
         {
             if (agent != null)
             {
                 agent.speed = GetModifiedSpeed(moveSpeed);
+                agent.autoTraverseOffMeshLink = false;
             }
         }
 
@@ -139,6 +286,11 @@ namespace RPGame.Enemies
             float duration,
             Action<Collider, Vector3> onCollision = null)
         {
+            if (isLeaping)
+            {
+                return;
+            }
+
             if (knockbackCoroutine != null)
             {
                 StopCoroutine(knockbackCoroutine);
@@ -297,6 +449,8 @@ namespace RPGame.Enemies
         {
             CacheRequiredComponents();
 
+            CancelLeap();
+
             if (knockbackCoroutine != null)
             {
                 StopCoroutine(knockbackCoroutine);
@@ -375,29 +529,10 @@ namespace RPGame.Enemies
         {
             moveSpeed = Mathf.Max(0f, moveSpeed);
             destinationChangeThreshold = Mathf.Max(0f, destinationChangeThreshold);
+            traversalLeapSpeed = Mathf.Max(0.01f, traversalLeapSpeed);
+            traversalLeapArcHeight = Mathf.Max(0f, traversalLeapArcHeight);
             ConfigureAgent();
         }
 
-        void IEnemyMovement.MoveTo(Vector3 position)
-        {
-            MoveTo(position);
-        }
-
-        void IEnemyMovement.FaceTowards(Vector3 position)
-        {
-            FaceTowards(position);
-        }
-
-        void IEnemyMovement.Stop()
-        {
-            Stop();
-        }
-
-        Vector3 IEnemyMovement.Position => Position;
-
-        bool IEnemyMovement.TryResolvePosition(Vector3 desiredPosition, out Vector3 validPosition)
-        {
-            return TryResolvePosition(desiredPosition, out validPosition);
-        }
     }
 }

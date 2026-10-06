@@ -47,6 +47,64 @@ namespace RPGame.Enemies.Tests
         }
 
         [Test]
+        public void Start_DisablesAutomaticOffMeshLinkTraversal()
+        {
+            Movement movement = CreateMovement(out NavMeshAgent agent);
+
+            InvokeStart(movement);
+
+            Assert.IsFalse(agent.autoTraverseOffMeshLink);
+        }
+
+        [Test]
+        public void ApplyKnockback_WhenLeaping_DoesNotStartKnockback()
+        {
+            Movement movement = CreateMovement(out _);
+            SetIsLeaping(movement, true);
+
+            movement.ApplyKnockback(Vector3.forward, 1f, 0.5f);
+
+            Assert.IsTrue(movement.IsLeaping);
+            Assert.IsNull(GetKnockbackCoroutine(movement));
+        }
+
+        [Test]
+        public void ResetForSpawn_WhenLeaping_ClearsLeapState()
+        {
+            Movement movement = CreateMovement(out _);
+            SetIsLeaping(movement, true);
+
+            movement.ResetForSpawn();
+
+            Assert.IsFalse(movement.IsLeaping);
+        }
+
+        [Test]
+        public void CancelLeap_WhenTraversingOffMeshLink_ClearsTraversalWithoutNormalCompletion()
+        {
+            Movement movement = CreateMovement(out _);
+            SetIsLeaping(movement, true);
+            SetLeapTraversalState(movement, true);
+
+            InvokeCancelLeap(movement);
+
+            Assert.IsFalse(movement.IsLeaping);
+            Assert.IsFalse(GetLeapTraversalState(movement));
+            Assert.IsNull(GetLeapCoroutine(movement));
+        }
+
+        [Test]
+        public void BlockMovement_WhenLeaping_DoesNotCancelLeap()
+        {
+            Movement movement = CreateMovement(out _);
+            SetIsLeaping(movement, true);
+
+            movement.BlockMovement();
+
+            Assert.IsTrue(movement.IsLeaping);
+        }
+
+        [Test]
         public void Movement_DoesNotReferenceDetectionPlayerOrCombat()
         {
             bool hasForbiddenField = typeof(Movement)
@@ -136,6 +194,42 @@ namespace RPGame.Enemies.Tests
                 "TryApplyKnockbackStep",
                 BindingFlags.Instance | BindingFlags.NonPublic);
             return (bool)method.Invoke(movement, new object[] { displacement, onCollision });
+        }
+
+        private static void SetIsLeaping(Movement movement, bool isLeaping)
+        {
+            FieldInfo field = typeof(Movement).GetField("isLeaping", BindingFlags.Instance | BindingFlags.NonPublic);
+            field.SetValue(movement, isLeaping);
+        }
+
+        private static Coroutine GetKnockbackCoroutine(Movement movement)
+        {
+            FieldInfo field = typeof(Movement).GetField("knockbackCoroutine", BindingFlags.Instance | BindingFlags.NonPublic);
+            return (Coroutine)field.GetValue(movement);
+        }
+
+        private static void InvokeCancelLeap(Movement movement)
+        {
+            MethodInfo method = typeof(Movement).GetMethod("CancelLeap", BindingFlags.Instance | BindingFlags.NonPublic);
+            method.Invoke(movement, null);
+        }
+
+        private static void SetLeapTraversalState(Movement movement, bool traversesOffMeshLink)
+        {
+            FieldInfo field = typeof(Movement).GetField("leapTraversesOffMeshLink", BindingFlags.Instance | BindingFlags.NonPublic);
+            field.SetValue(movement, traversesOffMeshLink);
+        }
+
+        private static bool GetLeapTraversalState(Movement movement)
+        {
+            FieldInfo field = typeof(Movement).GetField("leapTraversesOffMeshLink", BindingFlags.Instance | BindingFlags.NonPublic);
+            return (bool)field.GetValue(movement);
+        }
+
+        private static Coroutine GetLeapCoroutine(Movement movement)
+        {
+            FieldInfo field = typeof(Movement).GetField("leapCoroutine", BindingFlags.Instance | BindingFlags.NonPublic);
+            return (Coroutine)field.GetValue(movement);
         }
 
         private sealed class TestKnockbackCollisionCallback

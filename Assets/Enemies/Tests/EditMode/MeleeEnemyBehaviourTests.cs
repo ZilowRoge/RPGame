@@ -259,6 +259,7 @@ namespace RPGame.Enemies.Tests
             public int FaceTowardsCount { get; private set; }
             public Vector3 LastDestination { get; private set; }
             public Vector3 Position { get; set; }
+            public bool IsLeaping => false;
             public Vector3 LastFaceTarget { get; private set; }
 
             public void FaceTowards(Vector3 position)
@@ -271,6 +272,11 @@ namespace RPGame.Enemies.Tests
             {
                 MoveToCount++;
                 LastDestination = position;
+            }
+
+            public bool TryLeapTo(Vector3 destination, float speed, float arcHeight)
+            {
+                return false;
             }
 
             public void Stop()

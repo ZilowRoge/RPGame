@@ -16497,7 +16497,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.AI.Navigation::Unity.AI.Navigation.NavMeshLink
   m_SerializedVersion: 1
   m_AgentTypeID: 0
-  m_StartPoint: {x: -4.1733212, y: 3.0449624, z: -2.312669}
+  m_StartPoint: {x: -4.5415416, y: 2.6048386, z: -2.3126683}
   m_EndPoint: {x: -6.523609, y: 1.354451, z: -2.3161767}
   m_StartTransform: {fileID: 0}
   m_EndTransform: {fileID: 0}
@@ -16505,7 +16505,7 @@ MonoBehaviour:
   m_Width: 4.1503897
   m_CostModifier: 1
   m_IsOverridingCost: 0
-  m_Bidirectional: 0
+  m_Bidirectional: 1
   m_AutoUpdatePosition: 0
   m_Area: 0
 --- !u!114 &862005823
@@ -16522,15 +16522,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.AI.Navigation::Unity.AI.Navigation.NavMeshLink
   m_SerializedVersion: 1
   m_AgentTypeID: 0
-  m_StartPoint: {x: 3.0102258, y: 3.1802826, z: 3.439892}
-  m_EndPoint: {x: 3.1216612, y: 1.4515829, z: 6.4470243}
+  m_StartPoint: {x: 3.010228, y: 2.7486978, z: 3.9185205}
+  m_EndPoint: {x: 3.020594, y: 1.4515829, z: 5.729112}
   m_StartTransform: {fileID: 0}
   m_EndTransform: {fileID: 0}
   m_Activated: 1
   m_Width: 2.0422466
   m_CostModifier: 1
   m_IsOverridingCost: 0
-  m_Bidirectional: 0
+  m_Bidirectional: 1
   m_AutoUpdatePosition: 0
   m_Area: 0
 --- !u!114 &862005824
@@ -16547,15 +16547,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.AI.Navigation::Unity.AI.Navigation.NavMeshLink
   m_SerializedVersion: 1
   m_AgentTypeID: 0
-  m_StartPoint: {x: 3.5506723, y: 3.0449624, z: 2.4545069}
-  m_EndPoint: {x: 6.2023516, y: 1.4515829, z: 2.492904}
+  m_StartPoint: {x: 3.707115, y: 2.5956242, z: 2.4545069}
+  m_EndPoint: {x: 5.5908875, y: 1.4515829, z: 2.4929032}
   m_StartTransform: {fileID: 0}
   m_EndTransform: {fileID: 0}
   m_Activated: 1
   m_Width: 3.2293963
   m_CostModifier: 1
   m_IsOverridingCost: 0
-  m_Bidirectional: 0
+  m_Bidirectional: 1
   m_AutoUpdatePosition: 0
   m_Area: 0
 --- !u!114 &862005825
@@ -16572,7 +16572,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.AI.Navigation::Unity.AI.Navigation.NavMeshLink
   m_SerializedVersion: 1
   m_AgentTypeID: 0
-  m_StartPoint: {x: 3.246661, y: 3.0449624, z: -2.4842126}
+  m_StartPoint: {x: 3.24666, y: 2.637401, z: -2.4842124}
   m_EndPoint: {x: 6.195254, y: 0.3958295, z: -2.4806533}
   m_StartTransform: {fileID: 0}
   m_EndTransform: {fileID: 0}
@@ -16597,7 +16597,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.AI.Navigation::Unity.AI.Navigation.NavMeshLink
   m_SerializedVersion: 1
   m_AgentTypeID: 0
-  m_StartPoint: {x: 1.6799383, y: 3.0449624, z: -4.0462317}
+  m_StartPoint: {x: 1.6799371, y: 2.7058604, z: -4.0462317}
   m_EndPoint: {x: 1.739259, y: 0.3958295, z: -6.745165}
   m_StartTransform: {fileID: 0}
   m_EndTransform: {fileID: 0}
@@ -16622,8 +16622,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.AI.Navigation::Unity.AI.Navigation.NavMeshLink
   m_SerializedVersion: 1
   m_AgentTypeID: 0
-  m_StartPoint: {x: -4.2810984, y: 3.0449624, z: 2.4966018}
-  m_EndPoint: {x: -6.819427, y: 0.3958295, z: 2.5394459}
+  m_StartPoint: {x: -4.5864463, y: 2.6567497, z: 2.496601}
+  m_EndPoint: {x: -6.5735965, y: -0.15846041, z: 2.539446}
   m_StartTransform: {fileID: 0}
   m_EndTransform: {fileID: 0}
   m_Activated: 1
@@ -16647,7 +16647,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.AI.Navigation::Unity.AI.Navigation.NavMeshLink
   m_SerializedVersion: 1
   m_AgentTypeID: 0
-  m_StartPoint: {x: -2.8618324, y: 3.0449624, z: 3.6453707}
+  m_StartPoint: {x: -2.8618343, y: 2.5816731, z: 3.9747338}
   m_EndPoint: {x: -2.864458, y: 0.3958295, z: 6.1453075}
   m_StartTransform: {fileID: 0}
   m_EndTransform: {fileID: 0}
@@ -25738,6 +25738,7 @@ GameObject:
   - component: {fileID: 1331330879}
   - component: {fileID: 1331330878}
   - component: {fileID: 1331330881}
+  - component: {fileID: 1331330882}
   m_Layer: 0
   m_Name: Cube (1)
   m_TagString: Untagged
@@ -25858,6 +25859,31 @@ MonoBehaviour:
   m_EndTransform: {fileID: 0}
   m_Activated: 1
   m_Width: 6.738154
+  m_CostModifier: 1
+  m_IsOverridingCost: 0
+  m_Bidirectional: 1
+  m_AutoUpdatePosition: 0
+  m_Area: 0
+--- !u!114 &1331330882
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1331330876}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6eeb5dc026fdf4b488bc7ae0138ab719, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.AI.Navigation::Unity.AI.Navigation.NavMeshLink
+  m_SerializedVersion: 1
+  m_AgentTypeID: 0
+  m_StartPoint: {x: -0.34785053, y: 0.6926128, z: -2.9899995}
+  m_EndPoint: {x: -0.33854353, y: 0, z: -4.9199986}
+  m_StartTransform: {fileID: 0}
+  m_EndTransform: {fileID: 0}
+  m_Activated: 1
+  m_Width: 4.1
   m_CostModifier: 1
   m_IsOverridingCost: 0
   m_Bidirectional: 1
@@ -36265,6 +36291,8 @@ GameObject:
   - component: {fileID: 1831945811}
   - component: {fileID: 1831945810}
   - component: {fileID: 1831945809}
+  - component: {fileID: 1831945813}
+  - component: {fileID: 1831945812}
   m_Layer: 0
   m_Name: Cube (2)
   m_TagString: Untagged
@@ -36365,6 +36393,56 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1831945807}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &1831945812
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1831945807}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6eeb5dc026fdf4b488bc7ae0138ab719, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.AI.Navigation::Unity.AI.Navigation.NavMeshLink
+  m_SerializedVersion: 1
+  m_AgentTypeID: 0
+  m_StartPoint: {x: 2.541827, y: 0.67663723, z: 0.02336569}
+  m_EndPoint: {x: 4.535361, y: -0.6289967, z: -0.001721138}
+  m_StartTransform: {fileID: 0}
+  m_EndTransform: {fileID: 0}
+  m_Activated: 1
+  m_Width: 7.117803
+  m_CostModifier: 1
+  m_IsOverridingCost: 0
+  m_Bidirectional: 1
+  m_AutoUpdatePosition: 0
+  m_Area: 0
+--- !u!114 &1831945813
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1831945807}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6eeb5dc026fdf4b488bc7ae0138ab719, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.AI.Navigation::Unity.AI.Navigation.NavMeshLink
+  m_SerializedVersion: 1
+  m_AgentTypeID: 0
+  m_StartPoint: {x: 0.107151814, y: 0.67663723, z: 3.1612709}
+  m_EndPoint: {x: 0.1307458, y: -0.6289967, z: 4.860903}
+  m_StartTransform: {fileID: 0}
+  m_EndTransform: {fileID: 0}
+  m_Activated: 1
+  m_Width: 5.675643
+  m_CostModifier: 1
+  m_IsOverridingCost: 0
+  m_Bidirectional: 1
+  m_AutoUpdatePosition: 0
+  m_Area: 0
 --- !u!1 &1834852563
 GameObject:
   m_ObjectHideFlags: 0
