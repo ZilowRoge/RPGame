@@ -94,6 +94,8 @@ namespace RPGame.Enemies.Tests
             public int TryResolvePositionCount { get; private set; }
             public Vector3 Position { get; set; }
             public bool IsLeaping => false;
+            public bool IsCharging => false;
+            public bool IsMovementBlocked => false;
             public Vector3 LastDestination { get; private set; }
 
             public void FaceTowards(Vector3 position)
@@ -107,6 +109,16 @@ namespace RPGame.Enemies.Tests
             }
 
             public bool TryLeapTo(Vector3 destination, float speed, float arcHeight)
+            {
+                return false;
+            }
+
+            public bool TryStartCharge(
+                Vector3 destination,
+                float speed,
+                float maxDistance,
+                float knockbackResistance,
+                System.Action<Collider, Vector3> onCollision)
             {
                 return false;
             }

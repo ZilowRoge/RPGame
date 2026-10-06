@@ -113,6 +113,20 @@ namespace RPGame.Enemies
                     createdBehaviour = new MeleeEnemyBehaviour(detection, movement, meleeAttack);
                     return true;
 
+                case ChargingMeleeEnemyBehaviourConfig chargingConfig:
+                    if (!TryGetAttack(AttackType.Melee, out IEnemyAttack chargingMeleeAttack))
+                    {
+                        return false;
+                    }
+
+                    createdBehaviour = new ChargingMeleeEnemyBehaviour(
+                        detection,
+                        movement,
+                        chargingMeleeAttack,
+                        chargingConfig,
+                        gameObject);
+                    return true;
+
                 case RangedEnemyBehaviourConfig rangedConfig:
                     if (!TryGetAttack(AttackType.StraightProjectile, out IEnemyAttack straightAttack)
                         || !TryGetAttack(AttackType.ParabolicProjectile, out IEnemyAttack parabolicAttack))

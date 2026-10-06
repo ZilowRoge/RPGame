@@ -20,18 +20,30 @@ namespace RPGame.Enemies
         private bool hasDestination;
         private Coroutine knockbackCoroutine;
         private Coroutine leapCoroutine;
+        private Coroutine chargeCoroutine;
         private int movementBlockCount;
         private bool isKnockedBack;
         private bool isLeaping;
+        private bool isCharging;
         private bool leapAgentWasStopped;
         private bool leapAgentUpdatedPosition = true;
         private bool leapTraversesOffMeshLink;
         private Vector3 leapStartPosition;
+        private bool chargeAgentWasStopped;
+        private bool chargeAgentUpdatedPosition = true;
+        private Vector3 chargeDirection;
+        private float chargeSpeed;
+        private float chargeMaxDistance;
+        private float chargeDistance;
+        private float chargeKnockbackResistance;
+        private Action<Collider, Vector3> chargeCollisionHandler;
         private readonly RaycastHit[] knockbackHitBuffer = new RaycastHit[16];
         private readonly MovementSpeedModifiers movementSpeedModifiers = new();
 
         public Vector3 Position => transform.position;
         public bool IsLeaping => isLeaping;
+        public bool IsCharging => isCharging;
+        public bool IsMovementBlocked => movementBlockCount > 0;
 
         private void Start()
         {
@@ -52,7 +64,7 @@ namespace RPGame.Enemies
 
         public void MoveTo(Vector3 position)
         {
-            if (isLeaping || isKnockedBack || IsMovementBlocked || !CanUseAgent())
+            if (isLeaping || isCharging || isKnockedBack || IsMovementBlocked || !CanUseAgent())
             {
                 return;
             }
@@ -75,6 +87,11 @@ namespace RPGame.Enemies
 
         public void FaceTowards(Vector3 position)
         {
+            if (isCharging)
+            {
+                return;
+            }
+
             Vector3 direction = position - transform.position;
             direction.y = 0f;
             if (direction.sqrMagnitude <= 0f)
@@ -87,7 +104,7 @@ namespace RPGame.Enemies
 
         public void Stop()
         {
-            if (isLeaping || isKnockedBack || !CanUseAgent())
+            if (isLeaping || isCharging || isKnockedBack || !CanUseAgent())
             {
                 return;
             }
@@ -126,6 +143,191 @@ namespace RPGame.Enemies
 
             StartLeap(hit.position, speed, arcHeight);
             return true;
+        }
+
+        public bool TryStartCharge(
+            Vector3 destination,
+            float speed,
+            float maxDistance,
+            float knockbackResistance,
+            Action<Collider, Vector3> onCollision)
+        {
+            if (!CanStartCharge(destination, speed, maxDistance, knockbackResistance))
+            {
+                return false;
+            }
+
+            Vector3 direction = destination - transform.position;
+            direction.y = 0f;
+            chargeDirection = direction.normalized;
+            chargeSpeed = speed;
+            chargeMaxDistance = maxDistance;
+            chargeDistance = 0f;
+            chargeKnockbackResistance = knockbackResistance;
+            chargeCollisionHandler = onCollision;
+            chargeAgentWasStopped = agent.isStopped;
+            chargeAgentUpdatedPosition = agent.updatePosition;
+            isCharging = true;
+            agent.isStopped = true;
+            agent.updatePosition = false;
+            chargeCoroutine = StartCoroutine(ChargeRoutine());
+            return true;
+        }
+
+        internal void CancelCharge()
+        {
+            if (!isCharging)
+            {
+                return;
+            }
+
+            if (chargeCoroutine != null)
+            {
+                StopCoroutine(chargeCoroutine);
+                chargeCoroutine = null;
+            }
+
+            FinishCharge();
+        }
+
+        private IEnumerator ChargeRoutine()
+        {
+            while (chargeDistance < chargeMaxDistance)
+            {
+                float stepDistance = Mathf.Min(chargeSpeed * Time.deltaTime, chargeMaxDistance - chargeDistance);
+                if (stepDistance <= Mathf.Epsilon)
+                {
+                    yield return null;
+                    continue;
+                }
+
+                if (!TryApplyChargeStep(chargeDirection * stepDistance))
+                {
+                    break;
+                }
+
+                chargeDistance += stepDistance;
+                yield return null;
+            }
+
+            FinishCharge();
+        }
+
+        private bool CanStartCharge(
+            Vector3 destination,
+            float speed,
+            float maxDistance,
+            float knockbackResistance)
+        {
+            Vector3 direction = destination - transform.position;
+            direction.y = 0f;
+            return !isLeaping
+                && !isCharging
+                && !isKnockedBack
+                && !IsMovementBlocked
+                && CanUseAgent()
+                && direction.sqrMagnitude > Mathf.Epsilon
+                && !float.IsNaN(destination.x)
+                && !float.IsNaN(destination.y)
+                && !float.IsNaN(destination.z)
+                && !float.IsInfinity(destination.x)
+                && !float.IsInfinity(destination.y)
+                && !float.IsInfinity(destination.z)
+                && speed > 0f
+                && maxDistance > 0f
+                && !float.IsNaN(speed)
+                && !float.IsInfinity(speed)
+                && !float.IsNaN(maxDistance)
+                && !float.IsInfinity(maxDistance)
+                && knockbackResistance >= 0f
+                && knockbackResistance <= 1f;
+        }
+
+        private bool TryApplyChargeStep(Vector3 displacement)
+        {
+            float distance = displacement.magnitude;
+            if (distance <= Mathf.Epsilon)
+            {
+                return true;
+            }
+
+            Vector3 center = transform.position + Vector3.up * (agent != null ? agent.height * 0.5f : 0.5f);
+            float radius = agent != null ? agent.radius : 0.25f;
+            float halfHeight = Mathf.Max(radius, (agent != null ? agent.height : 1f) * 0.5f);
+            Vector3 bottom = center + Vector3.down * (halfHeight - radius);
+            Vector3 top = center + Vector3.up * (halfHeight - radius);
+            int hitCount = Physics.CapsuleCastNonAlloc(
+                bottom,
+                top,
+                radius,
+                displacement / distance,
+                knockbackHitBuffer,
+                distance,
+                ~0,
+                QueryTriggerInteraction.Ignore);
+            float closestDistance = float.MaxValue;
+            RaycastHit closestHit = default;
+            bool foundHit = false;
+            for (int i = 0; i < hitCount; i++)
+            {
+                RaycastHit hit = knockbackHitBuffer[i];
+                if (hit.collider == null
+                    || hit.collider.transform == transform
+                    || hit.collider.transform.IsChildOf(transform)
+                    || IsEnemyCollider(hit.collider)
+                    || hit.distance >= closestDistance)
+                {
+                    continue;
+                }
+
+                closestDistance = hit.distance;
+                closestHit = hit;
+                foundHit = true;
+            }
+
+            if (!foundHit)
+            {
+                transform.position += displacement;
+                return true;
+            }
+
+            transform.position += displacement.normalized * Mathf.Max(0f, closestDistance - 0.01f);
+            chargeCollisionHandler?.Invoke(closestHit.collider, closestHit.point);
+            return false;
+        }
+
+        private void FinishCharge()
+        {
+            isCharging = false;
+            chargeCoroutine = null;
+            chargeCollisionHandler = null;
+            chargeDirection = default;
+            chargeSpeed = 0f;
+            chargeMaxDistance = 0f;
+            chargeDistance = 0f;
+            chargeKnockbackResistance = 0f;
+
+            if (agent == null || !agent.enabled)
+            {
+                chargeAgentWasStopped = false;
+                chargeAgentUpdatedPosition = true;
+                return;
+            }
+
+            if (NavMesh.SamplePosition(transform.position, out NavMeshHit hit, agent.height, agent.areaMask))
+            {
+                transform.position = hit.position;
+                agent.Warp(hit.position);
+            }
+
+            agent.updatePosition = chargeAgentUpdatedPosition;
+            if (agent.isOnNavMesh)
+            {
+                agent.isStopped = IsMovementBlocked || chargeAgentWasStopped;
+            }
+
+            chargeAgentWasStopped = false;
+            chargeAgentUpdatedPosition = true;
         }
 
         private static bool HasValidLeapParameters(Vector3 destination, float speed, float arcHeight)
@@ -291,6 +493,16 @@ namespace RPGame.Enemies
                 return;
             }
 
+            if (isCharging)
+            {
+                distance *= chargeKnockbackResistance;
+                CancelCharge();
+                if (distance <= Mathf.Epsilon)
+                {
+                    return;
+                }
+            }
+
             if (knockbackCoroutine != null)
             {
                 StopCoroutine(knockbackCoroutine);
@@ -433,8 +645,6 @@ namespace RPGame.Enemies
             }
         }
 
-        private bool IsMovementBlocked => movementBlockCount > 0;
-
         public void ResetForSpawn()
         {
             ResetRuntimeState(stopAgent: false);
@@ -449,6 +659,7 @@ namespace RPGame.Enemies
         {
             CacheRequiredComponents();
 
+            CancelCharge();
             CancelLeap();
 
             if (knockbackCoroutine != null)
@@ -496,6 +707,7 @@ namespace RPGame.Enemies
         public void BlockMovement()
         {
             movementBlockCount++;
+            CancelCharge();
             Stop();
         }
 

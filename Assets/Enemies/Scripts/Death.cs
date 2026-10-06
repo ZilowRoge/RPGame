@@ -81,6 +81,7 @@ namespace RPGame.Enemies
             }
 
             IsDead = true;
+            movement.CancelCharge();
             movement.CancelLeap();
             movement.Stop();
             controller.enabled = false;

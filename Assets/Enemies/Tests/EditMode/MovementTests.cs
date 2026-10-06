@@ -105,6 +105,52 @@ namespace RPGame.Enemies.Tests
         }
 
         [Test]
+        public void BlockMovement_WhenCharging_CancelsCharge()
+        {
+            Movement movement = CreateMovement(out _);
+            SetIsCharging(movement, true);
+
+            movement.BlockMovement();
+
+            Assert.IsFalse(movement.IsCharging);
+        }
+
+        [Test]
+        public void ApplyKnockback_WhenCharging_UsesConfiguredResistanceAndCancelsCharge()
+        {
+            Movement movement = CreateMovement(out _);
+            SetIsCharging(movement, true);
+            SetChargeKnockbackResistance(movement, 0f);
+
+            movement.ApplyKnockback(Vector3.forward, 5f, 0.5f);
+
+            Assert.IsFalse(movement.IsCharging);
+            Assert.IsNull(GetKnockbackCoroutine(movement));
+        }
+
+        [Test]
+        public void MovementSpeedModifier_DoesNotChangeActiveChargeSpeed()
+        {
+            Movement movement = CreateMovement(out _);
+            SetChargeSpeed(movement, 8f);
+
+            movement.AddMovementSpeedModifier(0.5f);
+
+            Assert.AreEqual(8f, GetChargeSpeed(movement));
+        }
+
+        [Test]
+        public void ResetForDespawn_WhenCharging_ClearsChargeState()
+        {
+            Movement movement = CreateMovement(out _);
+            SetIsCharging(movement, true);
+
+            movement.ResetForDespawn();
+
+            Assert.IsFalse(movement.IsCharging);
+        }
+
+        [Test]
         public void Movement_DoesNotReferenceDetectionPlayerOrCombat()
         {
             bool hasForbiddenField = typeof(Movement)
@@ -200,6 +246,32 @@ namespace RPGame.Enemies.Tests
         {
             FieldInfo field = typeof(Movement).GetField("isLeaping", BindingFlags.Instance | BindingFlags.NonPublic);
             field.SetValue(movement, isLeaping);
+        }
+
+        private static void SetIsCharging(Movement movement, bool isCharging)
+        {
+            FieldInfo field = typeof(Movement).GetField("isCharging", BindingFlags.Instance | BindingFlags.NonPublic);
+            field.SetValue(movement, isCharging);
+        }
+
+        private static void SetChargeKnockbackResistance(Movement movement, float resistance)
+        {
+            FieldInfo field = typeof(Movement).GetField(
+                "chargeKnockbackResistance",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            field.SetValue(movement, resistance);
+        }
+
+        private static void SetChargeSpeed(Movement movement, float chargeSpeed)
+        {
+            FieldInfo field = typeof(Movement).GetField("chargeSpeed", BindingFlags.Instance | BindingFlags.NonPublic);
+            field.SetValue(movement, chargeSpeed);
+        }
+
+        private static float GetChargeSpeed(Movement movement)
+        {
+            FieldInfo field = typeof(Movement).GetField("chargeSpeed", BindingFlags.Instance | BindingFlags.NonPublic);
+            return (float)field.GetValue(movement);
         }
 
         private static Coroutine GetKnockbackCoroutine(Movement movement)

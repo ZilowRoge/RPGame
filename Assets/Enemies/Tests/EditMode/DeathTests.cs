@@ -221,6 +221,16 @@ namespace RPGame.Enemies.Tests
         }
 
         [Test]
+        public void DeathEvent_WhenCharging_ClearsChargeState()
+        {
+            SetIsCharging(movement, true);
+
+            KillEnemy();
+
+            Assert.IsFalse(movement.IsCharging);
+        }
+
+        [Test]
         public void CoreAndCombat_DoNotReferenceEnemiesOrLoot()
         {
             bool coreReferencesEnemies = typeof(StatisticsController).Assembly
@@ -303,6 +313,12 @@ namespace RPGame.Enemies.Tests
         {
             FieldInfo field = typeof(Movement).GetField("isLeaping", BindingFlags.Instance | BindingFlags.NonPublic);
             field.SetValue(enemyMovement, isLeaping);
+        }
+
+        private static void SetIsCharging(Movement enemyMovement, bool isCharging)
+        {
+            FieldInfo field = typeof(Movement).GetField("isCharging", BindingFlags.Instance | BindingFlags.NonPublic);
+            field.SetValue(enemyMovement, isCharging);
         }
 
         private static void ClearTargetRegistry()
