@@ -10,9 +10,9 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 04a16d32523a4c48ba2b77af423ec766, type: 3}
-  m_Name: RangedEnemyDefinition
+  m_Name: ChargeFastMeleeEnemyDefinition
   m_EditorClassIdentifier: RPGame.Encounter::RPGame.Encounter.EnemyDefinition
-  prefab: {fileID: 1330688795939094697, guid: c28530f0280de3145a19b87c536c22e2, type: 3}
-  cost: 5
-  unlockWave: 4
+  prefab: {fileID: 3183307177004933665, guid: 2c52022a277bd8541b9cb678e6378335, type: 3}
+  cost: 6
+  unlockWave: 1
   prewarmCount: 30

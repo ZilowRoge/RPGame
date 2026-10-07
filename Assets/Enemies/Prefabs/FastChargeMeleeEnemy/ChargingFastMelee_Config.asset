@@ -10,12 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6895df9c967c41758aeb7fe3f742d041, type: 3}
-  m_Name: RangedEnemyConfig
+  m_Name: ChargingFastMelee_Config
   m_EditorClassIdentifier: RPGame.Enemies::RPGame.Enemies.Config
-  behaviourConfig: {fileID: 11400000, guid: 1d7aa57ea7e99ae41a963597115fa4b8, type: 2}
+  behaviourConfig: {fileID: 11400000, guid: 18d594afa2651ce40a21416f5442616d, type: 2}
   attacks:
-  - type: 1
-    config: {fileID: 11400000, guid: 83fc017e785e14444956eba27ca575d0, type: 2}
-  - type: 2
-    config: {fileID: 11400000, guid: 89a141f1946246446ba5e57ce4ac58c2, type: 2}
-  experienceReward: 50
+  - type: 0
+    config: {fileID: 11400000, guid: 83392ef97f2e41546a5680998f1578c5, type: 2}
+  experienceReward: 40

@@ -15,6 +15,7 @@ namespace RPGame.Enemies
     [RequireComponent(typeof(DamageReceiver))]
     [RequireComponent(typeof(Death))]
     [RequireComponent(typeof(StatusAggregator))]
+    [RequireComponent(typeof(PooledEnemy))]
     public sealed class Controller : MonoBehaviour, IPooledEnemyResettable
     {
         [SerializeField] private Detection detection;

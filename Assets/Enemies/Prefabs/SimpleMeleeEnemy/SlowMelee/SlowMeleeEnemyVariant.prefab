@@ -10,7 +10,7 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 3977383957096067067, guid: 5db7af69051163a4fb31dd64fcae5607, type: 3}
       propertyPath: m_Name
-      value: SlowMeleeEnemy Variant
+      value: SlowMeleeEnemyVariant
       objectReference: {fileID: 0}
     - target: {fileID: 6175671529599007758, guid: 5db7af69051163a4fb31dd64fcae5607, type: 3}
       propertyPath: m_LocalPosition.x
@@ -51,6 +51,10 @@ PrefabInstance:
     - target: {fileID: 6175671529599007758, guid: 5db7af69051163a4fb31dd64fcae5607, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8546718972918938816, guid: 5db7af69051163a4fb31dd64fcae5607, type: 3}
+      propertyPath: moveSpeed
+      value: 2.5
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
