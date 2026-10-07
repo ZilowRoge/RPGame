@@ -311,14 +311,18 @@ namespace RPGame.Enemies.Tests
 
         private static void SetIsLeaping(Movement enemyMovement, bool isLeaping)
         {
-            FieldInfo field = typeof(Movement).GetField("isLeaping", BindingFlags.Instance | BindingFlags.NonPublic);
-            field.SetValue(enemyMovement, isLeaping);
+            FieldInfo movementField = typeof(Movement).GetField("leap", BindingFlags.Instance | BindingFlags.NonPublic);
+            LeapMovement leap = (LeapMovement)movementField.GetValue(enemyMovement);
+            FieldInfo activeField = typeof(LeapMovement).GetField("isActive", BindingFlags.Instance | BindingFlags.NonPublic);
+            activeField.SetValue(leap, isLeaping);
         }
 
         private static void SetIsCharging(Movement enemyMovement, bool isCharging)
         {
-            FieldInfo field = typeof(Movement).GetField("isCharging", BindingFlags.Instance | BindingFlags.NonPublic);
-            field.SetValue(enemyMovement, isCharging);
+            FieldInfo movementField = typeof(Movement).GetField("charge", BindingFlags.Instance | BindingFlags.NonPublic);
+            ChargeMovement charge = (ChargeMovement)movementField.GetValue(enemyMovement);
+            FieldInfo activeField = typeof(ChargeMovement).GetField("isActive", BindingFlags.Instance | BindingFlags.NonPublic);
+            activeField.SetValue(charge, isCharging);
         }
 
         private static void ClearTargetRegistry()

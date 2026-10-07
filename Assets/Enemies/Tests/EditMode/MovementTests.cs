@@ -65,7 +65,7 @@ namespace RPGame.Enemies.Tests
             movement.ApplyKnockback(Vector3.forward, 1f, 0.5f);
 
             Assert.IsTrue(movement.IsLeaping);
-            Assert.IsNull(GetKnockbackCoroutine(movement));
+            Assert.IsFalse(GetKnockback(movement).IsActive);
         }
 
         [Test]
@@ -86,11 +86,10 @@ namespace RPGame.Enemies.Tests
             SetIsLeaping(movement, true);
             SetLeapTraversalState(movement, true);
 
-            InvokeCancelLeap(movement);
+            GetLeap(movement).Cancel();
 
             Assert.IsFalse(movement.IsLeaping);
             Assert.IsFalse(GetLeapTraversalState(movement));
-            Assert.IsNull(GetLeapCoroutine(movement));
         }
 
         [Test]
@@ -125,7 +124,7 @@ namespace RPGame.Enemies.Tests
             movement.ApplyKnockback(Vector3.forward, 5f, 0.5f);
 
             Assert.IsFalse(movement.IsCharging);
-            Assert.IsNull(GetKnockbackCoroutine(movement));
+            Assert.IsFalse(GetKnockback(movement).IsActive);
         }
 
         [Test]
@@ -163,47 +162,6 @@ namespace RPGame.Enemies.Tests
             Assert.IsFalse(hasForbiddenField);
         }
 
-        [Test]
-        public void Knockback_WhenBlockedByObstacle_InvokesCollisionCallback()
-        {
-            Movement movement = CreateMovement(out _);
-            GameObject obstacle = CreateObject("Obstacle");
-            BoxCollider obstacleCollider = obstacle.AddComponent<BoxCollider>();
-            obstacle.transform.position = new Vector3(1.5f, 1f, 0f);
-            Physics.SyncTransforms();
-
-            TestKnockbackCollisionCallback callback = new();
-
-            bool completedMove = InvokeTryApplyKnockbackStep(
-                movement,
-                new Vector3(2f, 0f, 0f),
-                callback.Handle);
-
-            Assert.IsFalse(completedMove);
-            Assert.AreSame(obstacleCollider, callback.Obstacle);
-            Assert.AreEqual(1, callback.CallCount);
-            Assert.That(callback.Point.x, Is.EqualTo(1f).Within(0.01f));
-            Assert.That(callback.Point.y, Is.InRange(
-                obstacleCollider.bounds.min.y - 0.01f,
-                obstacleCollider.bounds.max.y + 0.01f));
-            Assert.That(callback.Point.z, Is.EqualTo(0f).Within(0.01f));
-        }
-
-        [Test]
-        public void Knockback_WhenMoveCompletes_DoesNotNotifyCollisionHandler()
-        {
-            Movement movement = CreateMovement(out _);
-            TestKnockbackCollisionCallback callback = new();
-
-            bool completedMove = InvokeTryApplyKnockbackStep(
-                movement,
-                new Vector3(0.25f, 0f, 0f),
-                callback.Handle);
-
-            Assert.IsTrue(completedMove);
-            Assert.AreEqual(0, callback.CallCount);
-        }
-
         private Movement CreateMovement(out NavMeshAgent agent)
         {
             GameObject gameObject = CreateObject("Movement");
@@ -231,91 +189,71 @@ namespace RPGame.Enemies.Tests
             method.Invoke(movement, null);
         }
 
-        private static bool InvokeTryApplyKnockbackStep(
-            Movement movement,
-            Vector3 displacement,
-            System.Action<Collider, Vector3> onCollision)
-        {
-            MethodInfo method = typeof(Movement).GetMethod(
-                "TryApplyKnockbackStep",
-                BindingFlags.Instance | BindingFlags.NonPublic);
-            return (bool)method.Invoke(movement, new object[] { displacement, onCollision });
-        }
-
         private static void SetIsLeaping(Movement movement, bool isLeaping)
         {
-            FieldInfo field = typeof(Movement).GetField("isLeaping", BindingFlags.Instance | BindingFlags.NonPublic);
-            field.SetValue(movement, isLeaping);
+            FieldInfo field = typeof(LeapMovement).GetField("isActive", BindingFlags.Instance | BindingFlags.NonPublic);
+            field.SetValue(GetLeap(movement), isLeaping);
+        }
+
+        private static LeapMovement GetLeap(Movement movement)
+        {
+            FieldInfo field = typeof(Movement).GetField("leap", BindingFlags.Instance | BindingFlags.NonPublic);
+            return (LeapMovement)field.GetValue(movement);
+        }
+
+        private static ChargeMovement GetCharge(Movement movement)
+        {
+            FieldInfo field = typeof(Movement).GetField("charge", BindingFlags.Instance | BindingFlags.NonPublic);
+            return (ChargeMovement)field.GetValue(movement);
+        }
+
+        private static KnockbackMovement GetKnockback(Movement movement)
+        {
+            FieldInfo field = typeof(Movement).GetField("knockback", BindingFlags.Instance | BindingFlags.NonPublic);
+            return (KnockbackMovement)field.GetValue(movement);
         }
 
         private static void SetIsCharging(Movement movement, bool isCharging)
         {
-            FieldInfo field = typeof(Movement).GetField("isCharging", BindingFlags.Instance | BindingFlags.NonPublic);
-            field.SetValue(movement, isCharging);
+            FieldInfo field = typeof(ChargeMovement).GetField("isActive", BindingFlags.Instance | BindingFlags.NonPublic);
+            field.SetValue(GetCharge(movement), isCharging);
         }
 
         private static void SetChargeKnockbackResistance(Movement movement, float resistance)
         {
-            FieldInfo field = typeof(Movement).GetField(
-                "chargeKnockbackResistance",
+            FieldInfo field = typeof(ChargeMovement).GetField(
+                "knockbackResistance",
                 BindingFlags.Instance | BindingFlags.NonPublic);
-            field.SetValue(movement, resistance);
+            field.SetValue(GetCharge(movement), resistance);
         }
 
         private static void SetChargeSpeed(Movement movement, float chargeSpeed)
         {
-            FieldInfo field = typeof(Movement).GetField("chargeSpeed", BindingFlags.Instance | BindingFlags.NonPublic);
-            field.SetValue(movement, chargeSpeed);
+            FieldInfo field = typeof(ChargeMovement).GetField("speed", BindingFlags.Instance | BindingFlags.NonPublic);
+            field.SetValue(GetCharge(movement), chargeSpeed);
         }
 
         private static float GetChargeSpeed(Movement movement)
         {
-            FieldInfo field = typeof(Movement).GetField("chargeSpeed", BindingFlags.Instance | BindingFlags.NonPublic);
-            return (float)field.GetValue(movement);
-        }
-
-        private static Coroutine GetKnockbackCoroutine(Movement movement)
-        {
-            FieldInfo field = typeof(Movement).GetField("knockbackCoroutine", BindingFlags.Instance | BindingFlags.NonPublic);
-            return (Coroutine)field.GetValue(movement);
-        }
-
-        private static void InvokeCancelLeap(Movement movement)
-        {
-            MethodInfo method = typeof(Movement).GetMethod("CancelLeap", BindingFlags.Instance | BindingFlags.NonPublic);
-            method.Invoke(movement, null);
+            FieldInfo field = typeof(ChargeMovement).GetField("speed", BindingFlags.Instance | BindingFlags.NonPublic);
+            return (float)field.GetValue(GetCharge(movement));
         }
 
         private static void SetLeapTraversalState(Movement movement, bool traversesOffMeshLink)
         {
-            FieldInfo field = typeof(Movement).GetField("leapTraversesOffMeshLink", BindingFlags.Instance | BindingFlags.NonPublic);
-            field.SetValue(movement, traversesOffMeshLink);
+            FieldInfo field = typeof(LeapMovement).GetField(
+                "traversesOffMeshLink",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            field.SetValue(GetLeap(movement), traversesOffMeshLink);
         }
 
         private static bool GetLeapTraversalState(Movement movement)
         {
-            FieldInfo field = typeof(Movement).GetField("leapTraversesOffMeshLink", BindingFlags.Instance | BindingFlags.NonPublic);
-            return (bool)field.GetValue(movement);
+            FieldInfo field = typeof(LeapMovement).GetField(
+                "traversesOffMeshLink",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            return (bool)field.GetValue(GetLeap(movement));
         }
 
-        private static Coroutine GetLeapCoroutine(Movement movement)
-        {
-            FieldInfo field = typeof(Movement).GetField("leapCoroutine", BindingFlags.Instance | BindingFlags.NonPublic);
-            return (Coroutine)field.GetValue(movement);
-        }
-
-        private sealed class TestKnockbackCollisionCallback
-        {
-            public int CallCount { get; private set; }
-            public Collider Obstacle { get; private set; }
-            public Vector3 Point { get; private set; }
-
-            public void Handle(Collider obstacle, Vector3 point)
-            {
-                CallCount++;
-                Obstacle = obstacle;
-                Point = point;
-            }
-        }
     }
 }
