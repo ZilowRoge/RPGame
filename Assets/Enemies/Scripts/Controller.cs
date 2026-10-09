@@ -95,6 +95,7 @@ namespace RPGame.Enemies
                 return false;
             }
 
+            movement.SetKnockbackResistance(config.KnockbackResistance);
             attack.SetConfig(config);
 
             if (config.BehaviourConfig == null)

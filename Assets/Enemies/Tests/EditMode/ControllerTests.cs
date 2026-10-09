@@ -62,6 +62,18 @@ namespace RPGame.Enemies.Tests
         }
 
         [Test]
+        public void Start_PassesConfigKnockbackResistanceToMovement()
+        {
+            SerializedObject serializedConfig = new(controller.Config);
+            serializedConfig.FindProperty("knockbackResistance").floatValue = 0.75f;
+            serializedConfig.ApplyModifiedPropertiesWithoutUndo();
+
+            InvokeStart(controller);
+
+            Assert.That(GetKnockbackResistance(controller.GetComponent<Movement>()), Is.EqualTo(0.75f));
+        }
+
+        [Test]
         public void Tick_WhenTargetIsInAttackRange_TriesAttack()
         {
             TargetFixture target = CreateDamageableTarget("Target", new Vector3(1f, 0f, 0f));
@@ -549,6 +561,14 @@ namespace RPGame.Enemies.Tests
             damageEntry.FindPropertyRelative("maxDamage").floatValue = damageAmount;
             damageEntry.FindPropertyRelative("damageType").enumValueIndex = (int)DamageType.Physical;
             damageEntry.FindPropertyRelative("damageElement").enumValueIndex = (int)DamageElement.None;
+        }
+
+        private static float GetKnockbackResistance(Movement movement)
+        {
+            FieldInfo field = typeof(Movement).GetField(
+                "knockbackResistance",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            return (float)field.GetValue(movement);
         }
 
         private EnemyStraightProjectile CreateStraightProjectilePrefab(string objectName)

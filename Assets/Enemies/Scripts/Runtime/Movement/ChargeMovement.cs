@@ -17,32 +17,32 @@ namespace RPGame.Enemies
         private float speed;
         private float maxDistance;
         private float distance;
-        private float knockbackResistance;
         private Action<Collider, Vector3> collisionHandler;
         private MovementAgentState agentState;
+        private readonly Action chargeFinished;
 
         public bool IsActive => isActive;
-        public float KnockbackResistance => knockbackResistance;
 
         public ChargeMovement(
             Transform transform,
             Func<MovementAgentState> beginMovement,
             Action<MovementAgentState, Vector3, bool> finishMovement,
             Func<MovementCapsule> capsuleProvider,
-            Func<Collider, bool> shouldIgnoreCollider)
+            Func<Collider, bool> shouldIgnoreCollider,
+            Action chargeFinished)
         {
             this.transform = transform;
             this.beginMovement = beginMovement;
             this.finishMovement = finishMovement;
             this.capsuleProvider = capsuleProvider;
             this.shouldIgnoreCollider = shouldIgnoreCollider;
+            this.chargeFinished = chargeFinished;
         }
 
         public void Start(
             Vector3 destination,
             float speed,
             float maxDistance,
-            float knockbackResistance,
             Action<Collider, Vector3> onCollision)
         {
             Vector3 chargeDirection = destination - transform.position;
@@ -51,7 +51,6 @@ namespace RPGame.Enemies
             this.speed = speed;
             this.maxDistance = maxDistance;
             distance = 0f;
-            this.knockbackResistance = knockbackResistance;
             collisionHandler = onCollision;
             agentState = beginMovement();
             isActive = true;
@@ -101,8 +100,8 @@ namespace RPGame.Enemies
             speed = 0f;
             maxDistance = 0f;
             distance = 0f;
-            knockbackResistance = 0f;
             finishMovement(agentState, transform.position, false);
+            chargeFinished();
         }
 
         private bool TryApplyStep(Vector3 displacement)

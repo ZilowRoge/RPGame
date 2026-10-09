@@ -116,7 +116,7 @@ namespace RPGame.Enemies
                     target.Position,
                     config.ChargeSpeed,
                     config.MaxDistance,
-                    1f - config.KnockbackResistance,
+                    config.KnockbackResistance,
                     HandleChargeCollision))
             {
                 EnterRecovery();

@@ -10322,6 +10322,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 55286a6920799214d83468d1d63f347f, type: 2}
   - {fileID: 11400000, guid: 4475c01f3d9669d4283ef6e920c910ca, type: 2}
   - {fileID: 11400000, guid: 3e054de886bb6e742af7fd865db52b57, type: 2}
+  - {fileID: 11400000, guid: 0fe7f52642dc4be9933a89cd8c786322, type: 2}
   playerStatistics: {fileID: 917633044}
   startWaveInteractable: {fileID: 534325457562861969}
   intermissionDuration: 15

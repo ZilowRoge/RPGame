@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using NUnit.Framework;
+using RPGame.Core.Movement;
 using RPGame.Enemies;
 using UnityEditor;
 using UnityEngine;
@@ -115,7 +116,20 @@ namespace RPGame.Enemies.Tests
         }
 
         [Test]
-        public void ApplyKnockback_WhenCharging_UsesConfiguredResistanceAndCancelsCharge()
+        public void ApplyKnockback_WhenChargeHasFullResistance_CancelsChargeWithoutKnockback()
+        {
+            Movement movement = CreateMovement(out _);
+            SetIsCharging(movement, true);
+            SetChargeKnockbackResistance(movement, 1f);
+
+            movement.ApplyKnockback(Vector3.forward, 5f, 0.5f);
+
+            Assert.IsFalse(movement.IsCharging);
+            Assert.IsFalse(GetKnockback(movement).IsActive);
+        }
+
+        [Test]
+        public void ApplyKnockback_WhenChargeHasNoResistance_CancelsChargeAndUsesFullDistance()
         {
             Movement movement = CreateMovement(out _);
             SetIsCharging(movement, true);
@@ -124,7 +138,96 @@ namespace RPGame.Enemies.Tests
             movement.ApplyKnockback(Vector3.forward, 5f, 0.5f);
 
             Assert.IsFalse(movement.IsCharging);
+            Assert.That(GetKnockbackDistance(movement), Is.EqualTo(5f));
+        }
+
+        [TestCase(0f, 5f)]
+        [TestCase(0.75f, 1.25f)]
+        public void ApplyKnockback_UsesBaseKnockbackResistance(float resistance, float expectedDistance)
+        {
+            Movement movement = CreateMovement(out _);
+            movement.SetKnockbackResistance(resistance);
+
+            movement.ApplyKnockback(Vector3.forward, 5f, 0.5f);
+
+            Assert.IsTrue(GetKnockback(movement).IsActive);
+            Assert.That(GetKnockbackDistance(movement), Is.EqualTo(expectedDistance));
+        }
+
+        [Test]
+        public void ApplyKnockback_WithFullBaseResistance_DoesNotStartKnockback()
+        {
+            Movement movement = CreateMovement(out _);
+            movement.SetKnockbackResistance(1f);
+
+            movement.ApplyKnockback(Vector3.forward, 5f, 0.5f);
+
             Assert.IsFalse(GetKnockback(movement).IsActive);
+        }
+
+        [Test]
+        public void ApplyKnockback_WithFullBaseResistance_CancelsCharge()
+        {
+            Movement movement = CreateMovement(out _);
+            SetIsCharging(movement, true);
+            SetChargeKnockbackResistance(movement, 0f);
+            movement.SetKnockbackResistance(1f);
+
+            movement.ApplyKnockback(Vector3.forward, 5f, 0.5f);
+
+            Assert.IsFalse(movement.IsCharging);
+            Assert.IsFalse(GetKnockback(movement).IsActive);
+        }
+
+        [Test]
+        public void ApplyKnockback_WhenCharging_CombinesBaseResistanceAndChargeMultiplier()
+        {
+            Movement movement = CreateMovement(out _);
+            SetIsCharging(movement, true);
+            SetChargeKnockbackResistance(movement, 0.8f);
+            movement.SetKnockbackResistance(0.75f);
+
+            movement.ApplyKnockback(Vector3.forward, 10f, 0.5f);
+
+            Assert.IsFalse(movement.IsCharging);
+            Assert.That(GetKnockbackDistance(movement), Is.EqualTo(0.5f).Within(0.0001f));
+        }
+
+        [Test]
+        public void ChargeMovement_DoesNotStoreKnockbackResistance()
+        {
+            Assert.IsNull(typeof(ChargeMovement).GetField(
+                "knockbackResistance",
+                BindingFlags.Instance | BindingFlags.NonPublic));
+            Assert.IsNull(typeof(ChargeMovement).GetProperty(
+                "KnockbackResistance",
+                BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic));
+        }
+
+        [Test]
+        public void ChargeModifier_IsRemovedWhenChargeFinishesNaturally()
+        {
+            Movement movement = CreateMovement(out _);
+            SetIsCharging(movement, true);
+            SetChargeKnockbackResistance(movement, 0.5f);
+            SetChargeMaxDistance(movement, 0f);
+
+            GetCharge(movement).Tick(0f);
+
+            Assert.IsFalse(movement.IsCharging);
+            Assert.That(GetKnockbackModifiers(movement).Multiplier, Is.EqualTo(1f));
+        }
+
+        [Test]
+        public void ChargeModifier_IsRemovedWhenChargeIsCancelled()
+        {
+            Movement movement = CreateMovement(out _);
+            SetIsCharging(movement, true);
+            SetChargeKnockbackResistance(movement, 0.5f);
+
+            GetCharge(movement).Cancel();
+
+            Assert.That(GetKnockbackModifiers(movement).Multiplier, Is.EqualTo(1f));
         }
 
         [Test]
@@ -143,10 +246,25 @@ namespace RPGame.Enemies.Tests
         {
             Movement movement = CreateMovement(out _);
             SetIsCharging(movement, true);
+            SetChargeKnockbackResistance(movement, 0.5f);
 
             movement.ResetForDespawn();
 
             Assert.IsFalse(movement.IsCharging);
+            Assert.That(GetKnockbackModifiers(movement).Multiplier, Is.EqualTo(1f));
+        }
+
+        [Test]
+        public void ResetForSpawn_WhenCharging_RemovesChargeModifier()
+        {
+            Movement movement = CreateMovement(out _);
+            SetIsCharging(movement, true);
+            SetChargeKnockbackResistance(movement, 0.5f);
+
+            movement.ResetForSpawn();
+
+            Assert.IsFalse(movement.IsCharging);
+            Assert.That(GetKnockbackModifiers(movement).Multiplier, Is.EqualTo(1f));
         }
 
         [Test]
@@ -213,6 +331,14 @@ namespace RPGame.Enemies.Tests
             return (KnockbackMovement)field.GetValue(movement);
         }
 
+        private static KnockbackModifiers GetKnockbackModifiers(Movement movement)
+        {
+            FieldInfo field = typeof(Movement).GetField(
+                "knockbackModifiers",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            return (KnockbackModifiers)field.GetValue(movement);
+        }
+
         private static void SetIsCharging(Movement movement, bool isCharging)
         {
             FieldInfo field = typeof(ChargeMovement).GetField("isActive", BindingFlags.Instance | BindingFlags.NonPublic);
@@ -221,10 +347,19 @@ namespace RPGame.Enemies.Tests
 
         private static void SetChargeKnockbackResistance(Movement movement, float resistance)
         {
-            FieldInfo field = typeof(ChargeMovement).GetField(
-                "knockbackResistance",
+            int modifierId = GetKnockbackModifiers(movement).AddResistance(resistance);
+            FieldInfo field = typeof(Movement).GetField(
+                "chargeKnockbackModifierId",
                 BindingFlags.Instance | BindingFlags.NonPublic);
-            field.SetValue(GetCharge(movement), resistance);
+            field.SetValue(movement, modifierId);
+        }
+
+        private static void SetChargeMaxDistance(Movement movement, float maxDistance)
+        {
+            FieldInfo field = typeof(ChargeMovement).GetField(
+                "maxDistance",
+                BindingFlags.Instance | BindingFlags.NonPublic);
+            field.SetValue(GetCharge(movement), maxDistance);
         }
 
         private static void SetChargeSpeed(Movement movement, float chargeSpeed)
@@ -237,6 +372,12 @@ namespace RPGame.Enemies.Tests
         {
             FieldInfo field = typeof(ChargeMovement).GetField("speed", BindingFlags.Instance | BindingFlags.NonPublic);
             return (float)field.GetValue(GetCharge(movement));
+        }
+
+        private static float GetKnockbackDistance(Movement movement)
+        {
+            FieldInfo field = typeof(KnockbackMovement).GetField("distance", BindingFlags.Instance | BindingFlags.NonPublic);
+            return (float)field.GetValue(GetKnockback(movement));
         }
 
         private static void SetLeapTraversalState(Movement movement, bool traversesOffMeshLink)

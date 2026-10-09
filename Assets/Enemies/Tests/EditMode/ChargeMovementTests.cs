@@ -24,9 +24,10 @@ namespace RPGame.Enemies.Tests
                 () => new MovementAgentState(false, true),
                 (agentState, position, completeTraversal) => finished = true,
                 CreateCapsule,
-                collider => false);
+                collider => false,
+                () => { });
 
-            charge.Start(Vector3.right * 10f, 2f, 1f, 0.25f, null);
+            charge.Start(Vector3.right * 10f, 2f, 1f, null);
             charge.Tick(0.5f);
 
             Assert.IsTrue(charge.IsActive);
@@ -50,9 +51,10 @@ namespace RPGame.Enemies.Tests
                 () => new MovementAgentState(false, true),
                 (agentState, position, completeTraversal) => { },
                 CreateCapsule,
-                hitCollider => false);
+                hitCollider => false,
+                () => { });
 
-            charge.Start(Vector3.right, 10f, 1f, 0.5f, (hitCollider, point) => collisionCount++);
+            charge.Start(Vector3.right, 10f, 1f, (hitCollider, point) => collisionCount++);
             colliderObject.transform.position = new Vector3(0.9f, 0.5f, 0f);
             Physics.SyncTransforms();
             charge.Tick(0.1f);

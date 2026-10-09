@@ -20,12 +20,10 @@ namespace RPGame.Enemies.Tests
             UnityEngine.Object.DestroyImmediate(config);
         }
 
-        [TestCase(0f, 1f)]
-        [TestCase(1f, 0f)]
-        [TestCase(0.25f, 0.75f)]
-        public void WindupEnd_PassesEffectiveKnockbackDistanceMultiplier(
-            float knockbackResistance,
-            float expectedMultiplier)
+        [TestCase(0f)]
+        [TestCase(1f)]
+        [TestCase(0.25f)]
+        public void WindupEnd_PassesKnockbackResistance(float knockbackResistance)
         {
             config = CreateConfig(knockbackResistance);
             enemyObject = new GameObject("Enemy");
@@ -38,7 +36,7 @@ namespace RPGame.Enemies.Tests
             charge.Tick(0f, target);
             charge.Tick(0f, target);
 
-            Assert.That(movement.KnockbackDistanceMultiplier, Is.EqualTo(expectedMultiplier));
+            Assert.That(movement.KnockbackResistance, Is.EqualTo(knockbackResistance));
         }
 
         private static ChargingMeleeEnemyBehaviourConfig CreateConfig(float knockbackResistance)
@@ -63,7 +61,7 @@ namespace RPGame.Enemies.Tests
             public bool IsLeaping => false;
             public bool IsCharging { get; private set; }
             public bool IsMovementBlocked => false;
-            public float KnockbackDistanceMultiplier { get; private set; }
+            public float KnockbackResistance { get; private set; }
 
             public void FaceTowards(Vector3 position)
             {
@@ -95,7 +93,7 @@ namespace RPGame.Enemies.Tests
                 float knockbackResistance,
                 Action<Collider, Vector3> onCollision)
             {
-                KnockbackDistanceMultiplier = knockbackResistance;
+                KnockbackResistance = knockbackResistance;
                 IsCharging = true;
                 return true;
             }

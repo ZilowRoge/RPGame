@@ -41,6 +41,7 @@ namespace RPGame.Enemies
         [SerializeField] private float traversalLeapArcHeight = 1f;
 
         private readonly MovementSpeedModifiers movementSpeedModifiers = new();
+        private readonly KnockbackModifiers knockbackModifiers = new();
 
         private NavMeshAgent agent;
         private LeapMovement leap;
@@ -49,6 +50,9 @@ namespace RPGame.Enemies
         private Vector3 lastDestination;
         private bool hasDestination;
         private int movementBlockCount;
+        private float knockbackResistance;
+        private int knockbackResistanceModifierId = -1;
+        private int chargeKnockbackModifierId = -1;
 
         public Vector3 Position => transform.position;
         public bool IsLeaping => leap.IsActive;
@@ -63,7 +67,8 @@ namespace RPGame.Enemies
                 BeginManualMovement,
                 FinishManualMovement,
                 GetMovementCapsule,
-                ShouldIgnoreMovementCollider);
+                ShouldIgnoreMovementCollider,
+                RemoveChargeKnockbackModifier);
             knockback = new KnockbackMovement(
                 transform,
                 BeginKnockback,
@@ -178,8 +183,20 @@ namespace RPGame.Enemies
                 return false;
             }
 
-            charge.Start(destination, speed, maxDistance, knockbackResistance, onCollision);
+            chargeKnockbackModifierId = knockbackModifiers.AddResistance(knockbackResistance);
+            charge.Start(destination, speed, maxDistance, onCollision);
             return true;
+        }
+
+        internal void SetKnockbackResistance(float resistance)
+        {
+            knockbackResistance = Mathf.Clamp01(resistance);
+            if (knockbackResistanceModifierId >= 0)
+            {
+                knockbackModifiers.Remove(knockbackResistanceModifierId);
+            }
+
+            knockbackResistanceModifierId = knockbackModifiers.AddResistance(knockbackResistance);
         }
 
         public void ApplyKnockback(
@@ -193,17 +210,19 @@ namespace RPGame.Enemies
                 return;
             }
 
+            float multiplier = knockbackModifiers.Multiplier;
             if (charge.IsActive)
             {
-                distance *= charge.KnockbackResistance;
                 charge.Cancel();
-                if (distance <= Mathf.Epsilon)
-                {
-                    return;
-                }
             }
 
-            knockback.Start(direction, distance, duration, onCollision);
+            float effectiveDistance = distance * multiplier;
+            if (effectiveDistance <= Mathf.Epsilon)
+            {
+                return;
+            }
+
+            knockback.Start(direction, effectiveDistance, duration, onCollision);
         }
 
         public void ResetForSpawn()
@@ -370,16 +389,30 @@ namespace RPGame.Enemies
                 || collider.GetComponentInParent<Movement>() != null;
         }
 
+        private void RemoveChargeKnockbackModifier()
+        {
+            if (chargeKnockbackModifierId < 0)
+            {
+                return;
+            }
+
+            knockbackModifiers.Remove(chargeKnockbackModifierId);
+            chargeKnockbackModifierId = -1;
+        }
+
         private void ResetRuntimeState(bool stopAgent)
         {
             CacheRequiredComponents();
             charge.Cancel();
             leap.Cancel();
             knockback.Cancel();
+            RemoveChargeKnockbackModifier();
             hasDestination = false;
             lastDestination = default;
             movementBlockCount = 0;
             movementSpeedModifiers.Clear();
+            knockbackModifiers.Clear();
+            knockbackResistanceModifierId = knockbackModifiers.AddResistance(knockbackResistance);
             ConfigureAgent();
             ResetAgent(stopAgent);
         }
