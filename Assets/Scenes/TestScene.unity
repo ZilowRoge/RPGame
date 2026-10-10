@@ -10322,6 +10322,7 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 55286a6920799214d83468d1d63f347f, type: 2}
   - {fileID: 11400000, guid: 4475c01f3d9669d4283ef6e920c910ca, type: 2}
   - {fileID: 11400000, guid: 3e054de886bb6e742af7fd865db52b57, type: 2}
+  - {fileID: 11400000, guid: bf640f9086e94033b49965f31cdedb59, type: 2}
   - {fileID: 11400000, guid: 0fe7f52642dc4be9933a89cd8c786322, type: 2}
   playerStatistics: {fileID: 917633044}
   startWaveInteractable: {fileID: 534325457562861969}
@@ -41852,67 +41853,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: RPGame.UI::RPGame.UI.EnemyTargetHealthBarController
   targetingController: {fileID: 1536372347364793633}
   playerCamera: {fileID: 1541568087}
---- !u!1001 &3184682195311609698
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 3183307177004933665, guid: 3bdc927fe08c82042bdb4d0567b4ed6a, type: 3}
-      propertyPath: m_Name
-      value: ChargingSlowEnemy
-      objectReference: {fileID: 0}
-    - target: {fileID: 5099332986215863224, guid: 3bdc927fe08c82042bdb4d0567b4ed6a, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: -23.15
-      objectReference: {fileID: 0}
-    - target: {fileID: 5099332986215863224, guid: 3bdc927fe08c82042bdb4d0567b4ed6a, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 5099332986215863224, guid: 3bdc927fe08c82042bdb4d0567b4ed6a, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 20.1
-      objectReference: {fileID: 0}
-    - target: {fileID: 5099332986215863224, guid: 3bdc927fe08c82042bdb4d0567b4ed6a, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 5099332986215863224, guid: 3bdc927fe08c82042bdb4d0567b4ed6a, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5099332986215863224, guid: 3bdc927fe08c82042bdb4d0567b4ed6a, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5099332986215863224, guid: 3bdc927fe08c82042bdb4d0567b4ed6a, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5099332986215863224, guid: 3bdc927fe08c82042bdb4d0567b4ed6a, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5099332986215863224, guid: 3bdc927fe08c82042bdb4d0567b4ed6a, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5099332986215863224, guid: 3bdc927fe08c82042bdb4d0567b4ed6a, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5582548622036004796, guid: 3bdc927fe08c82042bdb4d0567b4ed6a, type: 3}
-      propertyPath: detectionRange
-      value: 50
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 3bdc927fe08c82042bdb4d0567b4ed6a, type: 3}
 --- !u!1001 &5385227195477497174
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -42689,4 +42629,3 @@ SceneRoots:
   - {fileID: 843874385}
   - {fileID: 1493548865}
   - {fileID: 1768656977}
-  - {fileID: 3184682195311609698}

@@ -10,7 +10,6 @@ namespace RPGame.Enemies
     [RequireComponent(typeof(StatisticsController))]
     [RequireComponent(typeof(Detection))]
     [RequireComponent(typeof(Movement))]
-    [RequireComponent(typeof(Attack))]
     [RequireComponent(typeof(EnemyTargetable))]
     [RequireComponent(typeof(DamageReceiver))]
     [RequireComponent(typeof(Death))]
@@ -96,7 +95,7 @@ namespace RPGame.Enemies
             }
 
             movement.SetKnockbackResistance(config.KnockbackResistance);
-            attack.SetConfig(config);
+            attack?.SetConfig(config);
 
             if (config.BehaviourConfig == null)
             {
@@ -145,6 +144,31 @@ namespace RPGame.Enemies
                         parabolicAttack);
                     return true;
 
+                case HealerEnemyBehaviourConfig healerConfig:
+                    HealerTargetSensor healerTargetSensor = GetComponentInChildren<HealerTargetSensor>(true);
+                    LineOfSight healerLineOfSight = GetComponent<LineOfSight>();
+                    StatisticsController healerStatistics = GetComponent<StatisticsController>();
+                    EnemyTargetable healerTargetable = GetComponent<EnemyTargetable>();
+                    if (healerTargetSensor == null
+                        || healerLineOfSight == null
+                        || healerStatistics == null
+                        || healerTargetable == null)
+                    {
+                        Debug.LogError("Missing healer dependencies.", this);
+                        return false;
+                    }
+
+                    healerTargetSensor.SetSearchRadius(healerConfig.AllySearchRange);
+                    createdBehaviour = new HealerEnemyBehaviour(
+                        detection,
+                        movement,
+                        healerTargetSensor,
+                        healerLineOfSight,
+                        healerStatistics,
+                        healerConfig,
+                        healerTargetable);
+                    return true;
+
                 default:
                     Debug.LogError(
                         $"Unsupported behaviour config '{config.BehaviourConfig.GetType().Name}'.",
@@ -173,17 +197,18 @@ namespace RPGame.Enemies
                 return false;
             }
 
-            if (attack == null)
-            {
-                Debug.LogError("Missing field attack.", this);
-                return false;
-            }
-
             return true;
         }
 
         private bool TryGetAttack(AttackType type, out IEnemyAttack runtimeAttack)
         {
+            if (attack == null)
+            {
+                runtimeAttack = null;
+                Debug.LogError("Missing field attack.", this);
+                return false;
+            }
+
             if (attack.TryGetRuntimeAttack(type, out runtimeAttack))
             {
                 return true;
